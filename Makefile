@@ -11,3 +11,7 @@ js:
 	
 clean:
 	rm -r js
+	
+run:
+	( sleep 1 && chromium-browser "http://localhost:8000" ) &
+	python3 -m http.server
