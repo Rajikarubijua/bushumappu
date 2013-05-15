@@ -1,14 +1,25 @@
+window.my = {} # the global object where we can put stuff into it
+
 load = (cb) ->
-	window.my = {}
+	# load ALL the data concurrently
 	d3.text "data/krad", (content) ->
 		copyAttrs my, parseKrad content.split '\n'
+		end()
+	end = () ->
+		# everything of 'my' which is named '*_set' becomes a sorted array
 		for k, set of my
 			if k[-4..] == '_set'
 				my[k] = (Object.keys set).sort()
 		cb()
 
 main = () ->
-	drawStuff()
+	body = d3.select 'body'
+	body.append('pre').text somePrettyPrint my
+	svg = body.append('svg')
+		.attr('width', 600)
+		.attr('height', 400)
+		.style('border', '1px solid black')
+	drawStuff svg
 
 parseKrad = (lines) ->
 	kanji_radicals_map = {}
@@ -34,32 +45,26 @@ parseKrad = (lines) ->
 			
 	{ kanji_radicals_map, radicals_set, atomic_radicals_set }
 
-drawStuff = () ->
-	body = d3.select 'body'
+somePrettyPrint = (o) ->
+	# everything in 'o' gets pretty printed for development joy
+	w = 30
+	lines = for k, v of o
+		if Array.isArray v
+			k = W w, "["+k+"]"
+			v = v.length
+		else if typeof v is 'object'
+			k = W w, "{"+k+"}"
+			v = (Object.keys v).length
+		else
+			k = W w, " "+k+" "
+			v = JSON.stringify v
+		k+" "+v
+	lines.join "\n"
 
-	log = do ->
-		w = 30
-		for k, v of my
-			if Array.isArray v
-				k = W w, "["+k+"]"
-				v = v.length
-			else if typeof v is 'object'
-				k = W w, "{"+k+"}"
-				v = (Object.keys v).length
-			else
-				k = W w, " "+k+" "
-				v = JSON.stringify v
-			k+" "+v
-	log = log.join "\n"
 
-	body.append('pre').text(log)
-
-	[ w, h ] = [ 600, 400 ]
-
-	svg = body.append('svg')
-		.attr('width', w)
-		.attr('height', h)
-		.style('border', '1px solid black')
+drawStuff = (svg) ->
+	w = svg.attr 'width'
+	h = svg.attr 'height'
 
 	atomics_n = my.atomic_radicals_set.length
 	nodes = for kanji, i in my.atomic_radicals_set
