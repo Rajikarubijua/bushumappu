@@ -15,7 +15,7 @@ load = (cb) ->
 main = () ->
 	body = d3.select 'body'
 	body.append('pre').text somePrettyPrint my
-	svg = body.append('svg')
+	svg = my.svg = body.append('svg')
 		.attr('width', 600)
 		.attr('height', 400)
 		.style('border', '1px solid black')
@@ -47,7 +47,7 @@ parseKrad = (lines) ->
 
 somePrettyPrint = (o) ->
 	# everything in 'o' gets pretty printed for development joy
-	w = 30
+	w = firstColumnWidth = 30
 	lines = for k, v of o
 		if Array.isArray v
 			k = W w, "["+k+"]"
@@ -78,7 +78,7 @@ drawStuff = (svg) ->
 			y += h/2
 			{ kanji, x, y }
 	links  = []
-	
+
 	force = d3.layout.force()
 		.nodes(nodes)
 		.links(links)
@@ -87,16 +87,19 @@ drawStuff = (svg) ->
 
 	kanji = svg.selectAll('.kanji')
 		.data(nodes)
-		.enter().append("text")
-		.text((d) -> d.kanji)
+		.enter()
+		.append('g')
+	kanji
+		.append("circle").attr(r: 12).style fill: 'none', stroke: 'black'
+	kanji
+		.append("text").text((d) -> d.kanji)
+		.style "alignment-baseline": 'central', "text-anchor": "middle"
 		
 	force.on 'tick', (e) ->
-		kanji
-			.attr('x', (d) -> d.x)
-			.attr('y', (d) -> d.y)
+		kanji.attr('transform', (d) -> "translate(#{d.x} #{d.y})")
 	
 copyAttrs = (a, b) -> a[k] = v for k, v of b
-P = (args...) -> console.log args...; return args[0]
+P = (args...) -> console.log args...; return args[-1..][0]
 W = (width, str) ->
 	str = ""+str
 	width = Math.max str.length, width
