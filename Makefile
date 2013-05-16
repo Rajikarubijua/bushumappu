@@ -1,4 +1,3 @@
-#!/usr/bin/env make
 webserver  = python3 -m http.server
 #webserver  = python2 -m SimpleHTTPServer
 webbrowser = chromium-browser "http://localhost:8000"
@@ -9,12 +8,6 @@ build_js_files   = $(src_coffee_files:src/%.coffee=js/%.js)
 
 PHONY+=all
 all: check_build_deps $(build_js_files)
-
-js/%.js: src/%.coffee js
-	coffee -o js -cm $< 
-
-js:
-	mkdir js
 	
 PHONY+=clean
 clean:
@@ -27,5 +20,13 @@ run:
 	
 PHONY+=check_build_deps
 check_build_deps:
-	@coffee --version || echo "Please install CoffeeScript 1.6.2+"
+	@coffee --version > /dev/null || echo "  Please install CoffeeScript 1.6.2+"
 
+PHONY+=watch
+watch:
+	coffee -o js -wm src
+
+
+
+js/%.js: src/%.coffee
+	coffee -o js -cm $< 
