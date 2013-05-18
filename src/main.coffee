@@ -1,15 +1,22 @@
 window.my = {} # the global object where we can put stuff into it
 
 load = (cb) ->
+	i = 0
+	tryEnd = () -> end() if --i == 0
 	# load ALL the data concurrently
-	d3.text "data/krad", (content) ->
+	++i; d3.text "data/krad", (content) ->
 		copyAttrs my, parseKrad content.split '\n'
-		end()
+		tryEnd()
+	++i; d3.text "data/radk", (content) ->
+		copyAttrs my, parseRadk content.split '\n'
+		tryEnd()
 	end = () ->
 		# everything of 'my' which is named '*_set' becomes a sorted array
 		for k, set of my
 			if k[-4..] == '_set'
 				my[k] = (Object.keys set).sort()
+		# XXX radk doesn't contain radicals "邑龠" which are in krad
+		# XXX parsing krad results in a " " to be a radical
 		cb()
 
 main = () ->
@@ -44,6 +51,30 @@ parseKrad = (lines) ->
 			atomic_radicals_set[radical] = true 
 			
 	{ kanji_radicals_map, radicals_set, atomic_radicals_set }
+
+parseRadk = (lines) ->
+	radical_map = {}
+	radical = null
+	strokes_n = null
+	kanjis = ""
+	$line = /\$ (.) (\d+) ?.*/
+	
+	for line, i in lines
+		# parse line
+		continue if line[0] == '#' || !line
+		m = line.match $line
+		if m == null
+			kanjis += line.trim()
+		else
+			radical_map[radical] = { radical, strokes_n, kanjis } if radical
+			[ _, radical, strokes_n ] = m
+			
+	{ radical_map }
+			
+expect = (regex, line, i) ->
+	m = line.match regex
+	throw "expected #{regex} at #{i}" if m == null
+	return m
 
 somePrettyPrint = (o) ->
 	# everything in 'o' gets pretty printed for development joy
