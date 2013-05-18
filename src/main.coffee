@@ -140,4 +140,4 @@ require ['utils'], ({ P, W, copyAttrs, async }) ->
 		force.on 'tick', (e) ->
 			kanji.attr('transform', (d) -> "translate(#{d.x} #{d.y})")
 	
-	main()
+	load main
