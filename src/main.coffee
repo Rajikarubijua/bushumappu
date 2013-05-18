@@ -16,7 +16,6 @@ load = (cb) ->
 			if k[-4..] == '_set'
 				my[k] = (Object.keys set).sort()
 		# XXX radk doesn't contain radicals "邑龠" which are in krad
-		# XXX parsing krad results in a " " to be a radical
 		
 		my.kanji_map = {}
 		for kanji, radicals of my.kanji_radicals_map
@@ -46,7 +45,7 @@ parseKrad = (lines) ->
 		kanji = line[0]
 		if line[1..3] != ' : '
 			throw "expected \" : \" at line #{i}, got \"#{line[1..3]}\""
-		radicals = line[4..].split ' '
+		radicals = line[4..].trim().split ' '
 		# fill datastructures
 		kanji_radicals_map[kanji] = radicals
 		for radical in radicals
