@@ -17,6 +17,13 @@ load = (cb) ->
 				my[k] = (Object.keys set).sort()
 		# XXX radk doesn't contain radicals "邑龠" which are in krad
 		# XXX parsing krad results in a " " to be a radical
+		
+		my.kanji_map = {}
+		for kanji, radicals of my.kanji_radicals_map
+			strokes_n = 0
+			for radical in radicals
+				strokes_n += my.radical_map[radical]?.strokes_n
+			my.kanji_map[kanji] = { kanji, radicals, strokes_n }
 		cb()
 
 main = () ->
@@ -68,6 +75,7 @@ parseRadk = (lines) ->
 		else
 			radical_map[radical] = { radical, strokes_n, kanjis } if radical
 			[ _, radical, strokes_n ] = m
+			strokes_n = +strokes_n
 			
 	{ radical_map }
 			
