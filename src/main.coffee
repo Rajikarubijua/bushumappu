@@ -87,7 +87,8 @@ expect = (regex, line, i) ->
 somePrettyPrint = (o) ->
 	# everything in 'o' gets pretty printed for development joy
 	w = firstColumnWidth = 30
-	lines = for k, v of o
+	lines = for k in (Object.keys o).sort()
+		v = o[k]
 		if Array.isArray v
 			k = W w, "["+k+"]"
 			v = v.length
