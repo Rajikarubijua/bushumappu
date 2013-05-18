@@ -1,29 +1,30 @@
 window.my = {} # the global object where we can put stuff into it
 
 load = (cb) ->
-	i = 0
-	tryEnd = () -> end() if --i == 0
 	# load ALL the data concurrently
-	++i; d3.text "data/krad", (content) ->
-		copyAttrs my, parseKrad content.split '\n'
-		tryEnd()
-	++i; d3.text "data/radk", (content) ->
-		copyAttrs my, parseRadk content.split '\n'
-		tryEnd()
-	end = () ->
-		# everything of 'my' which is named '*_set' becomes a sorted array
-		for k, set of my
-			if k[-4..] == '_set'
-				my[k] = (Object.keys set).sort()
-		# XXX radk doesn't contain radicals "邑龠" which are in krad
+	async.parallel [
+		(cb) ->	
+			d3.text "data/krad", (content) ->
+				copyAttrs my, parseKrad content.split '\n'
+				cb()
+		(cb) ->
+			d3.text "data/radk", (content) ->
+				copyAttrs my, parseRadk content.split '\n'
+				cb()
+		], () ->
+			# everything of 'my' which is named '*_set' becomes a sorted array
+			for k, set of my
+				if k[-4..] == '_set'
+					my[k] = (Object.keys set).sort()
+			# XXX radk doesn't contain radicals "邑龠" which are in krad
 		
-		my.kanji_map = {}
-		for kanji, radicals of my.kanji_radicals_map
-			strokes_n = 0
-			for radical in radicals
-				strokes_n += my.radical_map[radical]?.strokes_n
-			my.kanji_map[kanji] = { kanji, radicals, strokes_n }
-		cb()
+			my.kanji_map = {}
+			for kanji, radicals of my.kanji_radicals_map
+				strokes_n = 0
+				for radical in radicals
+					strokes_n += my.radical_map[radical]?.strokes_n
+				my.kanji_map[kanji] = { kanji, radicals, strokes_n }
+			cb()
 
 main = () ->
 	body = d3.select 'body'
@@ -144,8 +145,20 @@ W = (width, str) ->
 	width = Math.max str.length, width
 	str + (" " for [1..width-str.length]).join ''
 
+async =
+	parallel: (funcs, cb) ->
+		results = []
+		i = funcs.length
+		end = (args...) ->
+			results.push args
+			cb results if --i == 0
+		for func in funcs
+			if typeof func is "function"
+				func end
+			else
+				[ o, k ] = func
+				o[k] = end
+
 do ->
-	i = 2
-	runMain = -> main() if --i == 0
-	window.onload = runMain
-	load runMain
+	async.parallel [ [window, 'onload'], load ], ->
+		main()
