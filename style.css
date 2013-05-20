@@ -8,5 +8,8 @@ body { overflow: hidden; }
 	alignment-baseline: central;
 	text-anchor: middle;
 }
+.radical { cursor: pointer; cursor: hand; }
+
+.dragging { cursor: move; }
 
 pre#my { position: absolute; }

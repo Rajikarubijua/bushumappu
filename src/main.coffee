@@ -39,6 +39,12 @@ require ['utils'], ({ P, W, copyAttrs, async, strUnique, somePrettyPrint,
 		svg.call (zoom = d3.behavior.zoom())
 			.translate([w()/2, h()/2])
 			.on 'zoom', styleZoom svg.g, zoom
+		draggingStart = -> svg.classed 'dragging', true
+		draggingEnd   = -> svg.classed 'dragging', false
+		svg.on 'mousedown.cursor' , draggingStart
+		svg.on 'mouseup.cursor'   , draggingEnd
+		svg.on 'touchstart.cursor', draggingStart
+		svg.on 'touchend.cursor'  , draggingEnd
 			 
 		drawStuff svg.g
 
@@ -104,6 +110,7 @@ require ['utils'], ({ P, W, copyAttrs, async, strUnique, somePrettyPrint,
 			.enter()
 			.append('g')
 			.attr(class: cls)
+			#.call(force.drag)
 		radical
 			.append("circle").attr(r: 12)
 		radical
