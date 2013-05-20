@@ -83,5 +83,15 @@ define ->
 		if typeof x is 'object'
 			return (Object.keys x).sort args...
 		throw "invalid argument ps type #{typeof x}"
+		
+	styleZoom = (el, zoom, dontCall) ->
+		func = ->
+			t = zoom.translate()
+			el.style "-webkit-transform": "
+				translate(#{t[0]}px, #{t[1]}px)
+				scale(#{zoom.scale()})"
+		func() if not dontCall
+		func
  
-	{ copyAttrs, P, W, async, strUnique, expect, somePrettyPrint, length, sort }
+	{ copyAttrs, P, W, async, strUnique, expect, somePrettyPrint, length,
+	  sort, styleZoom }
