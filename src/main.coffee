@@ -1,32 +1,22 @@
-require ['utils'], ({ P, W, copyAttrs, async }) ->
+require ['utils'], ({ P, W, copyAttrs, async, strUnique, somePrettyPrint,
+	length, sort }) ->
 
-	window.my = {} # the global object where we can put stuff into it
+	# the global object where we can put stuff into it
+	window.my = 
+		kanjis: {}
+		radicals: {}
 
 	load = (cb) ->
 		# load ALL the data concurrently
-		async.parallel [
-			(cb) ->	
-				d3.text "data/krad", (content) ->
-					copyAttrs my, parseKrad content.split '\n'
-					cb()
-			(cb) ->
-				d3.text "data/radk", (content) ->
-					copyAttrs my, parseRadk content.split '\n'
-					cb()
-			], () ->
-				# everything of 'my' which is named '*_set' becomes a sorted array
-				for k, set of my
-					if k[-4..] == '_set'
-						my[k] = (Object.keys set).sort()
-				# XXX radk doesn't contain radicals "邑龠" which are in krad
-		
-				my.kanji_map = {}
-				for kanji, radicals of my.kanji_radicals_map
-					strokes_n = 0
-					for radical in radicals
-						strokes_n += my.radical_map[radical]?.strokes_n
-					my.kanji_map[kanji] = { kanji, radicals, strokes_n }
-				cb()
+		async.map {
+			krad: (cb) -> d3.text "data/krad", cb
+			radk: (cb) -> d3.text "data/radk", cb
+			# XXX radk doesn't contain radicals "邑龠" which are in krad
+			}, cb
+			
+	parse = (data) ->
+		parseKrad data.krad[1]
+		parseRadk data.radk[1]
 
 	main = () ->
 		body = d3.select 'body'
@@ -37,10 +27,8 @@ require ['utils'], ({ P, W, copyAttrs, async }) ->
 			.style('border', '1px solid black')
 		drawStuff svg
 
-	parseKrad = (lines) ->
-		kanji_radicals_map = {}
-		radicals_set = {}
-		atomic_radicals_set = {}
+	parseKrad = (content) ->
+		lines = content.split '\n'
 
 		for line, i in lines
 			# parse line
@@ -50,19 +38,14 @@ require ['utils'], ({ P, W, copyAttrs, async }) ->
 				throw "expected \" : \" at line #{i}, got \"#{line[1..3]}\""
 			radicals = line[4..].trim().split ' '
 			# fill datastructures
-			kanji_radicals_map[kanji] = radicals
+			o = my.kanjis[kanji] ?= { kanji }
+			o.radicals = radicals
 			for radical in radicals
-				radicals_set[radical] = true
-		
-		for radical of radicals_set
-			radicals = kanji_radicals_map[radical]
-			if (!radicals) or (radicals.length == 1 and radical in radicals)
-				atomic_radicals_set[radical] = true 
-			
-		{ kanji_radicals_map, radicals_set, atomic_radicals_set }
+				o = my.radicals[radical] ?= { radical }
+				o.kanjis ?= ""
+				o.kanjis += kanji
 
 	parseRadk = (lines) ->
-		radical_map = {}
 		radical = null
 		strokes_n = null
 		kanjis = ""
@@ -75,42 +58,19 @@ require ['utils'], ({ P, W, copyAttrs, async }) ->
 			if m == null
 				kanjis += line.trim()
 			else
-				radical_map[radical] = { radical, strokes_n, kanjis } if radical
+				if radical
+					radical.strokes_n = +strokes_n
+					radical.kanjis = strUnique radical.kanjis, kanjis
 				[ _, radical, strokes_n ] = m
-				strokes_n = +strokes_n
-			
-		{ radical_map }
-			
-	expect = (regex, line, i) ->
-		m = line.match regex
-		throw "expected #{regex} at #{i}" if m == null
-		return m
-
-	somePrettyPrint = (o) ->
-		# everything in 'o' gets pretty printed for development joy
-		w = firstColumnWidth = 30
-		lines = for k in (Object.keys o).sort()
-			v = o[k]
-			if Array.isArray v
-				k = W w, "["+k+"]"
-				v = v.length
-			else if typeof v is 'object'
-				k = W w, "{"+k+"}"
-				v = (Object.keys v).length
-			else
-				k = W w, " "+k+" "
-				v = JSON.stringify v
-			k+" "+v
-		lines.join "\n"
-
+				radical = my.radicals[radical]
 
 	drawStuff = (svg) ->
 		w = svg.attr 'width'
 		h = svg.attr 'height'
 
-		atomics_n = my.atomic_radicals_set.length
-		nodes = for kanji, i in my.atomic_radicals_set
-				c = atomics_n * 1/8
+		radicals_n = length my.radicals
+		nodes = for radical, i in sort my.radicals
+				c = radicals_n * 1/16
 				af = 55/144 * 2*Math.PI
 				r = c * Math.sqrt i
 				a = i * af
@@ -118,7 +78,7 @@ require ['utils'], ({ P, W, copyAttrs, async }) ->
 				y = r * Math.sin a
 				x += w/2
 				y += h/2
-				{ kanji, x, y }
+				{ radical, x, y }
 		links  = []
 
 		force = d3.layout.force()
@@ -127,17 +87,19 @@ require ['utils'], ({ P, W, copyAttrs, async }) ->
 			.size([w, h])
 			.start()
 
-		kanji = svg.selectAll('.kanji')
+		radical = svg.selectAll('.radical')
 			.data(nodes)
 			.enter()
 			.append('g')
-		kanji
+		radical
 			.append("circle").attr(r: 12).style fill: 'none', stroke: 'black'
-		kanji
-			.append("text").text((d) -> d.kanji)
+		radical
+			.append("text").text((d) -> d.radical)
 			.style "alignment-baseline": 'central', "text-anchor": "middle"
 		
 		force.on 'tick', (e) ->
-			kanji.attr('transform', (d) -> "translate(#{d.x} #{d.y})")
+			radical.attr('transform', (d) -> "translate(#{d.x} #{d.y})")
 	
-	load main
+	load (data) ->
+		parse data
+		main()
