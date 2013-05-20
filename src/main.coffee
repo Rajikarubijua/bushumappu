@@ -85,9 +85,10 @@ require ['utils'], ({ P, W, copyAttrs, async, strUnique, somePrettyPrint,
 
 		radicals_n = length my.radicals
 		nodes = for radical, index in sort my.radicals
-				factor = radicals_n * 1/16
-				{ x, y } = sunflower { index, factor, x: w/2, y: h/2 }
-				{ radical, x, y }
+			index += 1
+			factor = radicals_n * 1/16
+			{ x, y } = sunflower { index, factor, x: w/2, y: h/2 }
+			{ radical, x, y }
 		links  = []
 
 		force = d3.layout.force()
