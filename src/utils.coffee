@@ -33,6 +33,11 @@ define ->
 					[ o, k ] = func
 					o[k] = end
 					
+		# 'mapped' is a object which maps labels to functions
+		# each function is called with the callback as last argument
+		# the arguments for that callback are gathered together with the label
+		# a object which maps labels to their gathered callback arguments is
+		# passed to 'cb'
 		map: (mapped, cb) ->
 			mapped_n = (Object.keys mapped).length
 			results = {}
@@ -84,6 +89,8 @@ define ->
 			return (Object.keys x).sort args...
 		throw "invalid argument ps type #{typeof x}"
 		
+	# converts a d3.behavior.zoom into a CSS transform
+	# https://github.com/mbostock/d3/wiki/Zoom-Behavior#wiki-zoom
 	styleZoom = (el, zoom, dontCall) ->
 		func = ->
 			t = zoom.translate()
@@ -93,6 +100,8 @@ define ->
 		func() if not dontCall
 		func
 
+	# useful to generate sunflower patterns
+	# http://en.wikipedia.org/wiki/Sunflower#Mathematical_model_of_floret_arrangement
 	sunflower = ({ index, factor, x, y }) ->
 		x ?= 0
 		y ?= 0
