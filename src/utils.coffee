@@ -50,7 +50,7 @@ define ->
 	strUnique = (str, base) ->
 		base ?= ""
 		for c in str
-			if c not in ret
+			if c not in base
 				base += c
 		return base
 		
