@@ -1,5 +1,5 @@
 require ['utils'], ({ P, W, copyAttrs, async, strUnique, somePrettyPrint,
-	length, sort }) ->
+	length, sort, styleZoom }) ->
 
 	# the global object where we can put stuff into it
 	window.my = 
@@ -19,13 +19,28 @@ require ['utils'], ({ P, W, copyAttrs, async, strUnique, somePrettyPrint,
 		parseRadk data.radk[1]
 
 	main = () ->
-		body = d3.select 'body'
-		body.append('pre').text somePrettyPrint my
-		svg = my.svg = body.append('svg')
-			.attr('width', 600)
-			.attr('height', 400)
-			.style('border', '1px solid black')
-		drawStuff svg
+		body = my.body = d3.select 'body'
+		body.append('pre').attr(id:'my').text somePrettyPrint my
+				
+		svg   = my.svg = body.append 'svg'
+		svg.g = svg.append 'g'
+				
+		w = new Signal
+		h = new Signal
+		window.onresize = ->
+			w window.innerWidth
+			h window.innerHeight
+		window.onresize()
+		new Observer ->
+			attrs = { width : w(), height: h() }
+			svg.attr attrs
+			svg.style attrs
+				
+		svg.call (zoom = d3.behavior.zoom())
+			.translate([w()/2, h()/2])
+			.on 'zoom', styleZoom svg.g, zoom
+			 
+		drawStuff svg.g
 
 	parseKrad = (content) ->
 		lines = content.split '\n'
@@ -87,12 +102,13 @@ require ['utils'], ({ P, W, copyAttrs, async, strUnique, somePrettyPrint,
 			.size([w, h])
 			.start()
 
-		radical = svg.selectAll('.radical')
+		radical = svg.selectAll('.'+cls='radical')
 			.data(nodes)
 			.enter()
 			.append('g')
+			.attr(class: cls)
 		radical
-			.append("circle").attr(r: 12).style fill: 'none', stroke: 'black'
+			.append("circle").attr(r: 12)
 		radical
 			.append("text").text((d) -> d.radical)
 			.style "alignment-baseline": 'central', "text-anchor": "middle"
