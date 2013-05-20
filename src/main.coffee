@@ -88,6 +88,8 @@ require ['utils'], ({ P, W, copyAttrs, async, strUnique, somePrettyPrint,
 			index += 1
 			factor = radicals_n * 1/16
 			{ x, y } = sunflower { index, factor, x: w/2, y: h/2 }
+			# possible attributes:
+			# https://github.com/mbostock/d3/wiki/Force-Layout#wiki-nodes
 			{ radical, x, y }
 		links  = []
 
