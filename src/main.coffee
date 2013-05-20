@@ -1,5 +1,5 @@
 require ['utils'], ({ P, W, copyAttrs, async, strUnique, somePrettyPrint,
-	length, sort, styleZoom }) ->
+	length, sort, styleZoom, sunflower }) ->
 
 	# the global object where we can put stuff into it
 	window.my = 
@@ -84,15 +84,9 @@ require ['utils'], ({ P, W, copyAttrs, async, strUnique, somePrettyPrint,
 		h = svg.attr 'height'
 
 		radicals_n = length my.radicals
-		nodes = for radical, i in sort my.radicals
-				c = radicals_n * 1/16
-				af = 55/144 * 2*Math.PI
-				r = c * Math.sqrt i
-				a = i * af
-				x = r * Math.cos a
-				y = r * Math.sin a
-				x += w/2
-				y += h/2
+		nodes = for radical, index in sort my.radicals
+				factor = radicals_n * 1/16
+				{ x, y } = sunflower { index, factor, x: w/2, y: h/2 }
 				{ radical, x, y }
 		links  = []
 

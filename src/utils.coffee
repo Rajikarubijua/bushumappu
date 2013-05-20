@@ -92,6 +92,15 @@ define ->
 				scale(#{zoom.scale()})"
 		func() if not dontCall
 		func
- 
+
+	sunflower = ({ index, factor, x, y }) ->
+		x ?= 0
+		y ?= 0
+		a = index * 55/144 * 2*Math.PI
+		r = factor * Math.sqrt index
+		x += r * Math.cos a
+		y += r * Math.sin a
+		{ x, y }
+
 	{ copyAttrs, P, W, async, strUnique, expect, somePrettyPrint, length,
-	  sort, styleZoom }
+	  sort, styleZoom, sunflower }
