@@ -4,5 +4,9 @@ body { overflow: hidden; }
 	fill: white;
 	stroke: black;
 }
+.radical > text {
+	alignment-baseline: central;
+	text-anchor: middle;
+}
 
 pre#my { position: absolute; }

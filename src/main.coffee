@@ -105,7 +105,6 @@ require ['utils'], ({ P, W, copyAttrs, async, strUnique, somePrettyPrint,
 			.append("circle").attr(r: 12)
 		radical
 			.append("text").text((d) -> d.radical)
-			.style "alignment-baseline": 'central', "text-anchor": "middle"
 		
 		force.on 'tick', (e) ->
 			radical.attr('transform', (d) -> "translate(#{d.x} #{d.y})")
