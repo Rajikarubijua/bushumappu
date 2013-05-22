@@ -114,6 +114,8 @@ require ['utils'], ({ P, W, copyAttrs, async, strUnique, somePrettyPrint,
 	drawStuff = (svg) ->
 		w = svg.attr 'width'
 		h = svg.attr 'height'
+		r = 12
+		d = 2*r
 
 		for radical, kanjis of my.jouyou_radicals
 			kanjis = (my.kanjis[k] for k in kanjis)
@@ -122,25 +124,43 @@ require ['utils'], ({ P, W, copyAttrs, async, strUnique, somePrettyPrint,
 		for grade, kanjis of my.jouyou_grade
 			for kanji in kanjis
 				my.kanjis[kanji].grade = +grade
+				
 		
 		radicals = (my.radicals[radical] for radical of my.jouyou_radicals)
 		radicals.sort (x) -> x.radical
 		radicals_n = length radicals
 		
-		radical = radicals[10]
+		radical = getNiceRadical radicals
 		endstation = { label: radical.radical }
-		stations = ({ label: k.kanji } for k in radical.jouyou)
-		line = { endstation, stations }
+		stations = ({ label: k.kanji, ybin: k.grade } for k in radical.jouyou)
 		
+		ybins = {}
+		for station in stations
+			ybins[station.ybin] ?= []
+			ybins[station.ybin].push station
+		
+		x = 0
+		y = -2*d
+		for bin in sort(ybins, (a,b) -> -(a<b) or a>b or 0)
+			ybin_stations = ybins[bin]
+			bin = +bin
+			n = ybin_stations.length
+			n2 = Math.floor n/2
+			for station, i in ybin_stations
+				xx =  2*d * (i%9 - 4)
+				yy = -2*d * Math.floor i/9
+				station.x = x + xx
+				station.y = y + yy
+			y -= 4*d - yy
+		
+		endstation.x = 0
+		endstation.y = 0
+		
+		line = { endstation, stations }
 		nodes = [ line.endstation, line.stations... ]
 		
 		for node, index in nodes
-			index += 1
-			factor = nodes.length * 0.35
-			{ x, y } = sunflower { index, factor, x: w/2, y: h/2 }
-			node.x = x
-			node.y = y
-			node.fixed = 0
+			node.fixed = 1
 			# possible attributes for node:
 			# https://github.com/mbostock/d3/wiki/Force-Layout#wiki-nodes
 		
@@ -185,7 +205,6 @@ require ['utils'], ({ P, W, copyAttrs, async, strUnique, somePrettyPrint,
 			.append('g')
 			.call(force.drag)
 
-		r = 12
 		station.append('rect').attr x:-r, y:-r, width:2*r, height:2*r
 		station.append('text').text (d) -> d.label
 			
@@ -198,6 +217,13 @@ require ['utils'], ({ P, W, copyAttrs, async, strUnique, somePrettyPrint,
 			station.attr transform: (d) -> "translate(#{d.x} #{d.y})"
 			
 		force.start()
+	
+	getNiceRadical = (radicals) ->
+		for r in radicals
+			for k in r.jouyou
+				if k.grade == 1
+					return r
+		return radicals[0]
 	
 	load (data) ->
 		parse data
