@@ -1,15 +1,24 @@
 body { overflow: hidden; }
 
-.radical > circle {
+circle, rect {
 	fill: white;
 	stroke: black;
 }
-.radical > text {
+text {
 	alignment-baseline: central;
 	text-anchor: middle;
 }
-.radical { cursor: pointer; cursor: hand; }
+path {
+	fill: none;
+	stroke: black;
+	stroke-width: 1.5px;
+}
 
+.station > * {
+	fill: #ddddff;
+}
+
+.dragable { cursor: pointer; cursor: hand; }
 .dragging { cursor: move; }
 
 pre#my { position: absolute; }

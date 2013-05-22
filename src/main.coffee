@@ -114,35 +114,85 @@ require ['utils'], ({ P, W, copyAttrs, async, strUnique, somePrettyPrint,
 		w = svg.attr 'width'
 		h = svg.attr 'height'
 
-		radicals_n = length my.radicals
-		nodes = for radical, index in sort my.radicals
+		for radical, kanjis of my.jouyou_radicals
+			kanjis = (my.kanjis[k] for k in kanjis)
+			my.radicals[radical].jouyou = kanjis
+			
+		radicals = (my.radicals[radical] for radical of my.jouyou_radicals)
+		radicals.sort (x) -> x.radical
+		radicals_n = length radicals
+		
+		radical = radicals[10]
+		endstation = { label: radical.radical }
+		stations = ({ label: k.kanji } for k in radical.jouyou)
+		line = { endstation, stations }
+		
+		nodes = [ line.endstation, line.stations... ]
+		
+		for node, index in nodes
 			index += 1
-			factor = radicals_n * 1/16
+			factor = nodes.length * 0.35
 			{ x, y } = sunflower { index, factor, x: w/2, y: h/2 }
-			# possible attributes:
+			node.x = x
+			node.y = y
+			node.fixed = 0
+			# possible attributes for node:
 			# https://github.com/mbostock/d3/wiki/Force-Layout#wiki-nodes
-			{ radical, x, y }
-		links  = []
-
+		
+		links = []
+		node = nodes[0]
+		for next in nodes[1..]
+			links.push { source: node, target: next }
+			node = next
+		
 		force = d3.layout.force()
 			.nodes(nodes)
 			.links(links)
 			.size([w, h])
+			.charge(-90)
 			.start()
 
-		radical = svg.selectAll('.'+cls='radical')
-			.data(nodes)
+		line = svg.selectAll('.line')
+			.data(lines = [ line ])
+			.enter()
+			.append 'g'
+			
+		svgline = d3.svg.line()
+			.x(({x}) -> x)
+			.y(({y}) -> y)
+			
+		links = line.selectAll(".links")
+			.data([ links ])
+			.enter().append 'g'
+			
+		link = links.selectAll(".link")
+			.data((d) -> d)
+			.enter().append "path"
+			
+		endstation = line.selectAll('.endstation')
+			.data((d) -> [ d.endstation ])
+			.enter()
+			.append 'g'
+		
+		station = line.selectAll('.station')
+			.data((d) -> d.stations)
 			.enter()
 			.append('g')
-			.attr(class: cls)
-			#.call(force.drag)
-		radical
-			.append("circle").attr(r: 12)
-		radical
-			.append("text").text((d) -> d.radical)
+			.call(force.drag)
+
+		r = 12
+		station.append('rect').attr x:-r, y:-r, width:2*r, height:2*r
+		station.append('text').text (d) -> d.label
+			
+		endstation.append("circle").attr {r}
+		endstation.append("text").text (d) -> d.label
 		
 		force.on 'tick', (e) ->
-			radical.attr('transform', (d) -> "translate(#{d.x} #{d.y})")
+			link.attr d: (d) -> svgline [ d.source, d.target ]
+			endstation.attr transform: (d) -> "translate(#{d.x} #{d.y})"
+			station.attr transform: (d) -> "translate(#{d.x} #{d.y})"
+			
+		force.start()
 	
 	load (data) ->
 		parse data
