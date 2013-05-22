@@ -7,7 +7,7 @@ require ['utils'], ({ P, W, copyAttrs, async, strUnique, somePrettyPrint,
 		radicals: {} 			# "radical" . {"radical", "kanjis"}
 		jouyou_radicals: {} 	# "radical" value "kanjikanjikanji"
 		jouyou: []				# list of jouyou kanji
-		jouyou_grade: {}		# grade value "kanjikanjikanji"
+		jouyou_grade: {}		# +grade: "kanjis"
 
 	load = (cb) ->
 		# load ALL the data concurrently
@@ -98,8 +98,9 @@ require ['utils'], ({ P, W, copyAttrs, async, strUnique, somePrettyPrint,
 			# parse line
 			continue if line[0] == '#' || !line
 			# fill data
-			kanjis = line[2..]
-			my.jouyou_grade[i] = kanjis
+			grade  = +line.match /^\d+/
+			kanjis = (line.match /:(.*)$/)[1]
+			my.jouyou_grade[grade] = kanjis
 			allkanji += kanjis
 
 		for char in allkanji
