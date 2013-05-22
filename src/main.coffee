@@ -118,6 +118,10 @@ require ['utils'], ({ P, W, copyAttrs, async, strUnique, somePrettyPrint,
 			kanjis = (my.kanjis[k] for k in kanjis)
 			my.radicals[radical].jouyou = kanjis
 			
+		for grade, kanjis of my.jouyou_grade
+			for kanji in kanjis
+				my.kanjis[kanji].grade = +grade
+		
 		radicals = (my.radicals[radical] for radical of my.jouyou_radicals)
 		radicals.sort (x) -> x.radical
 		radicals_n = length radicals
