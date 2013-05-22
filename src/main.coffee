@@ -3,8 +3,11 @@ require ['utils'], ({ P, W, copyAttrs, async, strUnique, somePrettyPrint,
 
 	# the global object where we can put stuff into it
 	window.my = 
-		kanjis: {}
-		radicals: {}
+		kanjis: {} 				# "kanji": { "kanji", "radicals"}
+		radicals: {} 			# "radical" . {"radical", "kanjis"}
+		jouyou_radicals: {} 	# "radical" value "kanjikanjikanji"
+		jouyou: []				# list of jouyou kanji
+		jouyou_grade: {}		# grade value "kanjikanjikanji"
 
 	load = (cb) ->
 		# load ALL the data concurrently
@@ -12,11 +15,13 @@ require ['utils'], ({ P, W, copyAttrs, async, strUnique, somePrettyPrint,
 			krad: (cb) -> d3.text "data/krad", cb
 			radk: (cb) -> d3.text "data/radk", cb
 			# XXX radk doesn't contain radicals "邑龠" which are in krad
+			jouyou: (cb) -> d3.text "data/jouyou", cb
 			}, cb
 			
 	parse = (data) ->
-		parseKrad data.krad[1]
-		parseRadk data.radk[1]
+		parseKrad 	data.krad[1]
+		parseRadk 	data.radk[1]
+		parseJouyou data.jouyou[1]
 
 	main = () ->
 		body = my.body = d3.select 'body'
@@ -84,6 +89,26 @@ require ['utils'], ({ P, W, copyAttrs, async, strUnique, somePrettyPrint,
 					radical.kanjis = strUnique radical.kanjis, kanjis
 				[ _, radical, strokes_n ] = m
 				radical = my.radicals[radical]
+
+	parseJouyou = (content) ->
+		lines = content.split '\n'
+		allkanji = ""
+
+		for line, i in lines
+			# parse line
+			continue if line[0] == '#' || !line
+			# fill data
+			kanjis = line[2..]
+			my.jouyou_grade[i] = kanjis
+			allkanji += kanjis
+
+		for char in allkanji
+			my.jouyou.push char
+			for radical in my.kanjis[char].radicals
+				my.jouyou_radicals[radical] ?= ""
+				my.jouyou_radicals[radical] += char
+
+
 
 	drawStuff = (svg) ->
 		w = svg.attr 'width'
