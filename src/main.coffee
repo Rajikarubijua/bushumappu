@@ -1,112 +1,150 @@
-window.my = {} # the global object where we can put stuff into it
+require ['utils'], ({ P, W, copyAttrs, async, strUnique, somePrettyPrint,
+	length, sort, styleZoom, sunflower }) ->
 
-load = (cb) ->
-	# load ALL the data concurrently
-	d3.text "data/krad", (content) ->
-		copyAttrs my, parseKrad content.split '\n'
-		end()
-	end = () ->
-		# everything of 'my' which is named '*_set' becomes a sorted array
-		for k, set of my
-			if k[-4..] == '_set'
-				my[k] = (Object.keys set).sort()
-		cb()
+	# the global object where we can put stuff into it
+	window.my = 
+		kanjis: {} 				# "kanji": { "kanji", "radicals"}
+		radicals: {} 			# "radical" . {"radical", "kanjis"}
+		jouyou_radicals: {} 	# "radical" value "kanjikanjikanji"
+		jouyou: []				# list of jouyou kanji
+		jouyou_grade: {}		# +grade: "kanjis"
 
-main = () ->
-	body = d3.select 'body'
-	body.append('pre').text somePrettyPrint my
-	svg = my.svg = body.append('svg')
-		.attr('width', 600)
-		.attr('height', 400)
-		.style('border', '1px solid black')
-	drawStuff svg
-
-parseKrad = (lines) ->
-	kanji_radicals_map = {}
-	radicals_set = {}
-	atomic_radicals_set = {}
-
-	for line, i in lines
-		# parse line
-		continue if line[0] == '#' || !line
-		kanji = line[0]
-		if line[1..3] != ' : '
-			throw "expected \" : \" at line #{i}, got \"#{line[1..3]}\""
-		radicals = line[4..].split ' '
-		# fill datastructures
-		kanji_radicals_map[kanji] = radicals
-		for radical in radicals
-			radicals_set[radical] = true
-		
-	for radical of radicals_set
-		radicals = kanji_radicals_map[radical]
-		if (!radicals) or (radicals.length == 1 and radical in radicals)
-			atomic_radicals_set[radical] = true 
+	load = (cb) ->
+		# load ALL the data concurrently
+		async.map {
+			krad: (cb) -> d3.text "data/krad", cb
+			radk: (cb) -> d3.text "data/radk", cb
+			# XXX radk doesn't contain radicals "邑龠" which are in krad
+			jouyou: (cb) -> d3.text "data/jouyou", cb
+			}, cb
 			
-	{ kanji_radicals_map, radicals_set, atomic_radicals_set }
+	parse = (data) ->
+		parseKrad 	data.krad[1]
+		parseRadk 	data.radk[1]
+		parseJouyou data.jouyou[1]
 
-somePrettyPrint = (o) ->
-	# everything in 'o' gets pretty printed for development joy
-	w = firstColumnWidth = 30
-	lines = for k, v of o
-		if Array.isArray v
-			k = W w, "["+k+"]"
-			v = v.length
-		else if typeof v is 'object'
-			k = W w, "{"+k+"}"
-			v = (Object.keys v).length
-		else
-			k = W w, " "+k+" "
-			v = JSON.stringify v
-		k+" "+v
-	lines.join "\n"
+	main = () ->
+		body = my.body = d3.select 'body'
+		body.append('pre').attr(id:'my').text somePrettyPrint my
+				
+		svg   = my.svg = body.append 'svg'
+		svg.g = svg.append 'g'
+				
+		w = new Signal
+		h = new Signal
+		window.onresize = ->
+			w window.innerWidth
+			h window.innerHeight
+		window.onresize()
+		new Observer ->
+			attrs = { width : w(), height: h() }
+			svg.attr attrs
+			svg.style attrs
+				
+		svg.call (zoom = d3.behavior.zoom())
+			.translate([w()/2, h()/2])
+			.on 'zoom', styleZoom svg.g, zoom
+		draggingStart = -> svg.classed 'dragging', true
+		draggingEnd   = -> svg.classed 'dragging', false
+		svg.on 'mousedown.cursor' , draggingStart
+		svg.on 'mouseup.cursor'   , draggingEnd
+		svg.on 'touchstart.cursor', draggingStart
+		svg.on 'touchend.cursor'  , draggingEnd
+			 
+		drawStuff svg.g
 
+	parseKrad = (content) ->
+		lines = content.split '\n'
 
-drawStuff = (svg) ->
-	w = svg.attr 'width'
-	h = svg.attr 'height'
+		for line, i in lines
+			# parse line
+			continue if line[0] == '#' || !line
+			kanji = line[0]
+			if line[1..3] != ' : '
+				throw "expected \" : \" at line #{i}, got \"#{line[1..3]}\""
+			radicals = line[4..].trim().split ' '
+			# fill datastructures
+			o = my.kanjis[kanji] ?= { kanji }
+			o.radicals = radicals
+			for radical in radicals
+				o = my.radicals[radical] ?= { radical }
+				o.kanjis ?= ""
+				o.kanjis += kanji
 
-	atomics_n = my.atomic_radicals_set.length
-	nodes = for kanji, i in my.atomic_radicals_set
-			c = atomics_n * 1/8
-			af = 55/144 * 2*Math.PI
-			r = c * Math.sqrt i
-			a = i * af
-			x = r * Math.cos a
-			y = r * Math.sin a
-			x += w/2
-			y += h/2
-			{ kanji, x, y }
-	links  = []
-
-	force = d3.layout.force()
-		.nodes(nodes)
-		.links(links)
-		.size([w, h])
-		.start()
-
-	kanji = svg.selectAll('.kanji')
-		.data(nodes)
-		.enter()
-		.append('g')
-	kanji
-		.append("circle").attr(r: 12).style fill: 'none', stroke: 'black'
-	kanji
-		.append("text").text((d) -> d.kanji)
-		.style "alignment-baseline": 'central', "text-anchor": "middle"
-		
-	force.on 'tick', (e) ->
-		kanji.attr('transform', (d) -> "translate(#{d.x} #{d.y})")
+	parseRadk = (lines) ->
+		radical = null
+		strokes_n = null
+		kanjis = ""
+		$line = /\$ (.) (\d+) ?.*/
 	
-copyAttrs = (a, b) -> a[k] = v for k, v of b
-P = (args...) -> console.log args...; return args[-1..][0]
-W = (width, str) ->
-	str = ""+str
-	width = Math.max str.length, width
-	str + (" " for [1..width-str.length]).join ''
+		for line, i in lines
+			# parse line
+			continue if line[0] == '#' || !line
+			m = line.match $line
+			if m == null
+				kanjis += line.trim()
+			else
+				if radical
+					radical.strokes_n = +strokes_n
+					radical.kanjis = strUnique radical.kanjis, kanjis
+				[ _, radical, strokes_n ] = m
+				radical = my.radicals[radical]
 
-do ->
-	i = 2
-	runMain = -> main() if --i == 0
-	window.onload = runMain
-	load runMain
+	parseJouyou = (content) ->
+		lines = content.split '\n'
+		allkanji = ""
+
+		for line, i in lines
+			# parse line
+			continue if line[0] == '#' || !line
+			# fill data
+			grade  = +line.match /^\d+/
+			kanjis = (line.match /:(.*)$/)[1]
+			my.jouyou_grade[grade] = kanjis
+			allkanji += kanjis
+
+		for char in allkanji
+			my.jouyou.push char
+			for radical in my.kanjis[char].radicals
+				my.jouyou_radicals[radical] ?= ""
+				my.jouyou_radicals[radical] += char
+
+
+
+	drawStuff = (svg) ->
+		w = svg.attr 'width'
+		h = svg.attr 'height'
+
+		radicals_n = length my.radicals
+		nodes = for radical, index in sort my.radicals
+			index += 1
+			factor = radicals_n * 1/16
+			{ x, y } = sunflower { index, factor, x: w/2, y: h/2 }
+			# possible attributes:
+			# https://github.com/mbostock/d3/wiki/Force-Layout#wiki-nodes
+			{ radical, x, y }
+		links  = []
+
+		force = d3.layout.force()
+			.nodes(nodes)
+			.links(links)
+			.size([w, h])
+			.start()
+
+		radical = svg.selectAll('.'+cls='radical')
+			.data(nodes)
+			.enter()
+			.append('g')
+			.attr(class: cls)
+			#.call(force.drag)
+		radical
+			.append("circle").attr(r: 12)
+		radical
+			.append("text").text((d) -> d.radical)
+		
+		force.on 'tick', (e) ->
+			radical.attr('transform', (d) -> "translate(#{d.x} #{d.y})")
+	
+	load (data) ->
+		parse data
+		main()
