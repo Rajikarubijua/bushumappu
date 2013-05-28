@@ -1,4 +1,4 @@
-require ['utils'], ({ P, W, copyAttrs, async, strUnique, somePrettyPrint,
+require ['utils'], ({ P, PN, W, copyAttrs, async, strUnique, somePrettyPrint,
 	length, sort, styleZoom, sunflower }) ->
 
 	# the global object where we can put stuff into it
@@ -43,6 +43,7 @@ require ['utils'], ({ P, W, copyAttrs, async, strUnique, somePrettyPrint,
 				
 		svg.call (zoom = d3.behavior.zoom())
 			.translate([w()/2, h()/2])
+			.scale(0.2)
 			.on 'zoom', styleZoom svg.g, zoom
 		draggingStart = -> svg.classed 'dragging', true
 		draggingEnd   = -> svg.classed 'dragging', false
@@ -159,12 +160,13 @@ require ['utils'], ({ P, W, copyAttrs, async, strUnique, somePrettyPrint,
 			.y(({y}) -> y)
 			
 		links = line.selectAll(".links")
-			.data((d) -> d.links)
+			.data((d) -> [  ]) # XXX put in 'd' if you like
 			.enter().append 'g'
 			
 		link = links.selectAll(".link")
-			.data((d) -> d)
-			.enter().append "path"
+			.data((d) -> d.links)
+			.enter()
+			.append "path"
 			
 		endstation = line.selectAll('.endstation')
 			.data((d) -> [ d.endstation ])
@@ -209,9 +211,7 @@ require ['utils'], ({ P, W, copyAttrs, async, strUnique, somePrettyPrint,
 			for station, i in ybin_stations
 				xx =  2*d * (i%9 - 4)
 				yy = -2*d * Math.floor i/9
-				if station.y < 0
-					station.y = -station.y
-				else if not station.x?
+				if not station.x?
 					station.x = x + xx
 					station.y = y + yy
 			y -= 4*d - yy
