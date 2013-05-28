@@ -130,6 +130,9 @@ require ['utils'], ({ P, W, copyAttrs, async, strUnique, somePrettyPrint,
 		radicals.sort (x) -> x.radical
 		radicals_n = length radicals
 		
+		for _, k of my.kanjis
+			k.station = { label: k.kanji, ybin: k.grade }
+		
 		all_links = []
 		all_nodes = []
 		all_lines = []
@@ -138,8 +141,6 @@ require ['utils'], ({ P, W, copyAttrs, async, strUnique, somePrettyPrint,
 			all_links = all_links.concat links
 			all_nodes = all_nodes.concat nodes
 			all_lines.push line
-		
-		P (x.endstation.label for x in all_lines)
 		
 		force = d3.layout.force()
 			.nodes(all_nodes)
@@ -191,7 +192,7 @@ require ['utils'], ({ P, W, copyAttrs, async, strUnique, somePrettyPrint,
 	
 	makeLine = (radical, i, radicals, d) ->
 		endstation = { label: radical.radical }
-		stations = ({ label: k.kanji, ybin: k.grade } for k in radical.jouyou)
+		stations = (k.station for k in radical.jouyou)
 	
 		ybins = {}
 		for station in stations
@@ -208,8 +209,11 @@ require ['utils'], ({ P, W, copyAttrs, async, strUnique, somePrettyPrint,
 			for station, i in ybin_stations
 				xx =  2*d * (i%9 - 4)
 				yy = -2*d * Math.floor i/9
-				station.x = x + xx
-				station.y = y + yy
+				if station.y < 0
+					station.y = -station.y
+				else if not station.x?
+					station.x = x + xx
+					station.y = y + yy
 			y -= 4*d - yy
 	
 		endstation.x = x
