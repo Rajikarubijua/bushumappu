@@ -7,6 +7,7 @@ define ->
 	#	1 + foo bar          # what is bar?
 	# 	1 + foo P 'bar', bar
 	P = (args...) -> console.log args...; return args[-1..][0]
+	PN= (args...) -> console.log args[...-1]...; return args[-1..][0]
 
 	# appends 'fill' to 'str' such that 'str.length == width'
 	W = (width, str, fill) ->
@@ -111,5 +112,5 @@ define ->
 		y += r * Math.sin a
 		{ x, y }
 
-	{ copyAttrs, P, W, async, strUnique, expect, somePrettyPrint, length,
+	{ copyAttrs, P, PN, W, async, strUnique, expect, somePrettyPrint, length,
 	  sort, styleZoom, sunflower }
