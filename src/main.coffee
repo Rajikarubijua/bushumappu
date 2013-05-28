@@ -130,55 +130,26 @@ require ['utils'], ({ P, W, copyAttrs, async, strUnique, somePrettyPrint,
 		radicals.sort (x) -> x.radical
 		radicals_n = length radicals
 		
-		radical = getNiceRadical radicals
-		endstation = { label: radical.radical }
-		stations = ({ label: k.kanji, ybin: k.grade } for k in radical.jouyou)
+		all_links = []
+		all_nodes = []
+		all_lines = []
+		for radical, i in radicals[0..6] ####
+			{ nodes, links, line } = makeLine radical, i, radicals, d
+			all_links = all_links.concat links
+			all_nodes = all_nodes.concat nodes
+			all_lines.push line
 		
-		ybins = {}
-		for station in stations
-			ybins[station.ybin] ?= []
-			ybins[station.ybin].push station
-		
-		x = 0
-		y = -2*d
-		for bin in sort(ybins, (a,b) -> -(a<b) or a>b or 0)
-			ybin_stations = ybins[bin]
-			bin = +bin
-			n = ybin_stations.length
-			n2 = Math.floor n/2
-			for station, i in ybin_stations
-				xx =  2*d * (i%9 - 4)
-				yy = -2*d * Math.floor i/9
-				station.x = x + xx
-				station.y = y + yy
-			y -= 4*d - yy
-		
-		endstation.x = 0
-		endstation.y = 0
-		
-		line = { endstation, stations }
-		nodes = [ line.endstation, line.stations... ]
-		
-		for node, index in nodes
-			node.fixed = 1
-			# possible attributes for node:
-			# https://github.com/mbostock/d3/wiki/Force-Layout#wiki-nodes
-		
-		links = []
-		node = nodes[0]
-		for next in nodes[1..]
-			links.push { source: node, target: next }
-			node = next
+		P (x.endstation.label for x in all_lines)
 		
 		force = d3.layout.force()
-			.nodes(nodes)
-			.links(links)
+			.nodes(all_nodes)
+			.links(all_links)
 			.size([w, h])
 			.charge(-90)
 			.start()
 
 		line = svg.selectAll('.line')
-			.data(lines = [ line ])
+			.data(lines = all_lines)
 			.enter()
 			.append 'g'
 			
@@ -187,7 +158,7 @@ require ['utils'], ({ P, W, copyAttrs, async, strUnique, somePrettyPrint,
 			.y(({y}) -> y)
 			
 		links = line.selectAll(".links")
-			.data([ links ])
+			.data((d) -> d.links)
 			.enter().append 'g'
 			
 		link = links.selectAll(".link")
@@ -217,6 +188,48 @@ require ['utils'], ({ P, W, copyAttrs, async, strUnique, somePrettyPrint,
 			station.attr transform: (d) -> "translate(#{d.x} #{d.y})"
 			
 		force.start()
+	
+	makeLine = (radical, i, radicals, d) ->
+		endstation = { label: radical.radical }
+		stations = ({ label: k.kanji, ybin: k.grade } for k in radical.jouyou)
+	
+		ybins = {}
+		for station in stations
+			ybins[station.ybin] ?= []
+			ybins[station.ybin].push station
+	
+		x = i * 20 * d
+		y = -2*d
+		for bin in sort(ybins, (a,b) -> -(a<b) or a>b or 0)
+			ybin_stations = ybins[bin]
+			bin = +bin
+			n = ybin_stations.length
+			n2 = Math.floor n/2
+			for station, i in ybin_stations
+				xx =  2*d * (i%9 - 4)
+				yy = -2*d * Math.floor i/9
+				station.x = x + xx
+				station.y = y + yy
+			y -= 4*d - yy
+	
+		endstation.x = x
+		endstation.y = 0
+	
+		line = { endstation, stations }
+		nodes = [ line.endstation, line.stations... ]
+	
+		for node, index in nodes
+			node.fixed = 1
+			# possible attributes for node:
+			# https://github.com/mbostock/d3/wiki/Force-Layout#wiki-nodes
+	
+		links = []
+		node = nodes[0]
+		for next in nodes[1..]
+			links.push { source: node, target: next }
+			node = next
+		line.links = links
+		{ nodes, links, line }
 	
 	getNiceRadical = (radicals) ->
 		for r in radicals
