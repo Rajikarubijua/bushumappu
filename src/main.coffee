@@ -1,5 +1,5 @@
 require ['utils'], ({ P, PN, W, copyAttrs, async, strUnique, somePrettyPrint,
-	length, sort, styleZoom, sunflower }) ->
+	length, sort, styleZoom, sunflower, vecX, vecY, vec }) ->
 
 	# the global object where we can put stuff into it
 	window.my = 
@@ -137,7 +137,7 @@ require ['utils'], ({ P, PN, W, copyAttrs, async, strUnique, somePrettyPrint,
 		all_links = []
 		all_nodes = []
 		all_lines = []
-		for radical, i in radicals[0..6] ####
+		for radical, i in radicals ####
 			{ nodes, links, line } = makeLine radical, i, radicals, d
 			all_links = all_links.concat links
 			all_nodes = all_nodes.concat nodes
@@ -148,6 +148,7 @@ require ['utils'], ({ P, PN, W, copyAttrs, async, strUnique, somePrettyPrint,
 			.links(all_links)
 			.size([w, h])
 			.charge(-90)
+			.gravity(0.05)
 			.start()
 
 		line = svg.selectAll('.line')
@@ -160,7 +161,7 @@ require ['utils'], ({ P, PN, W, copyAttrs, async, strUnique, somePrettyPrint,
 			.y(({y}) -> y)
 			
 		links = line.selectAll(".links")
-			.data((d) -> [  ]) # XXX put in 'd' if you like
+			.data((d) -> [ ]) # XXX put in 'd' if you like
 			.enter().append 'g'
 			
 		link = links.selectAll(".link")
@@ -193,37 +194,43 @@ require ['utils'], ({ P, PN, W, copyAttrs, async, strUnique, somePrettyPrint,
 		force.start()
 	
 	makeLine = (radical, i, radicals, d) ->
-		endstation = { label: radical.radical }
-		stations = (k.station for k in radical.jouyou)
+		radicals_n  = length radicals
+		endstation  = { label: radical.radical, fixed: 1 }
+		stations    = (k.station for k in radical.jouyou)
+		line_radius = 3000
+		line_angle  = (i/radicals_n) * 2*Math.PI + Math.PI/2
 	
 		ybins = {}
 		for station in stations
+			station.fixed = 1
 			ybins[station.ybin] ?= []
 			ybins[station.ybin].push station
-	
-		x = i * 20 * d
-		y = -2*d
-		for bin in sort(ybins, (a,b) -> -(a<b) or a>b or 0)
+		
+		[ x, y ] = vec line_radius, line_angle
+		for bin, bin_i in sort(ybins, (a,b) -> -(a<b) or a>b or 0)
 			ybin_stations = ybins[bin]
 			bin = +bin
 			n = ybin_stations.length
-			n2 = Math.floor n/2
-			for station, i in ybin_stations
-				xx =  2*d * (i%9 - 4)
-				yy = -2*d * Math.floor i/9
+			for station, station_i in ybin_stations
+		# placement of a station
 				if not station.x?
-					station.x = x + xx
-					station.y = y + yy
-			y -= 4*d - yy
+					radius = (line_radius -
+						(2*d * (1 + Math.floor station_i/9)) - # row in a bin
+						(bin_i * (Math.floor n/9) * 2*d))      # bin rows
+					angle  = line_angle +
+						2*d * (station_i%9 - 4)*0.0003 # column in a bin
+					station.x = vecX radius, angle
+					station.y = vecY radius, angle
 	
+		# placement of a endstation
 		endstation.x = x
-		endstation.y = 0
+		endstation.y = y
 	
 		line = { endstation, stations }
 		nodes = [ line.endstation, line.stations... ]
 	
-		for node, index in nodes
-			node.fixed = 1
+		#for node, index in nodes
+			#node.fixed = 1
 			# possible attributes for node:
 			# https://github.com/mbostock/d3/wiki/Force-Layout#wiki-nodes
 	
