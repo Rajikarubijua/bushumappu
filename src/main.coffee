@@ -43,7 +43,7 @@ require ['utils'], ({ P, PN, W, copyAttrs, async, strUnique, somePrettyPrint,
 				
 		svg.call (zoom = d3.behavior.zoom())
 			.translate([w()/2, h()/2])
-			.scale(0.2)
+			.scale(0.12)
 			.on 'zoom', styleZoom svg.g, zoom
 		draggingStart = -> svg.classed 'dragging', true
 		draggingEnd   = -> svg.classed 'dragging', false
@@ -133,6 +133,12 @@ require ['utils'], ({ P, PN, W, copyAttrs, async, strUnique, somePrettyPrint,
 		
 		for _, k of my.kanjis
 			k.station = { label: k.kanji, ybin: k.grade }
+			
+		for kanji, kanji_i in my.jouyou
+			kanji = my.kanjis[kanji]
+			{ x, y } = sunflower { index: kanji_i, factor: 2.7*d }
+			kanji.station.x = x
+			kanji.station.y = y
 		
 		all_links = []
 		all_nodes = []

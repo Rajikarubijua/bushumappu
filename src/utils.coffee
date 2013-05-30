@@ -104,6 +104,8 @@ define ->
 	# useful to generate sunflower patterns
 	# http://en.wikipedia.org/wiki/Sunflower#Mathematical_model_of_floret_arrangement
 	sunflower = ({ index, factor, x, y }) ->
+		throw "missing index" if not index?
+		throw "missing factor" if not factor?
 		x ?= 0
 		y ?= 0
 		a = index * 55/144 * 2*Math.PI
