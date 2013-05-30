@@ -153,9 +153,14 @@ require ['utils'], ({ P, PN, W, copyAttrs, async, strUnique, somePrettyPrint,
 			.nodes(all_nodes)
 			.links(all_links)
 			.size([w, h])
-			.charge(-90)
-			.gravity(0.05)
+			.linkStrength(0.1)
+			.linkDistance(8*d)
+			.charge(-10)
+			.gravity(0.001)
+			.theta(10)
 			.start()
+			
+		P force.alpha()
 
 		line = svg.selectAll('.line')
 			.data(lines = all_lines)
@@ -167,7 +172,7 @@ require ['utils'], ({ P, PN, W, copyAttrs, async, strUnique, somePrettyPrint,
 			.y(({y}) -> y)
 			
 		links = line.selectAll(".links")
-			.data((d) -> [ ]) # XXX put in 'd' if you like
+			.data((d) -> [ d ]) # XXX put in 'd' if you like
 			.enter().append 'g'
 			
 		link = links.selectAll(".link")
@@ -196,8 +201,6 @@ require ['utils'], ({ P, PN, W, copyAttrs, async, strUnique, somePrettyPrint,
 			link.attr d: (d) -> svgline [ d.source, d.target ]
 			endstation.attr transform: (d) -> "translate(#{d.x} #{d.y})"
 			station.attr transform: (d) -> "translate(#{d.x} #{d.y})"
-			
-		force.start()
 	
 	makeLine = (radical, i, radicals, d) ->
 		radicals_n  = length radicals
@@ -208,7 +211,7 @@ require ['utils'], ({ P, PN, W, copyAttrs, async, strUnique, somePrettyPrint,
 	
 		ybins = {}
 		for station in stations
-			station.fixed = 1
+			station.fixed = 0
 			ybins[station.ybin] ?= []
 			ybins[station.ybin].push station
 		
