@@ -136,7 +136,7 @@ require ['utils'], ({ P, PN, W, copyAttrs, async, strUnique, somePrettyPrint,
 			
 		for kanji, kanji_i in my.jouyou
 			kanji = my.kanjis[kanji]
-			{ x, y } = sunflower { index: kanji_i, factor: 2.7*d }
+			{ x, y } = sunflower { index: kanji_i+1, factor: 2.7*d }
 			kanji.station.x = x
 			kanji.station.y = y
 		
