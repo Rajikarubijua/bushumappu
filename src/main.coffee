@@ -2,6 +2,7 @@ config =
 	showLines: 			false
 	fixedEndstation:	true
 	fixedStation:		true
+	filterRadicals:		(radicals) -> radicals
 
 require ['utils'], ({ P, PN, W, copyAttrs, async, strUnique, somePrettyPrint,
 	length, sort, styleZoom, sunflower, vecX, vecY, vec }) ->
@@ -172,10 +173,12 @@ require ['utils'], ({ P, PN, W, copyAttrs, async, strUnique, somePrettyPrint,
 			kanji.station.x = x
 			kanji.station.y = y
 		
+		radicals = config.filterRadicals radicals
+		
 		all_links = []
 		all_nodes = []
 		all_lines = []
-		for radical, i in radicals ####
+		for radical, i in radicals
 			{ nodes, links, line } = makeLine radical, i, radicals, d
 			all_links = all_links.concat links
 			all_nodes = all_nodes.concat nodes
