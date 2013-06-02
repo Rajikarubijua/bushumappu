@@ -3,7 +3,7 @@ require ['utils'], ({ P, PN, W, copyAttrs, async, strUnique, somePrettyPrint,
 
 	# the global object where we can put stuff into it
 	window.my = 
-		kanjis: {} 				# "kanji": { "kanji", "radicals"}
+		kanjis: {} 				# "kanji": { "kanji", "radicals", "strokes_n", "freq", "onyomi", "kunyomi", "meaning"}
 		radicals: {} 			# "radical" . {"radical", "kanjis"}
 		jouyou_radicals: {} 	# "radical" value "kanjikanjikanji"
 		jouyou: []				# list of jouyou kanji
@@ -16,12 +16,14 @@ require ['utils'], ({ P, PN, W, copyAttrs, async, strUnique, somePrettyPrint,
 			radk: (cb) -> d3.text "data/radk", cb
 			# XXX radk doesn't contain radicals "邑龠" which are in krad
 			jouyou: (cb) -> d3.text "data/jouyou", cb
+			kext: (cb) -> d3.text "data/kext", cb
 			}, cb
 			
 	parse = (data) ->
 		parseKrad 	data.krad[1]
 		parseRadk 	data.radk[1]
-		parseJouyou data.jouyou[1]
+		parseJouyou 	data.jouyou[1]
+		parseKext 	data.kext[1]
 
 	main = () ->
 		body = my.body = d3.select 'body'
@@ -109,6 +111,31 @@ require ['utils'], ({ P, PN, W, copyAttrs, async, strUnique, somePrettyPrint,
 			for radical in my.kanjis[char].radicals
 				my.jouyou_radicals[radical] ?= ""
 				my.jouyou_radicals[radical] += char
+
+	parseKext = (content) ->
+		lines = content.split '\n'
+		
+		for line, i in lines
+			continue if line[0] == '#' || !line
+			entries = line.split(";")
+			for entry in entries
+				[ name, obj ] = entry.split(":")	
+				name = name?.trim()
+				obj = obj?.trim()
+				continue if not obj
+				if name == "KANJI" 
+					kanji = my.kanjis[obj]
+					# XXX prints kanji which are not in my.kanjis (krad) but in kext
+					# if not kanji? then P obj 
+					continue
+				map =
+					STROKECOUNT: 'stroke_n'
+					FREQ: 'freq'
+					ON: 'onyomi'
+					KUN: 'kunyomi'
+					MEAN: 'meaning'
+				kanji?[map[name]] ?= obj
+				
 
 
 
