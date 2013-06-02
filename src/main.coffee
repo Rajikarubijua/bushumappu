@@ -151,9 +151,13 @@ require ['utils'], ({ P, PN, W, copyAttrs, async, strUnique, somePrettyPrint,
 		r = 12
 		d = 2*r
 
+		jouyou_kanjis = []
 		for radical, kanjis of my.jouyou_radicals
 			kanjis = (my.kanjis[k] for k in kanjis)
 			my.radicals[radical].jouyou = kanjis
+			for k in kanjis
+				if k not in jouyou_kanjis
+					jouyou_kanjis.push k
 			
 		for grade, kanjis of my.jouyou_grade
 			for kanji in kanjis
@@ -164,11 +168,13 @@ require ['utils'], ({ P, PN, W, copyAttrs, async, strUnique, somePrettyPrint,
 		radicals.sort (x) -> x.radical
 		radicals_n = length radicals
 		
+		kanjis = jouyou_kanjis
+		kanjis.sort (x) -> x.kanji
+		
 		for _, k of my.kanjis
 			k.station = { label: k.kanji, ybin: k.grade }
 			
-		for kanji, kanji_i in my.jouyou
-			kanji = my.kanjis[kanji]
+		for kanji, kanji_i in kanjis
 			{ x, y } = sunflower { index: kanji_i+1, factor: 2.7*d }
 			kanji.station.x = x
 			kanji.station.y = y
