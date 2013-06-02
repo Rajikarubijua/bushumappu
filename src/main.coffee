@@ -205,8 +205,6 @@ require ['utils'], ({ P, PN, W, copyAttrs, async, strUnique, somePrettyPrint,
 			.gravity(0.001)
 			.theta(10)
 			.start()
-			
-		P force.alpha()
 
 		line = svg.selectAll('.line')
 			.data(lines = all_lines)
