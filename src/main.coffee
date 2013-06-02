@@ -5,6 +5,7 @@ config =
 	filterRadicals:		(radicals) -> radicals
 	sunflowerKanjis:	false
 	kmeansInitialVectorsRandom: false
+	clustering:			false
 
 require ['utils'], ({ P, PN, W, copyAttrs, async, strUnique, somePrettyPrint,
 	length, sort, styleZoom, sunflower, vecX, vecY, vec, compareNumber }) ->
@@ -173,39 +174,42 @@ require ['utils'], ({ P, PN, W, copyAttrs, async, strUnique, somePrettyPrint,
 		kanjis = jouyou_kanjis
 		kanjis.sort (x) -> x.kanji
 		
-		for kanji in kanjis
-			kanji.vector = []
-			for radical, radical_i in radicals
-				kanji.vector[radical_i] = +(radical.radical in kanji.radicals)
+		if config.clustering
 		
-		if config.kmeansInitialVectorsRandom
-			initial_vectors = undefined 
-		else
+			for kanji in kanjis
+				kanji.vector = []
+				for radical, radical_i in radicals
+					kanji.vector[radical_i] = +(radical.radical in kanji.radicals)
+		
+			if config.kmeansInitialVectorsRandom
+				initial_vectors = undefined 
+			else
+				vectors = (k.vector for k in kanjis)
+				step = Math.floor vectors.length/radicals_n
+				initial_vectors = (vectors[i*step] for i in [0...radicals_n])
+		
 			vectors = (k.vector for k in kanjis)
-			step = Math.floor vectors.length/radicals_n
-			initial_vectors = (vectors[i*step] for i in [0...radicals_n])
+			{ centroids, assignments } =
+				figue.kmeans radicals_n, vectors, initial_vectors
+			clusters = ({ centroid, kanjis: [] } for centroid in centroids)
+			for assignment, assignment_i in assignments
+				cluster = clusters[assignment]
+				kanji   = kanjis[assignment_i]
+				kanji.cluster = cluster
+				cluster.kanjis.push kanji
 		
-		vectors = (k.vector for k in kanjis)
-		{ centroids, assignments } =
-			figue.kmeans radicals_n, vectors, initial_vectors
-		clusters = ({ centroid, kanjis: [] } for centroid in centroids)
-		for assignment, assignment_i in assignments
-			cluster = clusters[assignment]
-			kanji   = kanjis[assignment_i]
-			kanji.cluster = cluster
-			cluster.kanjis.push kanji
-		
-		for cluster, cluster_i in clusters
-			cluster.x = cluster_i * d*3
-			cluster.y = 0
+			for cluster, cluster_i in clusters
+				cluster.x = cluster_i * d*3
+				cluster.y = 0
 		
 		for _, k of my.kanjis
 			k.station = { label: k.kanji, ybin: k.grade }
 			
 		for kanji, kanji_i in kanjis
+			x = y = undefined
 			if config.sunflowerKanjis
 				{ x, y } = sunflower { index: kanji_i+1, factor: 2.7*d }
-			else
+			else if config.clustering
 				x = kanji.cluster.x
 				y = kanji.cluster.y + 3*d* kanji.cluster.kanjis.indexOf kanji
 			kanji.station.x = x
