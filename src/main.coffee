@@ -171,6 +171,11 @@ require ['utils'], ({ P, PN, W, copyAttrs, async, strUnique, somePrettyPrint,
 		kanjis = jouyou_kanjis
 		kanjis.sort (x) -> x.kanji
 		
+		for kanji in kanjis
+			kanji.vector = []
+			for radical, radical_i in radicals
+				kanji.vector[radical_i] = +(radical.radical in kanji.radicals)
+		
 		for _, k of my.kanjis
 			k.station = { label: k.kanji, ybin: k.grade }
 			
