@@ -3,9 +3,11 @@ config =
 	fixedEndstation:	true
 	fixedStation:		true
 	filterRadicals:		(radicals) -> radicals
+	sunflowerKanjis:	false
+	kmeansInitialVectorsRandom: false
 
 require ['utils'], ({ P, PN, W, copyAttrs, async, strUnique, somePrettyPrint,
-	length, sort, styleZoom, sunflower, vecX, vecY, vec }) ->
+	length, sort, styleZoom, sunflower, vecX, vecY, vec, compareNumber }) ->
 
 	# the global object where we can put stuff into it
 	window.my = 
@@ -176,11 +178,36 @@ require ['utils'], ({ P, PN, W, copyAttrs, async, strUnique, somePrettyPrint,
 			for radical, radical_i in radicals
 				kanji.vector[radical_i] = +(radical.radical in kanji.radicals)
 		
+		if config.kmeansInitialVectorsRandom
+			initial_vectors = undefined 
+		else
+			vectors = (k.vector for k in kanjis)
+			step = Math.floor vectors.length/radicals_n
+			initial_vectors = (vectors[i*step] for i in [0...radicals_n])
+		
+		vectors = (k.vector for k in kanjis)
+		{ centroids, assignments } =
+			figue.kmeans radicals_n, vectors, initial_vectors
+		clusters = ({ centroid, kanjis: [] } for centroid in centroids)
+		for assignment, assignment_i in assignments
+			cluster = clusters[assignment]
+			kanji   = kanjis[assignment_i]
+			kanji.cluster = cluster
+			cluster.kanjis.push kanji
+		
+		for cluster, cluster_i in clusters
+			cluster.x = cluster_i * d*3
+			cluster.y = 0
+		
 		for _, k of my.kanjis
 			k.station = { label: k.kanji, ybin: k.grade }
 			
 		for kanji, kanji_i in kanjis
-			{ x, y } = sunflower { index: kanji_i+1, factor: 2.7*d }
+			if config.sunflowerKanjis
+				{ x, y } = sunflower { index: kanji_i+1, factor: 2.7*d }
+			else
+				x = kanji.cluster.x
+				y = kanji.cluster.y + 3*d* kanji.cluster.kanjis.indexOf kanji
 			kanji.station.x = x
 			kanji.station.y = y
 		
@@ -260,7 +287,7 @@ require ['utils'], ({ P, PN, W, copyAttrs, async, strUnique, somePrettyPrint,
 			ybins[station.ybin].push station
 		
 		[ x, y ] = vec line_radius, line_angle
-		for bin, bin_i in sort(ybins, (a,b) -> -(a<b) or a>b or 0)
+		for bin, bin_i in sort(ybins, compareNumber)
 			ybin_stations = ybins[bin]
 			bin = +bin
 			n = ybin_stations.length
