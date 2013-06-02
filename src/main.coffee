@@ -1,3 +1,8 @@
+config =
+	showLines: 			false
+	fixedEndstation:	true
+	fixedStation:		true
+
 require ['utils'], ({ P, PN, W, copyAttrs, async, strUnique, somePrettyPrint,
 	length, sort, styleZoom, sunflower, vecX, vecY, vec }) ->
 
@@ -199,7 +204,7 @@ require ['utils'], ({ P, PN, W, copyAttrs, async, strUnique, somePrettyPrint,
 			.y(({y}) -> y)
 			
 		links = line.selectAll(".links")
-			.data((d) -> [ d ]) # XXX put in 'd' if you like
+			.data((d) -> if config.showLines then [d] else [])
 			.enter().append 'g'
 			
 		link = links.selectAll(".link")
@@ -231,14 +236,14 @@ require ['utils'], ({ P, PN, W, copyAttrs, async, strUnique, somePrettyPrint,
 	
 	makeLine = (radical, i, radicals, d) ->
 		radicals_n  = length radicals
-		endstation  = { label: radical.radical, fixed: 1 }
+		endstation  = { label: radical.radical, fixed: +config.fixedEndstation }
 		stations    = (k.station for k in radical.jouyou)
 		line_radius = 3000
 		line_angle  = (i/radicals_n) * 2*Math.PI + Math.PI/2
 	
 		ybins = {}
 		for station in stations
-			station.fixed = 0
+			station.fixed = +config.fixedStation
 			ybins[station.ybin] ?= []
 			ybins[station.ybin].push station
 		
