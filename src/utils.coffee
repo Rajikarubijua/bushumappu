@@ -90,6 +90,8 @@ define ->
 			return (Object.keys x).sort args...
 		throw "invalid argument ps type #{typeof x}"
 		
+	compareNumber = (a,b) -> -(a<b) or a>b or 0
+		
 	# converts a d3.behavior.zoom into a CSS transform
 	# https://github.com/mbostock/d3/wiki/Zoom-Behavior#wiki-zoom
 	styleZoom = (el, zoom, dontCall) ->
@@ -119,4 +121,4 @@ define ->
 	vec  = (r, angle) -> [ (vecX r, angle), (vecY r, angle) ]
 
 	{ copyAttrs, P, PN, W, async, strUnique, expect, somePrettyPrint, length,
-	  sort, styleZoom, sunflower, vecX, vecY, vec }
+	  sort, styleZoom, sunflower, vecX, vecY, vec, compareNumber }
