@@ -119,6 +119,10 @@ define ->
 	vecX = (r, angle) -> r * Math.cos angle
 	vecY = (r, angle) -> r * Math.sin angle
 	vec  = (r, angle) -> [ (vecX r, angle), (vecY r, angle) ]
+	
+	parseMaybeNumber = (str) ->
+		if "#{+str}" == str then +str else str
 
 	{ copyAttrs, P, PN, W, async, strUnique, expect, somePrettyPrint, length,
-	  sort, styleZoom, sunflower, vecX, vecY, vec, compareNumber }
+	  sort, styleZoom, sunflower, vecX, vecY, vec, compareNumber,
+  	  parseMaybeNumber }

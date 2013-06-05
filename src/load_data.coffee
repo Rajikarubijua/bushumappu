@@ -1,4 +1,4 @@
-define ['utils'], ({ P, async }) ->
+define ['utils'], ({ P, async, parseMaybeNumber }) ->
 
 	load = (cb) ->
 		# load ALL the data concurrently
@@ -94,7 +94,7 @@ define ['utils'], ({ P, async }) ->
 					ON: 'onyomi'
 					KUN: 'kunyomi'
 					MEAN: 'meaning'
-				kanji?[map[name]] ?= obj
+				kanji?[map[name]] ?= parseMaybeNumber obj
 	
 	(cb) -> load (data) ->
 		parse data
