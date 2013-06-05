@@ -16,9 +16,10 @@ window.my = {
 	jouyou_grade: {}		# +grade: "kanjis"
 	config }
 
-define ['utils', 'load_data'], ({ P, PN, W, copyAttrs, async, strUnique,
-	somePrettyPrint, length, sort, styleZoom, sunflower, vecX, vecY, vec,
-	compareNumber }, load_data) ->
+define ['utils', 'load_data', 'prepare_data'], (
+	{ P, PN, W, copyAttrs, async, strUnique, somePrettyPrint, length, sort,
+	styleZoom, sunflower, vecX, vecY, vec, compareNumber },
+	load_data, prepare_data) ->
 
 	main = () ->
 		body = my.body = d3.select 'body'
@@ -59,19 +60,8 @@ define ['utils', 'load_data'], ({ P, PN, W, copyAttrs, async, strUnique,
 		r = 12
 		d = 2*r
 
-		jouyou_kanjis = []
-		for radical, kanjis of my.jouyou_radicals
-			kanjis = (my.kanjis[k] for k in kanjis)
-			my.radicals[radical].jouyou = kanjis
-			for k in kanjis
-				if k not in jouyou_kanjis
-					jouyou_kanjis.push k
-			
-		for grade, kanjis of my.jouyou_grade
-			for kanji in kanjis
-				my.kanjis[kanji].grade = +grade
-				
-		
+		{ jouyou_kanjis } = prepare_data()
+
 		radicals = (my.radicals[radical] for radical of my.jouyou_radicals)
 		radicals.sort (x) -> x.radical
 		radicals_n = length radicals
