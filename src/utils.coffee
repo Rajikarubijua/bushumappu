@@ -7,6 +7,7 @@ define ->
 	#	1 + foo bar          # what is bar?
 	# 	1 + foo P 'bar', bar
 	P = (args...) -> console.log args...; return args[-1..][0]
+	PN= (args...) -> console.log args[...-1]...; return args[-1..][0]
 
 	# appends 'fill' to 'str' such that 'str.length == width'
 	W = (width, str, fill) ->
@@ -84,10 +85,12 @@ define ->
 		if 'sort' of x
 			return x.sort args...
 		if typeof x is 'string'
-			return x.split('').sort args...
+			return x.split('').sort(args...).join ''
 		if typeof x is 'object'
 			return (Object.keys x).sort args...
 		throw "invalid argument ps type #{typeof x}"
+		
+	compareNumber = (a,b) -> -(a<b) or a>b or 0
 		
 	# converts a d3.behavior.zoom into a CSS transform
 	# https://github.com/mbostock/d3/wiki/Zoom-Behavior#wiki-zoom
@@ -103,6 +106,8 @@ define ->
 	# useful to generate sunflower patterns
 	# http://en.wikipedia.org/wiki/Sunflower#Mathematical_model_of_floret_arrangement
 	sunflower = ({ index, factor, x, y }) ->
+		throw "missing index" if not index?
+		throw "missing factor" if not factor?
 		x ?= 0
 		y ?= 0
 		a = index * 55/144 * 2*Math.PI
@@ -111,5 +116,9 @@ define ->
 		y += r * Math.sin a
 		{ x, y }
 
-	{ copyAttrs, P, W, async, strUnique, expect, somePrettyPrint, length,
-	  sort, styleZoom, sunflower }
+	vecX = (r, angle) -> r * Math.cos angle
+	vecY = (r, angle) -> r * Math.sin angle
+	vec  = (r, angle) -> [ (vecX r, angle), (vecY r, angle) ]
+
+	{ copyAttrs, P, PN, W, async, strUnique, expect, somePrettyPrint, length,
+	  sort, styleZoom, sunflower, vecX, vecY, vec, compareNumber }
