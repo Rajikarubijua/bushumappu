@@ -74,10 +74,10 @@ define ['utils', 'load_data', 'prepare_data'], (
 		
 			prepare.setup_kanji_vectors kanjis, radicals
 		
-			initial_vectors = if not config.kmeansInitialVectorsRandom
-				equidistant_selection radicals_n, (k.vector for k in kanjis)
-		
 			vectors = (k.vector for k in kanjis)
+			initial_vectors = if not config.kmeansInitialVectorsRandom
+				equidistant_selection radicals_n, vectors
+		
 			{ centroids, assignments } =
 				figue.kmeans radicals_n, vectors, initial_vectors
 			clusters = ({ centroid, kanjis: [] } for centroid in centroids)
