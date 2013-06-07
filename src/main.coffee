@@ -71,10 +71,7 @@ define ['utils', 'load_data', 'prepare_data'], (
 		
 		if config.clustering
 		
-			for kanji in kanjis
-				kanji.vector = []
-				for radical, radical_i in radicals
-					kanji.vector[radical_i] = +(radical.radical in kanji.radicals)
+			prepare.setup_kanji_vectors kanjis, radicals
 		
 			if config.kmeansInitialVectorsRandom
 				initial_vectors = undefined 

@@ -19,6 +19,12 @@ define ['utils'], ({ }) ->
 		for grade, kanjis of my.jouyou_grade
 			for kanji in kanjis
 				my.kanjis[kanji].grade = +grade
-		
+				
+	setup_kanji_vectors = (kanjis, radicals) ->
+		for kanji in kanjis
+			kanji.vector = []
+			for radical, radical_i in radicals
+				kanji.vector[radical_i] = +(radical.radical in kanji.radicals)
 
-	{ prepare_data, setup_radical_jouyous, setup_kanji_grades }
+	{ prepare_data, setup_radical_jouyous, setup_kanji_grades,
+	  setup_kanji_vectors }
