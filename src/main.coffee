@@ -19,7 +19,7 @@ window.my = {
 define ['utils', 'load_data', 'prepare_data'], (
 	{ P, PN, W, copyAttrs, async, strUnique, somePrettyPrint, length, sort,
 	styleZoom, sunflower, vecX, vecY, vec, compareNumber },
-	load_data, prepare_data) ->
+	load_data, prepare) ->
 
 	main = () ->
 		body = my.body = d3.select 'body'
@@ -60,7 +60,7 @@ define ['utils', 'load_data', 'prepare_data'], (
 		r = 12
 		d = 2*r
 
-		{ jouyou_kanjis } = prepare_data()
+		{ jouyou_kanjis } = prepare.prepare_data()
 
 		radicals = (my.radicals[radical] for radical of my.jouyou_radicals)
 		radicals.sort (x) -> x.radical

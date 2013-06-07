@@ -21,4 +21,4 @@ define ['utils'], ({ }) ->
 				my.kanjis[kanji].grade = +grade
 		
 
-	prepare_data
+	{ prepare_data, setup_radical_jouyous, setup_kanji_grades }
