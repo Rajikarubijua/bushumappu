@@ -18,7 +18,8 @@ window.my = {
 
 define ['utils', 'load_data', 'prepare_data'], (
 	{ P, PN, W, copyAttrs, async, strUnique, somePrettyPrint, length, sort,
-	styleZoom, sunflower, vecX, vecY, vec, compareNumber },
+	styleZoom, sunflower, vecX, vecY, vec, compareNumber, equidistant_selection
+	},
 	load_data, prepare) ->
 
 	main = () ->
@@ -73,12 +74,8 @@ define ['utils', 'load_data', 'prepare_data'], (
 		
 			prepare.setup_kanji_vectors kanjis, radicals
 		
-			if config.kmeansInitialVectorsRandom
-				initial_vectors = undefined 
-			else
-				vectors = (k.vector for k in kanjis)
-				step = Math.floor vectors.length/radicals_n
-				initial_vectors = (vectors[i*step] for i in [0...radicals_n])
+			initial_vectors = if not config.kmeansInitialVectorsRandom
+				equidistant_selection radicals_n, (k.vector for k in kanjis)
 		
 			vectors = (k.vector for k in kanjis)
 			{ centroids, assignments } =
