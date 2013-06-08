@@ -6,6 +6,7 @@ config =
 	sunflowerKanjis:	true
 	kmeansInitialVectorsRandom: false
 	kmeansClustersN:	-1 # 0 rule of thumb, -1 vector.length
+	forceGraph:			false
 
 # the global object where we can put stuff into it
 window.my = {
@@ -160,8 +161,8 @@ define ['utils', 'load_data', 'prepare_data'], (
 		
 		if config.forceGraph
 			force = d3.layout.force()
-				.nodes(all_nodes)
-				.links(all_links)
+				.nodes(stations)
+				.links(links)
 				.size([w, h])
 				.linkStrength(0.1)
 				.linkDistance(8*d)
