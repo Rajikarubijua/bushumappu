@@ -206,11 +206,4 @@ define ['utils', 'load_data', 'prepare_data'], (
 				.on 'tick', (e) -> forceTick e, link, endstation, station
 			station.call force.drag
 			
-	getNiceRadical = (radicals) ->
-		for r in radicals
-			for k in r.jouyou
-				if k.grade == 1
-					return r
-		return radicals[0]
-	
 	loadData main
