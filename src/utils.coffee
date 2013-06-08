@@ -55,6 +55,13 @@ define ->
 				base += c
 		return base
 		
+	arrayUnique = (array, base) ->
+		base ?= []
+		for e in array
+			if e not in base
+				base.push e
+		return base
+		
 	expect = (regex, line, i) ->
 		m = line.match regex
 		throw "expected #{regex} at #{i}" if m == null
@@ -152,4 +159,4 @@ define ->
 
 	{ copyAttrs, P, PN, W, async, strUnique, expect, somePrettyPrint, length,
 	  sort, styleZoom, sunflower, vecX, vecY, vec, compareNumber,
-  	  parseMaybeNumber, equidistantSelection, getMinMax }
+  	  parseMaybeNumber, equidistantSelection, getMinMax, arrayUnique }

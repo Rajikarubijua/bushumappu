@@ -20,7 +20,7 @@ window.my = {
 define ['utils', 'load_data', 'prepare_data'], (
 	{ P, PN, W, copyAttrs, async, strUnique, somePrettyPrint, length, sort,
 	styleZoom, sunflower, vecX, vecY, vec, compareNumber, equidistantSelection
-	groupBy, getMinMax },
+	groupBy, getMinMax, arrayUnique },
 	loadData, prepare) ->
 
 	main = () ->
@@ -100,13 +100,19 @@ define ['utils', 'load_data', 'prepare_data'], (
 			when -1 then vectors[0].length
 			when 0  then Math.floor Math.sqrt kanjis.length/2
 
+	getKanjis = (radicals) ->
+		kanjis = []
+		for radical in radicals
+			arrayUnique radical.jouyou, kanjis
+		kanjis.sort (x) -> x.kanji
+
 	drawStuff = (svg) ->
 		w = svg.attr 'width'
 		h = svg.attr 'height'
 		r = 12
 		d = 2*r
 
-		jouyou_kanjis = prepare.setupRadicalJouyous()
+		prepare.setupRadicalJouyous()
 		prepare.setupKanjiGrades()
 
 		radicals = (my.radicals[radical] for radical of my.jouyou_radicals)
@@ -114,8 +120,7 @@ define ['utils', 'load_data', 'prepare_data'], (
 		radicals.sort (x) -> x.radical
 		radicals_n = length radicals
 		
-		kanjis = jouyou_kanjis
-		kanjis.sort (x) -> x.kanji
+		kanjis = getKanjis radicals
 		
 		vectors = prepare.setupKanjiVectors kanjis, radicals
 		clusters_n = getClusterN kanjis, radicals, vectors
