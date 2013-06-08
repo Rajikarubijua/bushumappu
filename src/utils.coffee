@@ -1,6 +1,6 @@
 define ->
 	# copies every attribute of a object 'b' to object 'a'
-	copyAttrs = (a, b) -> a[k] = v for k, v of b
+	copyAttrs = (a, b) -> a[k] = v for k, v of b; a
 
 	# shorthand for console.log, also returns the last argument
 	# usage:
@@ -126,7 +126,30 @@ define ->
 	equidistantSelection = (n, array) ->
 		step = Math.floor array.length/n
 		(array[i*step%array.length] for i in [0...n])
+		
+	groupBy = (array, func) ->
+		groups = {}
+		for element in array
+			(groups[func element] ?= []).push element
+		groups
+		
+	getMinMax = (array, map) ->
+		map = copyAttrs {}, map
+		for key, func of map
+			if typeof func == 'string'
+				map[key] = do (func) -> (x) -> x[func]
+		result = {}
+		for element in array
+			for key, func of map
+				value = func element
+				min = result["min_"+key]
+				max = result["max_"+key]
+				if not min? or value < func min
+					result["min_"+key] = element
+				if not max? or value > func max
+					result["max_"+key] = element
+		result
 
 	{ copyAttrs, P, PN, W, async, strUnique, expect, somePrettyPrint, length,
 	  sort, styleZoom, sunflower, vecX, vecY, vec, compareNumber,
-  	  parseMaybeNumber, equidistantSelection }
+  	  parseMaybeNumber, equidistantSelection, getMinMax }

@@ -27,12 +27,14 @@ define ['utils'], ({ }) ->
 			for radical, radical_i in radicals
 				kanji.vector[radical_i] = +(radical.radical in kanji.radicals)
 
-	setupClusterAssignment = (kanjis, radicals, initial_vectors) ->
+	setupClusterAssignment = (kanjis, radicals, initial_vectors, clusters_n) ->
 		vectors = (k.vector for k in kanjis)
 		if undefined in vectors
-			throw "kanjis need .vector"	
+			throw "kanjis need .vector"
+		clusters_n ?= initial_vectors?.length
+		clusters_n ?= Math.floor Math.sqrt kanjis.length/2
 		{ centroids, assignments } =
-			figue.kmeans initial_vectors.length, vectors, initial_vectors
+			figue.kmeans clusters_n, vectors, initial_vectors
 		clusters = ({ centroid, kanjis: [] } for centroid in centroids)
 		for assignment, assignment_i in assignments
 			cluster = clusters[assignment]

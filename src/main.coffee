@@ -3,9 +3,9 @@ config =
 	fixedEndstation:	true
 	fixedStation:		true
 	filterRadicals:		(radicals) -> radicals
-	sunflowerKanjis:	false
+	sunflowerKanjis:	true
 	kmeansInitialVectorsRandom: false
-	clustering:			false
+	kmeansClustersN:	-1 # 0 rule of thumb, -1 vector.length
 
 # the global object where we can put stuff into it
 window.my = {
@@ -19,7 +19,7 @@ window.my = {
 define ['utils', 'load_data', 'prepare_data'], (
 	{ P, PN, W, copyAttrs, async, strUnique, somePrettyPrint, length, sort,
 	styleZoom, sunflower, vecX, vecY, vec, compareNumber, equidistantSelection
-	},
+	groupBy, getMinMax },
 	loadData, prepare) ->
 
 	main = () ->
@@ -55,9 +55,49 @@ define ['utils', 'load_data', 'prepare_data'], (
 
 
 	setupClusterPosition = (clusters, d) ->
+		for cluster in clusters
+			minmax = getMinMax (k.station for k in cluster.kanjis), { "x", "y" }
+			dx = minmax.max_x.x - minmax.min_x.x
+			dy = minmax.max_y.y - minmax.min_y.y
+			cluster.r = 0.5*Math.max dx, dy
+		minmax = getMinMax clusters, { "r" }
+		r = minmax.max_r.r
 		for cluster, i in clusters
-			cluster.x = i * 3*d
-			cluster.y = 0
+			{ x, y } = sunflower { index: i+1, factor: r }
+			cluster.x = x
+			cluster.y = y
+
+	getStation = (kanji, kanji_i, d, n) ->
+		station = { label: kanji.kanji, ybin: kanji.grade }
+		x = y = 0
+		index = kanji.cluster.kanjis.indexOf kanji
+		if config.sunflowerKanjis
+			{ x, y } = sunflower { index: index+1, factor: 2.7*d }
+		else
+			columns = Math.floor Math.sqrt n
+			x = 2*d *           (kanji_i % columns)
+			y = 2*d * Math.floor kanji_i / columns
+		station.x = x
+		station.y = y
+		station.fixed = +config.fixedStation
+		kanji.station = station
+
+	forceTick = (e, link, endstation, station) ->
+		link.attr d: (d) -> svgline [ d.source, d.target ]
+		endstation.attr transform: (d) -> "translate(#{d.x} #{d.y})"
+		station.attr transform: (d) -> "translate(#{d.x} #{d.y})"
+
+	svgline = d3.svg.line()
+		.x(({x}) -> x)
+		.y(({y}) -> y)
+
+	getClusterN = (kanjis, radicals, vectors) ->
+		Math.min vectors.length,
+		if config.kmeansClustersN > 0
+			config.kmeansClustersN
+		else switch config.kmeansClustersN
+			when -1 then vectors[0].length
+			when 0  then Math.floor Math.sqrt kanjis.length/2
 
 	drawStuff = (svg) ->
 		w = svg.attr 'width'
@@ -68,83 +108,46 @@ define ['utils', 'load_data', 'prepare_data'], (
 		{ jouyou_kanjis } = prepare.prepareData()
 
 		radicals = (my.radicals[radical] for radical of my.jouyou_radicals)
+		radicals = config.filterRadicals radicals
 		radicals.sort (x) -> x.radical
 		radicals_n = length radicals
 		
 		kanjis = jouyou_kanjis
 		kanjis.sort (x) -> x.kanji
 		
-		if config.clustering
-			vectors = prepare.setupKanjiVectors kanjis, radicals
-			initial_vectors = if not config.kmeansInitialVectorsRandom
-				equidistantSelection radicals_n, vectors
-			clusters = prepare.setupClusterAssignment(
-				kanjis, radicals, initial_vectors)
-			setupClusterPosition clusters, d
-		
-		for k in kanjis
-			k.station = { label: k.kanji, ybin: k.grade }
+		vectors = prepare.setupKanjiVectors kanjis, radicals
+		clusters_n = getClusterN kanjis, radicals, vectors
+		initial_vectors = if not config.kmeansInitialVectorsRandom
+			equidistantSelection clusters_n, vectors
+		clusters = prepare.setupClusterAssignment(
+			kanjis, radicals, initial_vectors, clusters_n)
+		for cluster in clusters
+			for kanji, i in cluster.kanjis
+				kanji.station = getStation kanji, i, d, cluster.kanjis.length
+		setupClusterPosition clusters, d
+		for cluster in clusters
+			for kanji in cluster.kanjis
+				kanji.station.x += cluster.x
+				kanji.station.y += cluster.y
 			
-		for kanji, kanji_i in kanjis
-			x = y = undefined
-			if config.sunflowerKanjis
-				{ x, y } = sunflower { index: kanji_i+1, factor: 2.7*d }
-			else if config.clustering
-				x = kanji.cluster.x
-				y = kanji.cluster.y + 3*d* kanji.cluster.kanjis.indexOf kanji
-			kanji.station.x = x
-			kanji.station.y = y
-		
-		radicals = config.filterRadicals radicals
-		
-		all_links = []
-		all_nodes = []
-		all_lines = []
-		for radical, i in radicals
-			{ nodes, links, line } = makeLine radical, i, radicals, d
-			all_links = all_links.concat links
-			all_nodes = all_nodes.concat nodes
-			all_lines.push line
-		
-		force = d3.layout.force()
-			.nodes(all_nodes)
-			.links(all_links)
-			.size([w, h])
-			.linkStrength(0.1)
-			.linkDistance(8*d)
-			.charge(-10)
-			.gravity(0.001)
-			.theta(10)
-			.start()
-
-		line = svg.selectAll('.line')
-			.data(lines = all_lines)
-			.enter()
-			.append 'g'
+		links = []
+		endstations = []
+		stations = (k.station for k in kanjis)
 			
-		svgline = d3.svg.line()
-			.x(({x}) -> x)
-			.y(({y}) -> y)
-			
-		links = line.selectAll(".links")
-			.data((d) -> if config.showLines then [d] else [])
-			.enter().append 'g'
-			
-		link = links.selectAll(".link")
-			.data((d) -> d.links)
+		link = svg.selectAll(".link")
+			.data(links)
 			.enter()
 			.append "path"
 			
-		endstation = line.selectAll('.endstation')
-			.data((d) -> [ d.endstation ])
+		endstation = svg.selectAll('.endstation')
+			.data(endstations)
 			.enter()
 			.append 'g'
 		
-		station = line.selectAll('.station')
-			.data((d) -> d.stations)
+		station = svg.selectAll('.station')
+			.data(stations)
 			.enter()
 			.append('g')
-			.call(force.drag)
 
 		station.append('rect').attr x:-r, y:-r, width:2*r, height:2*r
 		station.append('text').text (d) -> d.label
@@ -152,60 +155,23 @@ define ['utils', 'load_data', 'prepare_data'], (
 		endstation.append("circle").attr {r}
 		endstation.append("text").text (d) -> d.label
 		
-		force.on 'tick', (e) ->
-			link.attr d: (d) -> svgline [ d.source, d.target ]
-			endstation.attr transform: (d) -> "translate(#{d.x} #{d.y})"
-			station.attr transform: (d) -> "translate(#{d.x} #{d.y})"
-	
-	makeLine = (radical, i, radicals, d) ->
-		radicals_n  = length radicals
-		endstation  = { label: radical.radical, fixed: +config.fixedEndstation }
-		stations    = (k.station for k in radical.jouyou)
-		line_radius = 3000
-		line_angle  = (i/radicals_n) * 2*Math.PI + Math.PI/2
-	
-		ybins = {}
-		for station in stations
-			station.fixed = +config.fixedStation
-			ybins[station.ybin] ?= []
-			ybins[station.ybin].push station
+		endstation.attr transform: (d) -> "translate(#{d.x} #{d.y})"
+		station.attr transform: (d) -> "translate(#{d.x} #{d.y})"
 		
-		[ x, y ] = vec line_radius, line_angle
-		for bin, bin_i in sort(ybins, compareNumber)
-			ybin_stations = ybins[bin]
-			bin = +bin
-			n = ybin_stations.length
-			for station, station_i in ybin_stations
-		# placement of a station
-				if not station.x?
-					radius = (line_radius -
-						(2*d * (1 + Math.floor station_i/9)) - # row in a bin
-						(bin_i * (Math.floor n/9) * 2*d))      # bin rows
-					angle  = line_angle +
-						2*d * (station_i%9 - 4)*0.0003 # column in a bin
-					station.x = vecX radius, angle
-					station.y = vecY radius, angle
-	
-		# placement of a endstation
-		endstation.x = x
-		endstation.y = y
-	
-		line = { endstation, stations }
-		nodes = [ line.endstation, line.stations... ]
-	
-		#for node, index in nodes
-			#node.fixed = 1
-			# possible attributes for node:
-			# https://github.com/mbostock/d3/wiki/Force-Layout#wiki-nodes
-	
-		links = []
-		node = nodes[0]
-		for next in nodes[1..]
-			links.push { source: node, target: next }
-			node = next
-		line.links = links
-		{ nodes, links, line }
-	
+		if config.forceGraph
+			force = d3.layout.force()
+				.nodes(all_nodes)
+				.links(all_links)
+				.size([w, h])
+				.linkStrength(0.1)
+				.linkDistance(8*d)
+				.charge(-10)
+				.gravity(0.001)
+				.theta(10)
+				.start()
+				.on 'tick', (e) -> forceTick e, link, endstation, station
+			station.call force.drag
+			
 	getNiceRadical = (radicals) ->
 		for r in radicals
 			for k in r.jouyou
