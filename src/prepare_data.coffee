@@ -1,4 +1,4 @@
-define ['utils'], ({ }) ->
+define ['utils'], ({ P }) ->
 		
 	setupRadicalJouyous= ->
 		jouyou_kanjis = []
@@ -22,21 +22,31 @@ define ['utils'], ({ }) ->
 			for radical, radical_i in radicals
 				kanji.vector[radical_i] = +(radical.radical in kanji.radicals)
 
-	setupClusterAssignment = (kanjis, radicals, initial_vectors, clusters_n) ->
-		vectors = (k.vector for k in kanjis)
+	getRadicalVector = (char, radicals) ->
+		vector = []
+		if char.radical
+			vector = (0 for [0...radicals.length])
+			vector[radicals.indexOf char] = 1
+		else if char.kanji
+			for radical, radical_i in radicals
+				vector[radical_i] = +(radical.radical in char.radicals)
+		vector
+
+	setupClusterAssignment = (stations, initial_vectors, clusters_n) ->
+		vectors = (s.vector for s in stations)
 		if undefined in vectors
-			throw "kanjis need .vector"
+			throw "station need .vector"
 		clusters_n ?= initial_vectors?.length
-		clusters_n ?= Math.floor Math.sqrt kanjis.length/2
+		clusters_n ?= Math.floor Math.sqrt stations.length/2
 		{ centroids, assignments } =
 			figue.kmeans clusters_n, vectors, initial_vectors
-		clusters = ({ centroid, kanjis: [] } for centroid in centroids)
+		clusters = ({ centroid, stations: [] } for centroid in centroids)
 		for assignment, assignment_i in assignments
 			cluster = clusters[assignment]
-			kanji   = kanjis[assignment_i]
-			kanji.cluster = cluster
-			cluster.kanjis.push kanji		
+			station   = stations[assignment_i]
+			station.cluster = cluster
+			cluster.stations.push station
 		clusters
 
 	{ setupRadicalJouyous, setupKanjiGrades,
-	  setupKanjiVectors, setupClusterAssignment }
+	  setupKanjiVectors, setupClusterAssignment, getRadicalVector }

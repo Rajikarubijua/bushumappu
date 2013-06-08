@@ -20,7 +20,7 @@ window.my = {
 define ['utils', 'load_data', 'prepare_data'], (
 	{ P, PN, W, copyAttrs, async, strUnique, somePrettyPrint, length, sort,
 	styleZoom, sunflower, vecX, vecY, vec, compareNumber, equidistantSelection
-	groupBy, getMinMax, arrayUnique },
+	groupBy, getMinMax, arrayUnique, max },
 	loadData, prepare) ->
 
 	main = () ->
@@ -57,7 +57,7 @@ define ['utils', 'load_data', 'prepare_data'], (
 
 	setupClusterPosition = (clusters, d) ->
 		for cluster in clusters
-			minmax = getMinMax (k.station for k in cluster.kanjis), { "x", "y" }
+			minmax = getMinMax cluster.stations, { "x", "y" }
 			dx = minmax.max_x.x - minmax.min_x.x
 			dy = minmax.max_y.y - minmax.min_y.y
 			cluster.r = 0.5*Math.max dx, dy
@@ -68,20 +68,16 @@ define ['utils', 'load_data', 'prepare_data'], (
 			cluster.x = x
 			cluster.y = y
 
-	getStation = (kanji, kanji_i, d, n) ->
-		station = { label: kanji.kanji, ybin: kanji.grade }
+	getStationPosition = (station, index, d, n) ->
 		x = y = 0
-		index = kanji.cluster.kanjis.indexOf kanji
+		cluster_index = station.cluster.stations.indexOf station
 		if config.sunflowerKanjis
-			{ x, y } = sunflower { index: index+1, factor: 2.7*d }
+			{ x, y } = sunflower { index: cluster_index+1, factor: 2.7*d }
 		else
 			columns = Math.floor Math.sqrt n
-			x = 2*d *           (kanji_i % columns)
-			y = 2*d * Math.floor kanji_i / columns
-		station.x = x
-		station.y = y
-		station.fixed = +config.fixedStation
-		kanji.station = station
+			x = 2*d *           (index % columns)
+			y = 2*d * Math.floor index / columns
+		{ x, y }
 
 	forceTick = (e, link, endstation, station) ->
 		link.attr d: (d) -> svgline [ d.source, d.target ]
@@ -92,19 +88,42 @@ define ['utils', 'load_data', 'prepare_data'], (
 		.x(({x}) -> x)
 		.y(({y}) -> y)
 
-	getClusterN = (kanjis, radicals, vectors) ->
+	getClusterN = (vectors) ->
 		Math.min vectors.length,
 		if config.kmeansClustersN > 0
 			config.kmeansClustersN
 		else switch config.kmeansClustersN
-			when -1 then vectors[0].length
-			when 0  then Math.floor Math.sqrt kanjis.length/2
+			when -1 then Math.floor vectors[0].length
+			when 0  then Math.floor Math.sqrt vectors.length/2
 
 	getKanjis = (radicals) ->
 		kanjis = []
 		for radical in radicals
 			arrayUnique radical.jouyou, kanjis
 		kanjis.sort (x) -> x.kanji
+
+	getKanjisForRadicalInCluster = (radical, cluster) ->
+		kanjis = (station.kanji for station in cluster.stations when \
+			station.kanji and radical.radical in station.kanji.radicals)
+
+	setupClustersForRadicals = (radicals, clusters) ->
+		for radical in radicals
+			cluster = max clusters, (cluster) ->
+				length getKanjisForRadicalInCluster radical, cluster
+			radical.station.cluster = cluster
+			cluster.stations.push radical.station
+
+	setupPositions = (clusters, d) ->
+		for cluster in clusters
+			for station, i in cluster.stations
+				{ x, y } = getStationPosition station, i, d, cluster.stations.length
+				station.x = x
+				station.y = y
+		setupClusterPosition clusters, d
+		for cluster in clusters
+			for station in cluster.stations
+				station.x += cluster.x
+				station.y += cluster.y
 
 	drawStuff = (svg) ->
 		w = svg.attr 'width'
@@ -122,24 +141,30 @@ define ['utils', 'load_data', 'prepare_data'], (
 		
 		kanjis = getKanjis radicals
 		
-		vectors = prepare.setupKanjiVectors kanjis, radicals
-		clusters_n = getClusterN kanjis, radicals, vectors
-		initial_vectors = if not config.kmeansInitialVectorsRandom
-			equidistantSelection clusters_n, vectors
+		stations = for x in [ kanjis..., radicals... ]
+			x.station =
+				label:		x.kanji or x.radical
+				cluster:	null
+				vector:		prepare.getRadicalVector x, radicals
+				x:			0
+				y:			0
+				kanji:		x.kanji? and x
+				radical:	x.radical? and x
+				fixed:		+config.fixedStation
+		
+		vectors = (k.station.vector for k in kanjis)
+		clusters_n = getClusterN vectors
+		if not config.kmeansInitialVectorsRandom
+			initial_vectors = equidistantSelection clusters_n, vectors
 		clusters = prepare.setupClusterAssignment(
-			kanjis, radicals, initial_vectors, clusters_n)
-		for cluster in clusters
-			for kanji, i in cluster.kanjis
-				kanji.station = getStation kanji, i, d, cluster.kanjis.length
-		setupClusterPosition clusters, d
-		for cluster in clusters
-			for kanji in cluster.kanjis
-				kanji.station.x += cluster.x
-				kanji.station.y += cluster.y
+			(k.station for k in kanjis), initial_vectors, clusters_n)
+		
+		setupClustersForRadicals radicals, clusters
+		setupPositions clusters, d
 			
 		links = []
-		endstations = []
-		stations = (k.station for k in kanjis)
+		endstations = (radical.station for radical in radicals)
+		stations = (kanji.station for kanji in kanjis)
 			
 		link = svg.selectAll(".link")
 			.data(links)

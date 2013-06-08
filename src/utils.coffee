@@ -157,7 +157,18 @@ define ->
 				if not max? or value > func max
 					result["max_"+key] = element
 		result
+		
+	max = (array, func) ->
+		if typeof func == 'string'
+			func = do (func) -> (x) -> x[func]
+		max_value = max_e = undefined
+		for e in array
+			value = func e
+			if not max_value? or value > max_value
+				max_value = value
+				max_e = e
+		max_e
 
 	{ copyAttrs, P, PN, W, async, strUnique, expect, somePrettyPrint, length,
-	  sort, styleZoom, sunflower, vecX, vecY, vec, compareNumber,
+	  sort, styleZoom, sunflower, vecX, vecY, vec, compareNumber, max,
   	  parseMaybeNumber, equidistantSelection, getMinMax, arrayUnique }
