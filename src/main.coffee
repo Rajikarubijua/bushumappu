@@ -54,6 +54,11 @@ define ['utils', 'load_data', 'prepare_data'], (
 		drawStuff svg.g				
 
 
+	setupClusterPosition = (clusters, d) ->
+		for cluster, i in clusters
+			cluster.x = i * 3*d
+			cluster.y = 0
+
 	drawStuff = (svg) ->
 		w = svg.attr 'width'
 		h = svg.attr 'height'
@@ -75,9 +80,7 @@ define ['utils', 'load_data', 'prepare_data'], (
 				equidistantSelection radicals_n, vectors
 			clusters = prepare.setupClusterAssignment(
 				kanjis, radicals, initial_vectors)
-			for cluster, cluster_i in clusters
-				cluster.x = cluster_i * d*3
-				cluster.y = 0
+			setupClusterPosition clusters, d
 		
 		for k in kanjis
 			k.station = { label: k.kanji, ybin: k.grade }
