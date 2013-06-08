@@ -130,9 +130,10 @@ define ->
 	parseMaybeNumber = (str) ->
 		if "#{+str}" == str then +str else str
 
-	equidistantSelection = (n, array) ->
+	equidistantSelection = (n, array, { offset }={}) ->
+		offset ?= 0
 		step = Math.floor array.length/n
-		(array[i*step%array.length] for i in [0...n])
+		(array[(offset + i*step) % array.length] for i in [0...n])
 		
 	groupBy = (array, func) ->
 		groups = {}
