@@ -52,7 +52,8 @@ define ['utils', 'load_data', 'prepare_data'], (
 		svg.on 'touchstart.cursor', draggingStart
 		svg.on 'touchend.cursor'  , draggingEnd
 			 
-		drawStuff svg.g				
+		{ stations, endstations, links } = setupInitialEmbedding()
+		setupD3 svg.g, stations, endstations, links
 
 
 	setupClusterPosition = (clusters, d) ->
@@ -125,9 +126,7 @@ define ['utils', 'load_data', 'prepare_data'], (
 				station.x += cluster.x
 				station.y += cluster.y
 
-	drawStuff = (svg) ->
-		w = svg.attr 'width'
-		h = svg.attr 'height'
+	setupInitialEmbedding = ->
 		r = 12
 		d = 2*r
 
@@ -165,7 +164,10 @@ define ['utils', 'load_data', 'prepare_data'], (
 		links = []
 		endstations = (radical.station for radical in radicals)
 		stations = (kanji.station for kanji in kanjis)
-			
+		{ stations, endstations, links }
+
+	setupD3 = (svg, stations, endstations, links) ->
+		r = 12
 		link = svg.selectAll(".link")
 			.data(links)
 			.enter()
@@ -194,9 +196,9 @@ define ['utils', 'load_data', 'prepare_data'], (
 			force = d3.layout.force()
 				.nodes(stations)
 				.links(links)
-				.size([w, h])
+				.size([ (svg.attr 'width'), (scg.attr 'height') ])
 				.linkStrength(0.1)
-				.linkDistance(8*d)
+				.linkDistance(16*r)
 				.charge(-10)
 				.gravity(0.001)
 				.theta(10)
