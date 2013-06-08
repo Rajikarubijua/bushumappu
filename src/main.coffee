@@ -18,9 +18,9 @@ window.my = {
 
 define ['utils', 'load_data', 'prepare_data'], (
 	{ P, PN, W, copyAttrs, async, strUnique, somePrettyPrint, length, sort,
-	styleZoom, sunflower, vecX, vecY, vec, compareNumber, equidistant_selection
+	styleZoom, sunflower, vecX, vecY, vec, compareNumber, equidistantSelection
 	},
-	load_data, prepare) ->
+	loadData, prepare) ->
 
 	main = () ->
 		body = my.body = d3.select 'body'
@@ -60,7 +60,7 @@ define ['utils', 'load_data', 'prepare_data'], (
 		r = 12
 		d = 2*r
 
-		{ jouyou_kanjis } = prepare.prepare_data()
+		{ jouyou_kanjis } = prepare.prepareData()
 
 		radicals = (my.radicals[radical] for radical of my.jouyou_radicals)
 		radicals.sort (x) -> x.radical
@@ -70,10 +70,10 @@ define ['utils', 'load_data', 'prepare_data'], (
 		kanjis.sort (x) -> x.kanji
 		
 		if config.clustering
-			vectors = prepare.setup_kanji_vectors kanjis, radicals
+			vectors = prepare.setupKanjiVectors kanjis, radicals
 			initial_vectors = if not config.kmeansInitialVectorsRandom
-				equidistant_selection radicals_n, vectors
-			clusters = prepare.setup_cluster_assignment(
+				equidistantSelection radicals_n, vectors
+			clusters = prepare.setupClusterAssignment(
 				kanjis, radicals, initial_vectors)
 			for cluster, cluster_i in clusters
 				cluster.x = cluster_i * d*3
@@ -210,4 +210,4 @@ define ['utils', 'load_data', 'prepare_data'], (
 					return r
 		return radicals[0]
 	
-	load_data main
+	loadData main

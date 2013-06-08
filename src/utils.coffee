@@ -123,10 +123,10 @@ define ->
 	parseMaybeNumber = (str) ->
 		if "#{+str}" == str then +str else str
 
-	equidistant_selection = (n, array) ->
+	equidistantSelection = (n, array) ->
 		step = Math.floor array.length/n
 		(array[i*step%array.length] for i in [0...n])
 
 	{ copyAttrs, P, PN, W, async, strUnique, expect, somePrettyPrint, length,
 	  sort, styleZoom, sunflower, vecX, vecY, vec, compareNumber,
-  	  parseMaybeNumber, equidistant_selection }
+  	  parseMaybeNumber, equidistantSelection }
