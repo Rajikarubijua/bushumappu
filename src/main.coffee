@@ -54,7 +54,6 @@ define ['utils', 'load_data', 'prepare_data'], (
 		drawStuff svg.g				
 
 
-
 	drawStuff = (svg) ->
 		w = svg.attr 'width'
 		h = svg.attr 'height'
@@ -71,27 +70,16 @@ define ['utils', 'load_data', 'prepare_data'], (
 		kanjis.sort (x) -> x.kanji
 		
 		if config.clustering
-		
-			prepare.setup_kanji_vectors kanjis, radicals
-		
-			vectors = (k.vector for k in kanjis)
+			vectors = prepare.setup_kanji_vectors kanjis, radicals
 			initial_vectors = if not config.kmeansInitialVectorsRandom
 				equidistant_selection radicals_n, vectors
-		
-			{ centroids, assignments } =
-				figue.kmeans radicals_n, vectors, initial_vectors
-			clusters = ({ centroid, kanjis: [] } for centroid in centroids)
-			for assignment, assignment_i in assignments
-				cluster = clusters[assignment]
-				kanji   = kanjis[assignment_i]
-				kanji.cluster = cluster
-				cluster.kanjis.push kanji
-		
+			clusters = prepare.setup_cluster_assignment(
+				kanjis, radicals, initial_vectors)
 			for cluster, cluster_i in clusters
 				cluster.x = cluster_i * d*3
 				cluster.y = 0
 		
-		for _, k of my.kanjis
+		for k in kanjis
 			k.station = { label: k.kanji, ybin: k.grade }
 			
 		for kanji, kanji_i in kanjis
