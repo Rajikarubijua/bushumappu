@@ -106,7 +106,8 @@ define ['utils', 'load_data', 'prepare_data'], (
 		r = 12
 		d = 2*r
 
-		{ jouyou_kanjis } = prepare.prepareData()
+		jouyou_kanjis = prepare.setupRadicalJouyous()
+		prepare.setupKanjiGrades()
 
 		radicals = (my.radicals[radical] for radical of my.jouyou_radicals)
 		radicals = config.filterRadicals radicals

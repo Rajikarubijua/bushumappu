@@ -1,9 +1,4 @@
 define ['utils'], ({ }) ->
-
-	prepareData = ->
-		jouyou_kanjis = setupRadicalJouyous()			
-		setupKanjiGrades()
-		{ jouyou_kanjis }
 		
 	setupRadicalJouyous= ->
 		jouyou_kanjis = []
@@ -43,5 +38,5 @@ define ['utils'], ({ }) ->
 			cluster.kanjis.push kanji		
 		clusters
 
-	{ prepareData, setupRadicalJouyous, setupKanjiGrades,
+	{ setupRadicalJouyous, setupKanjiGrades,
 	  setupKanjiVectors, setupClusterAssignment }
