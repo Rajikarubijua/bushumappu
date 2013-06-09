@@ -1,6 +1,6 @@
-define ['utils'], ({  }) ->
+define ['utils'], ({ P, compareNumber }) ->
 
-	setupD3 = (svg, stations, endstations, links, config) ->
+	setupD3 = (svg, { stations, endstations, links }, config) ->
 		r = 12
 		link = svg.selectAll(".link")
 			.data(links)

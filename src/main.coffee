@@ -21,9 +21,9 @@ window.my = {
 	config }
 
 define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
-	'interactivity'], (
+	'interactivity', 'routing'], (
 	{ P, somePrettyPrint, styleZoom },
-	loadData, prepare, { setupInitialEmbedding }, { setupD3 }) ->
+	loadData, prepare, { setupInitialEmbedding }, { setupD3 }, { metroMap }) ->
 
 	main = () ->
 		body = my.body = d3.select 'body'
@@ -54,7 +54,8 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 		svg.on 'touchstart.cursor', draggingStart
 		svg.on 'touchend.cursor'  , draggingEnd
 			 
-		{ stations, endstations, links } = setupInitialEmbedding config
-		setupD3 svg.g, stations, endstations, links, config
+		graph = setupInitialEmbedding config
+		graph = metroMap graph, config
+		setupD3 svg.g, graph, config
 			
 	loadData main
