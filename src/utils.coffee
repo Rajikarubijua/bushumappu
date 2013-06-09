@@ -170,9 +170,7 @@ define ->
 		max_e
 
 	distanceSqrXY = (a, b) ->
-		dx = b.x - a.x
-		dy = b.y - a.y
-		dx*dx + dy*dy
+		Math.pow( b.x - a.x, 2 ) + Math.pow( b.y - a.y, 2 )
 
 	nearestXY = (a, array) ->
 		min_d = 1/0
