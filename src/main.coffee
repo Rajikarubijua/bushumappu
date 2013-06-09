@@ -189,7 +189,9 @@ define ['utils', 'load_data', 'prepare_data'], (
 	endstationSelectLine = (d) ->
 		selector = ".radical_"+d.radical.radical
 		d3.selectAll(selector).classed 'highlighted', (d) ->
-			!d3.select(@).classed 'highlighted'
+			d.highlighted = !d3.select(@).classed 'highlighted'
+		d3.selectAll(".link").sort (a, b) ->
+				compareNumber a.highlighted or 0, b.highlighted or 0
 
 	setupD3 = (svg, stations, endstations, links) ->
 		r = 12
