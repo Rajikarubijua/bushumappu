@@ -172,17 +172,47 @@ define ->
 	distanceSqrXY = (a, b) ->
 		Math.pow( b.x - a.x, 2 ) + Math.pow( b.y - a.y, 2 )
 
-	nearestXY = (a, array) ->
+	distanceSqr01 = (a, b) ->
+		Math.pow( b[0] - a[0], 2 ) + Math.pow( b[1] - a[1], 2 )
+
+	nearest = (a, array, distanceFunc) ->
 		min_d = 1/0
 		min_i = null
 		for b, i in array
-			d = distanceSqrXY a, b
+			d = distanceFunc a, b
 			if d < min_d
 				min_d = d
 				min_i = i
 		{ b: array[min_i], i: min_i }
+		
+	nearestXY = (a, array) -> nearest a, array, distanceSqrXY
+	nearest01 = (a, array) -> nearest a, array, distanceSqr01
+
+	forall = (func) -> (xs) ->
+		func x for x in xs
+		
+	rasterCircle = (x0, y0, r) ->
+		# http://en.wikipedia.org/wiki/Midpoint_circle_algorithm
+		f = 1 - r
+		ddF_x = 1
+		ddF_y = -2 * r
+		x = 0
+		y = r
+		pxs = [ [x0, y0+r], [x0, y0-r], [x0+r, y0], [x0-r, y0] ]
+		while x < y
+			if f >= 0
+				--y
+				ddF_y += 2
+				f += ddF_y
+			++x
+			ddF_x += 2
+			f += ddF_x
+		pxs = pxs.concat [
+			[x0+x, y0+y], [x0-x, y0+y], [x0+x, y0-y], [x0-x, y0-y],
+			[x0+y, y0+x], [x0-y, y0+x], [x0+y, y0-x], [x0-y, y0-x] ]
 
 	{ copyAttrs, P, PN, W, async, strUnique, expect, somePrettyPrint, length,
 	  sort, styleZoom, sunflower, vecX, vecY, vec, compareNumber, max,
   	  parseMaybeNumber, equidistantSelection, getMinMax, arrayUnique,
-  	  distanceSqrXY, nearestXY }
+  	  distanceSqrXY, nearestXY, nearest01, distanceSqr01, nearest, forall,
+  	  rasterCircle }

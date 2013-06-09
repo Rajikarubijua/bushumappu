@@ -9,7 +9,7 @@ config =
 	kmeansClustersN:			-1 # 0 rule of thumb, -1 vector.length
 	forceGraph:					false
 	circularLines:				true
-	gridSpacing:				48
+	gridSpacing:				48*6
 figue.KMEANS_MAX_ITERATIONS = 1
 
 # the global object where we can put stuff into it
@@ -22,9 +22,10 @@ window.my = {
 	config }
 
 define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
-	'interactivity', 'routing'], (
+	'interactivity', 'routing', 'test_routing'], (
 	{ P, somePrettyPrint, styleZoom },
-	loadData, prepare, { setupInitialEmbedding }, { setupD3 }, { metroMap }) ->
+	loadData, prepare, { setupInitialEmbedding }, { setupD3 }, { metroMap },
+	testRouting) ->
 
 	main = () ->
 		body = my.body = d3.select 'body'
@@ -59,4 +60,5 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 		graph = metroMap graph, config
 		setupD3 svg.g, graph, config
 			
+	testRouting.runTests()
 	loadData main
