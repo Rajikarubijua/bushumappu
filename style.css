@@ -16,10 +16,6 @@ path {
 	stroke-width: 2pt;
 }
 
-.station > * {
-	fill: #ddddff;
-}
-
 /* Output colors
     [229,  53,  23, 1, "red"    ]
     [151, 190,  13, 1, "green"  ]
