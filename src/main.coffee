@@ -132,7 +132,7 @@ define ['utils', 'load_data', 'prepare_data'], (
 			while stations.length > 0
 				{ b, i } = nearestXY a, stations
 				stations[i..i] = []
-				links.push { source: a, target: b }
+				links.push { source: a, target: b, radical }
 				a = b
 				if stations.length == l
 					throw "no progres"
@@ -182,17 +182,24 @@ define ['utils', 'load_data', 'prepare_data'], (
 		stations = (kanji.station for kanji in kanjis)
 		{ stations, endstations, links }
 
+	endstationSelectLine = (d) ->
+		selector = ".radical_"+d.radical.radical
+		d3.selectAll(selector).classed 'highlighted', (d) ->
+			d.highlighted = !d.highlighted
+
 	setupD3 = (svg, stations, endstations, links) ->
 		r = 12
 		link = svg.selectAll(".link")
 			.data(links)
 			.enter()
-			.append "path"
+			.append("path")
+			.each((d) -> @classList.add "radical_"+d.radical.radical)
 			
 		endstation = svg.selectAll('.endstation')
 			.data(endstations)
 			.enter()
-			.append 'g'
+			.append('g')
+			.on('click.selectLine', endstationSelectLine)
 		
 		station = svg.selectAll('.station')
 			.data(stations)
