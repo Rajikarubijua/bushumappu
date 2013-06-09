@@ -1,12 +1,13 @@
 config =
-	showLines: 			false
-	fixedEndstation:	true
-	fixedStation:		true
-	filterRadicals:		(radicals) -> radicals
-	sunflowerKanjis:	true
-	kmeansInitialVectorsRandom: false
-	kmeansClustersN:	-1 # 0 rule of thumb, -1 vector.length
-	forceGraph:			false
+	showLines: 					false
+	fixedEndstation:			false
+	fixedStation:				false
+	filterRadicals:				(radicals) -> radicals
+	filterLinkedRadicals:		(radicals) -> radicals
+	sunflowerKanjis:			true
+	kmeansInitialVectorsRandom:	true
+	kmeansClustersN:			0 # 0 rule of thumb, -1 vector.length
+	forceGraph:					false
 
 # the global object where we can put stuff into it
 window.my = {
@@ -20,7 +21,7 @@ window.my = {
 define ['utils', 'load_data', 'prepare_data'], (
 	{ P, PN, W, copyAttrs, async, strUnique, somePrettyPrint, length, sort,
 	styleZoom, sunflower, vecX, vecY, vec, compareNumber, equidistantSelection
-	groupBy, getMinMax, arrayUnique, max },
+	groupBy, getMinMax, arrayUnique, max, distanceSqrXY, nearestXY },
 	loadData, prepare) ->
 
 	main = () ->
@@ -126,6 +127,24 @@ define ['utils', 'load_data', 'prepare_data'], (
 				station.x += cluster.x
 				station.y += cluster.y
 
+	getLinks = (radicals) ->
+		console.time 'getLinks'
+		links = []
+		for radical in config.filterLinkedRadicals radicals
+			stations = (kanji.station for kanji in radical.jouyou)
+			a = radical.station
+			l = stations.length
+			while stations.length > 0
+				{ b, i } = nearestXY a, stations
+				stations[i..i] = []
+				links.push { source: a, target: b }
+				a = b
+				if stations.length == l
+					throw "no progres"
+				l = stations.length
+		console.timeEnd 'getLinks'
+		links
+
 	setupInitialEmbedding = ->
 		r = 12
 		d = 2*r
@@ -155,13 +174,15 @@ define ['utils', 'load_data', 'prepare_data'], (
 		clusters_n = getClusterN vectors
 		if not config.kmeansInitialVectorsRandom
 			initial_vectors = equidistantSelection clusters_n, vectors
+		console.time 'prepare.setupClusterAssignment'
 		clusters = prepare.setupClusterAssignment(
 			(k.station for k in kanjis), initial_vectors, clusters_n)
+		console.timeEnd 'prepare.setupClusterAssignment'
 		
 		setupClustersForRadicals radicals, clusters
 		setupPositions clusters, d
-			
-		links = []
+		
+		links = getLinks radicals
 		endstations = (radical.station for radical in radicals)
 		stations = (kanji.station for kanji in kanjis)
 		{ stations, endstations, links }
@@ -189,19 +210,18 @@ define ['utils', 'load_data', 'prepare_data'], (
 		endstation.append("circle").attr {r}
 		endstation.append("text").text (d) -> d.label
 		
+		link.attr d: (d) -> svgline [ d.source, d.target ]
 		endstation.attr transform: (d) -> "translate(#{d.x} #{d.y})"
 		station.attr transform: (d) -> "translate(#{d.x} #{d.y})"
 		
 		if config.forceGraph
 			force = d3.layout.force()
-				.nodes(stations)
+				.nodes([stations..., endstations...])
 				.links(links)
-				.size([ (svg.attr 'width'), (scg.attr 'height') ])
-				.linkStrength(0.1)
-				.linkDistance(16*r)
-				.charge(-10)
+				.linkStrength(1)
+				.linkDistance(8*r)
+				.charge(-3000)
 				.gravity(0.001)
-				.theta(10)
 				.start()
 				.on 'tick', (e) -> forceTick e, link, endstation, station
 			station.call force.drag

@@ -169,6 +169,22 @@ define ->
 				max_e = e
 		max_e
 
+	distanceSqrXY = (a, b) ->
+		dx = b.x - a.x
+		dy = b.y - a.y
+		dx*dx + dy*dy
+
+	nearestXY = (a, array) ->
+		min_d = 1/0
+		min_i = null
+		for b, i in array
+			d = distanceSqrXY a, b
+			if d < min_d
+				min_d = d
+				min_i = i
+		{ b: array[min_i], i: min_i }
+
 	{ copyAttrs, P, PN, W, async, strUnique, expect, somePrettyPrint, length,
 	  sort, styleZoom, sunflower, vecX, vecY, vec, compareNumber, max,
-  	  parseMaybeNumber, equidistantSelection, getMinMax, arrayUnique }
+  	  parseMaybeNumber, equidistantSelection, getMinMax, arrayUnique,
+  	  distanceSqrXY, nearestXY }
