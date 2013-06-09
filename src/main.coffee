@@ -193,6 +193,7 @@ define ['utils', 'load_data', 'prepare_data'], (
 			.data(links)
 			.enter()
 			.append("path")
+			.classed("link", true)
 			.each((d) ->
 				d3.select(@).classed "radical_"+d.radical.radical, true)
 			
@@ -200,6 +201,7 @@ define ['utils', 'load_data', 'prepare_data'], (
 			.data(endstations)
 			.enter()
 			.append('g')
+			.classed("endstation", true)
 			.on('click.selectLine', endstationSelectLine)
 		endstation.append("circle").attr {r}
 		endstation.append("text").text (d) -> d.label
@@ -208,6 +210,7 @@ define ['utils', 'load_data', 'prepare_data'], (
 			.data(stations)
 			.enter()
 			.append('g')
+			.classed("station", true)
 		station.append('rect').attr x:-r, y:-r, width:2*r, height:2*r
 		station.append('text').text (d) -> d.label
 		
