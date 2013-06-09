@@ -81,11 +81,6 @@ define ['utils', 'load_data', 'prepare_data'], (
 			y = 2*d * Math.floor index / columns
 		{ x, y }
 
-	forceTick = (e, link, endstation, station) ->
-		link.attr d: (d) -> svgline [ d.source, d.target ]
-		endstation.attr transform: (d) -> "translate(#{d.x} #{d.y})"
-		station.attr transform: (d) -> "translate(#{d.x} #{d.y})"
-
 	svgline = d3.svg.line()
 		.x(({x}) -> x)
 		.y(({y}) -> y)
@@ -210,9 +205,11 @@ define ['utils', 'load_data', 'prepare_data'], (
 		endstation.append("circle").attr {r}
 		endstation.append("text").text (d) -> d.label
 		
-		link.attr d: (d) -> svgline [ d.source, d.target ]
-		endstation.attr transform: (d) -> "translate(#{d.x} #{d.y})"
-		station.attr transform: (d) -> "translate(#{d.x} #{d.y})"
+		updatePositions = ->
+			link.attr d: (d) -> svgline [ d.source, d.target ]
+			endstation.attr transform: (d) -> "translate(#{d.x} #{d.y})"
+			station.attr transform: (d) -> "translate(#{d.x} #{d.y})"
+		updatePositions()
 		
 		if config.forceGraph
 			force = d3.layout.force()
@@ -223,7 +220,7 @@ define ['utils', 'load_data', 'prepare_data'], (
 				.charge(-3000)
 				.gravity(0.001)
 				.start()
-				.on 'tick', (e) -> forceTick e, link, endstation, station
+				.on 'tick', updatePositions
 			station.call force.drag
 			
 	loadData main
