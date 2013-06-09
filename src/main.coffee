@@ -201,17 +201,15 @@ define ['utils', 'load_data', 'prepare_data'], (
 			.enter()
 			.append('g')
 			.on('click.selectLine', endstationSelectLine)
+		endstation.append("circle").attr {r}
+		endstation.append("text").text (d) -> d.label
 		
 		station = svg.selectAll('.station')
 			.data(stations)
 			.enter()
 			.append('g')
-
 		station.append('rect').attr x:-r, y:-r, width:2*r, height:2*r
 		station.append('text').text (d) -> d.label
-			
-		endstation.append("circle").attr {r}
-		endstation.append("text").text (d) -> d.label
 		
 		updatePositions = ->
 			link.attr d: (d) -> svgline [ d.source, d.target ]
