@@ -193,7 +193,8 @@ define ['utils', 'load_data', 'prepare_data'], (
 			.data(links)
 			.enter()
 			.append("path")
-			.each((d) -> @classList.add "radical_"+d.radical.radical)
+			.each((d) ->
+				d3.select(@).classed "radical_"+d.radical.radical, true)
 			
 		endstation = svg.selectAll('.endstation')
 			.data(endstations)
