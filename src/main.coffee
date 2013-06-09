@@ -5,7 +5,7 @@ config =
 	filterRadicals:				(radicals) -> radicals
 	filterLinkedRadicals:		(radicals) -> radicals
 	sunflowerKanjis:			true
-	kmeansInitialVectorsRandom:	true
+	kmeansInitialVectorsRandom:	false
 	kmeansClustersN:			0 # 0 rule of thumb, -1 vector.length
 	forceGraph:					false
 
