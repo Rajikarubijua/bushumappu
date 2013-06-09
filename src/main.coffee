@@ -9,6 +9,7 @@ config =
 	kmeansClustersN:			-1 # 0 rule of thumb, -1 vector.length
 	forceGraph:					false
 	circularLines:				true
+	gridSpacing:				48
 figue.KMEANS_MAX_ITERATIONS = 1
 
 # the global object where we can put stuff into it
