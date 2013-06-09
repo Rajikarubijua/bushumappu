@@ -6,8 +6,9 @@ config =
 	filterLinkedRadicals:		(radicals) -> radicals
 	sunflowerKanjis:			true
 	kmeansInitialVectorsRandom:	false
-	kmeansClustersN:			0 # 0 rule of thumb, -1 vector.length
+	kmeansClustersN:			-1 # 0 rule of thumb, -1 vector.length
 	forceGraph:					false
+figue.KMEANS_MAX_ITERATIONS = 1
 
 # the global object where we can put stuff into it
 window.my = {
@@ -44,7 +45,7 @@ define ['utils', 'load_data', 'prepare_data'], (
 				
 		svg.call (zoom = d3.behavior.zoom())
 			.translate([w()/2, h()/2])
-			.scale(0.12)
+			.scale(0.03)
 			.on 'zoom', styleZoom svg.g, zoom
 		draggingStart = -> svg.classed 'dragging', true
 		draggingEnd   = -> svg.classed 'dragging', false
