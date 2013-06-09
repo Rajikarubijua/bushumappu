@@ -8,6 +8,7 @@ config =
 	kmeansInitialVectorsRandom:	false
 	kmeansClustersN:			-1 # 0 rule of thumb, -1 vector.length
 	forceGraph:					false
+	circularLines:				true
 figue.KMEANS_MAX_ITERATIONS = 1
 
 # the global object where we can put stuff into it
@@ -138,6 +139,8 @@ define ['utils', 'load_data', 'prepare_data'], (
 				if stations.length == l
 					throw "no progres"
 				l = stations.length
+			if config.circularLines
+				links.push { source: a, target: radical.station, radical }
 		console.timeEnd 'getLinks'
 		links
 
