@@ -15,7 +15,7 @@ define ['utils'], ({ P, forall, nearest01, nearestXY, rasterCircle }) ->
 			new Edge { link }
 		graph = { nodes, edges }
 		layout = new MetroMapLayout { config, graph }
-		layout.snapNodes()
+		layout.snapNodes() if config.gridSpacing > 0
 		layout.optimize()
 		for node in nodes
 			node.station.x = node.x
