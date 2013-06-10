@@ -27,6 +27,7 @@ define ["utils", "prepare_data"], ({
 				kanji:		x.kanji? and x
 				radical:	x.radical? and x
 				fixed:		+config.fixedStation
+				links:		[]
 		
 		vectors = (k.station.vector for k in kanjis)
 		clusters_n = getClusterN vectors, config
@@ -55,13 +56,19 @@ define ["utils", "prepare_data"], ({
 			while stations.length > 0
 				{ b, i } = nearestXY a, stations
 				stations[i..i] = []
-				links.push { source: a, target: b, radical }
+				link = { source: a, target: b, radical }
+				links.push link
+				a.links.push link
+				b.links.push link
 				a = b
 				if stations.length == l
 					throw "no progres"
 				l = stations.length
 			if circularLines
-				links.push { source: a, target: radical.station, radical }
+				link = { source: a, target: radical.station, radical }
+				links.push link
+				a.links.push link
+				b.links.push link
 		console.timeEnd 'getLinks'
 		links
 
