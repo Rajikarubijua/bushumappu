@@ -78,7 +78,15 @@ define ['utils'], ({ P, compareNumber }) ->
 			.style('top', (d3.event.pageY - 28) + 'px')
   
 	stationMouseMove = (d, station) ->
-		tooltip.html(d.label + '<br/>' + d.kanji.grade + '<br/>' + d.kanji.meaning)
+		d.kanji.onyomi ?= ' - ' 
+		d.kanji.kunyomi ?= ' - '
+		d.kanji.grade ?= ' - '
+		tooltip.html(d.label + '<br/>' + 
+			d.kanji.meaning + '<br/>' + 
+			'strokes: ' + d.kanji.stroke_n + '<br/>' + 
+			'ON: ' + d.kanji.onyomi + '<br/>' + 
+			'KUN: '+ d.kanji.kunyomi + '<br/>' + 
+			'school year: ' + d.kanji.grade)
 			.style('opacity', 1)
 			.style("left", (d3.event.pageX) + "px")
 			.style("top", (d3.event.pageY - 28) + "px")
