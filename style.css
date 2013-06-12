@@ -16,6 +16,20 @@ path {
 	stroke-width: 2pt;
 }
 
+
+div.tooltip {
+  position: absolute;
+  text-align: center;
+  width: 100px;
+  height: 150px;
+  padding: 8px;
+  font: 16px sans-serif;
+  background: lightsteelblue;
+  border: solid 0px #aaa;
+  border-radius: 8px;
+  pointer-events: none;
+}
+
 /* Output colors
     [229,  53,  23, 1, "red"    ]
     [151, 190,  13, 1, "green"  ]
