@@ -122,8 +122,45 @@ define ['utils'], ({ P, forall, nearest01, nearestXY, rasterCircle }) ->
 			P loops+" metro optimization loops"
 			
 		calculateNodeCriteria: (nodes) ->
+			# angularResolutionCriterion = @getAngularResolutionCriterion nodes
+			# How to calculate final criterion over multiple criteria? p 89?
 			0
 		
+		getAngularResolutionCriterion: (nodes) ->
+			sum = 0
+			for node in nodes
+				edgesOfNode = @getEdgesOfNode node
+				degree = edgesOfNode.length
+				l_vec = @getVector edgesOfNode[0]
+				for edge in edgesOfNode
+					continue if edge == undefined 
+					c_vec = @getVector edge
+					continue if c_vec == l_vec
+
+					scalar = c_vec[0] * l_vec[0] + c_vec[1] * l_vec[1] 
+					c_length = Math.sqrt( Math.pow( c_vec[0], 2 ) + Math.pow( c_vec[1], 2) )
+					l_length = Math.sqrt( Math.pow( l_vec[0], 2 ) + Math.pow( l_vec[1], 2) )
+					angle = scalar / c_length * l_length
+					sum += Math.abs( (2*Math.PI / degree) - angle ) 
+
+					l_vec = @getVector edge
+			sum
+
+		getVector: (edge) ->
+			p1 = [ edge.link.source.x, edge.link.source.y ]
+			p2 = [ edge.link.target.x, edge.link.target.y ]
+			vec= [ p1[0] - p2[0], 	p1[1] - p2[1] ]
+		
+		getEdgesOfNode: (node) ->
+			edgesOfNode = []
+			for edge in @graph.edges
+				kanji 	  = node.station.kanji.kanji
+				src_kanji = edge.link.source.kanji.kanji
+				tar_kanji = edge.link.target.kanji.kanji
+				if src_kanji == kanji or tar_kanji == kanji
+					edgesOfNode.push edge
+			edgesOfNode
+
 		findLowestNodeCriteria: (nodes) ->
 			0
 		
