@@ -19,13 +19,18 @@ define ['utils'], ({ P, compareNumber }) ->
 		endstation.append("circle").attr {r}
 		endstation.append("text").text (d) -> d.label
 		
+		
 		station = svg.selectAll('.station')
 			.data(stations)
 			.enter()
 			.append('g')
 			.classed("station", true)
+			.on('mouseover', (d) -> stationMouseOver d)
+			.on('mouseout', (d) -> stationMouseOut d)
+			.on('mousemove', (d) -> stationMouseMove d, station)
 		station.append('rect').attr x:-r, y:-r, width:2*r, height:2*r
 		station.append('text').text (d) -> d.label
+
 		
 		updatePositions = ->
 			link.attr d: (d) -> svgline [ d.source, d.target ]
@@ -55,5 +60,35 @@ define ['utils'], ({ P, compareNumber }) ->
 			d.highlighted = !d3.select(@).classed 'highlighted'
 		d3.selectAll(".link").sort (a, b) ->
 				compareNumber a.highlighted or 0, b.highlighted or 0
+				
+	tooltip = d3.select('body').append('div')
+		.attr('class', 'tooltip')
+		.style('opacity', 0)
+
+	stationMouseOver = (d) ->
+		tooltip.transition().duration(500)
+			.style('opacity', 1)
+			.style('left', (d3.event.pageX) + 'px')
+			.style('top', (d3.event.pageY - 28) + 'px')
+    
+	stationMouseOut = (d) ->
+		tooltip.transition().duration(500)
+			.style('opacity', 0)
+			.style('left', (d3.event.pageX) + 'px')
+			.style('top', (d3.event.pageY - 28) + 'px')
+  
+	stationMouseMove = (d, station) ->
+		d.kanji.onyomi ?= ' - ' 
+		d.kanji.kunyomi ?= ' - '
+		d.kanji.grade ?= ' - '
+		tooltip.html(d.label + '<br/>' + 
+			d.kanji.meaning + '<br/>' + 
+			'strokes: ' + d.kanji.stroke_n + '<br/>' + 
+			'ON: ' + d.kanji.onyomi + '<br/>' + 
+			'KUN: '+ d.kanji.kunyomi + '<br/>' + 
+			'school year: ' + d.kanji.grade)
+			.style('opacity', 1)
+			.style("left", (d3.event.pageX) + "px")
+			.style("top", (d3.event.pageY - 28) + "px")
 
 	{ setupD3 }
