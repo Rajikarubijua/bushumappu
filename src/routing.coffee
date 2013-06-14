@@ -32,6 +32,11 @@ define ['utils'], ({ P, forall, nearest01, nearestXY, rasterCircle }) ->
 	
 	class Edge
 		constructor: ({ @link }) ->
+
+		getVector: () ->
+			[ x1,y1 ] = [ @link.source.x, @link.source.y ]
+			[ x2,y2 ] = [ @link.target.x, @link.target.y ]
+			vec 	  = [ x1 - x2, y1 - y2 ]
 	
 	class Grid
 		constructor:    -> @map = d3.map()
@@ -105,14 +110,14 @@ define ['utils'], ({ P, forall, nearest01, nearestXY, rasterCircle }) ->
 			# somewhat like Algorithm 3.2 Metro Map Layout
 			loops = 0
 			time = @timeToOptimize+Date.now()
-			mT0 = @calculateNodeCriteria nodes
+			[ mT0, mN ] = @calculateNodesCriteria nodes
+			mT = mT0
 			loop
 				for node in nodes
-					mN0 = @calculateNodeCriteria nodes
-					mN  = @findLowestNodeCriteria nodes
+					mN0 = node.criteria
 					if mN < mN0
 						@moveNode node
-				mT = @calculateNodeCriteria nodes
+						[ mT, mN ] = @calculateNodesCriteria nodes
 				# XXX no clustering now
 				# no labels
 				++loops
@@ -121,35 +126,31 @@ define ['utils'], ({ P, forall, nearest01, nearestXY, rasterCircle }) ->
 				mT0 = mT
 			P loops+" metro optimization loops"
 			
-		calculateNodeCriteria: (nodes) ->
+		calculateNodesCriteria: (nodes) ->
 			# angularResolutionCriterion = @getAngularResolutionCriterion nodes
 			# How to calculate final criterion over multiple criteria? p 89?
-			0
+			[0,0]
 		
 		getAngularResolutionCriterion: (nodes) ->
 			sum = 0
 			for node in nodes
 				edgesOfNode = @getEdgesOfNode node
 				degree = edgesOfNode.length
-				l_vec = @getVector edgesOfNode[0]
-				for edge in edgesOfNode
-					continue if edge == undefined 
-					c_vec = @getVector edge
-					continue if c_vec == l_vec
+				for e1 in edgesOfNode
+					for e2 in edgesOfNode
+						continue if e1 == e2
 
-					scalar = c_vec[0] * l_vec[0] + c_vec[1] * l_vec[1] 
-					c_length = Math.sqrt( Math.pow( c_vec[0], 2 ) + Math.pow( c_vec[1], 2) )
-					l_length = Math.sqrt( Math.pow( l_vec[0], 2 ) + Math.pow( l_vec[1], 2) )
-					angle = scalar / c_length * l_length
-					sum += Math.abs( (2*Math.PI / degree) - angle ) 
+						[ x1, y1 ] = e1.getVector()
+						[ x2, y2 ] = e2.getVector()
 
-					l_vec = @getVector edge
+						scalar = x1 * x2 + y1 * y2 
+						l1 = Math.sqrt( Math.pow( x1, 2 ) + Math.pow( y1, 2) )
+						l2 = Math.sqrt( Math.pow( x2, 2 ) + Math.pow( y2, 2) )
+						angle = Math.acos( scalar / l1 * l2)
+						
+						sum += Math.abs( (2*Math.PI / degree) - angle ) 
+
 			sum
-
-		getVector: (edge) ->
-			p1 = [ edge.link.source.x, edge.link.source.y ]
-			p2 = [ edge.link.target.x, edge.link.target.y ]
-			vec= [ p1[0] - p2[0], 	p1[1] - p2[1] ]
 		
 		getEdgesOfNode: (node) ->
 			edgesOfNode = []
