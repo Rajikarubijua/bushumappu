@@ -7,6 +7,15 @@ define ['utils', 'grid', 'graph'], (
 		http://www.jstott.me.uk/thesis/thesis-final.pdf (main algorithm on page 90)
 		This involved graph, node, edge, metro line, ...
 
+		* data stucture
+			graph = { nodes, edges }
+			node  = { station }
+			edge  = { link }
+			station = { label, cluster,	vector, x, y, kanji, radical, fixed, links }
+			link = { source, target, radical, kanjis}
+			source = { station }
+			target = { station }
+
 	###
 
 	metroMap = ({ stations, endstations, links }, config) ->
@@ -24,7 +33,7 @@ define ['utils', 'grid', 'graph'], (
 			node.station.y = node.y
 		console.timeEnd 'metroMap'
 		{ stations, endstations, links }
-			
+		
 	class MetroMapLayout
 		constructor: ({ config, @graph }) ->
 			{ @timeToOptimize, @gridSpacing } = config
@@ -70,14 +79,14 @@ define ['utils', 'grid', 'graph'], (
 			# somewhat like Algorithm 3.2 Metro Map Layout
 			loops = 0
 			time = @timeToOptimize+Date.now()
-			mT0 = @calculateNodeCriteria nodes
+			[ mT0, mN ] = @calculateNodesCriteria nodes
+			mT = mT0
 			loop
 				for node in nodes
-					mN0 = @calculateNodeCriteria nodes
-					mN  = @findLowestNodeCriteria nodes
+					mN0 = node.criteria
 					if mN < mN0
 						@moveNode node
-				mT = @calculateNodeCriteria nodes
+						[ mT, mN ] = @calculateNodesCriteria nodes
 				# XXX no clustering now
 				# no labels
 				++loops
@@ -86,35 +95,25 @@ define ['utils', 'grid', 'graph'], (
 				mT0 = mT
 			P loops+" metro optimization loops"
 			
-		calculateNodeCriteria: (nodes) ->
-			# angularResolutionCriterion = @getAngularResolutionCriterion nodes
+		calculateNodesCriteria: (nodes) ->
 			# How to calculate final criterion over multiple criteria? p 89?
-			0
-		
-		getAngularResolutionCriterion: (nodes) ->
-			sum = 0
 			for node in nodes
 				edgesOfNode = @getEdgesOfNode node
-				degree = edgesOfNode.length
-				l_vec = @getVector edgesOfNode[0]
-				for edge in edgesOfNode
-					continue if edge == undefined 
-					c_vec = @getVector edge
-					continue if c_vec == l_vec
+				# angularResolutionCriterion = @getAngularResolutionCriterion edgesOfNode
 
-					scalar = c_vec[0] * l_vec[0] + c_vec[1] * l_vec[1] 
-					c_length = Math.sqrt( Math.pow( c_vec[0], 2 ) + Math.pow( c_vec[1], 2) )
-					l_length = Math.sqrt( Math.pow( l_vec[0], 2 ) + Math.pow( l_vec[1], 2) )
-					angle = scalar / c_length * l_length
-					sum += Math.abs( (2*Math.PI / degree) - angle ) 
+			[0,0]
+		
+		getAngularResolutionCriterion: (edges) ->
+			sum = 0
+			degree = edges.length
+			# TODO: nur nebeneinanderliegende Kanten
+			# nur die kleinsten Winkel ... Anzahl = Kanten
+			for e1 in edges
+				for e2 in edges
+					continue if e1.isSame(e2)					
+					sum += Math.abs( (2*Math.PI / degree) - e1.getAngle(e2) )
 
-					l_vec = @getVector edge
 			sum
-
-		getVector: (edge) ->
-			p1 = [ edge.link.source.x, edge.link.source.y ]
-			p2 = [ edge.link.target.x, edge.link.target.y ]
-			vec= [ p1[0] - p2[0], 	p1[1] - p2[1] ]
 		
 		getEdgesOfNode: (node) ->
 			edgesOfNode = []
@@ -131,4 +130,4 @@ define ['utils', 'grid', 'graph'], (
 		
 		moveNode: (node) ->
 	
-	{ metroMap, MetroMapLayout }
+	{ metroMap, MetroMapLayout, Node, Edge }
