@@ -5,6 +5,15 @@ define ['utils'], ({ P, forall, nearest01, nearestXY, rasterCircle }) ->
 		http://www.jstott.me.uk/thesis/thesis-final.pdf (main algorithm on page 90)
 		This involved graph, node, edge, metro line, ...
 
+		* data stucture
+			graph = { nodes, edges }
+			node  = { station }
+			edge  = { link }
+			station = { label, cluster,	vector, x, y, kanji, radical, fixed, links }
+			link = { source, target, radical, kanjis}
+			source = { station }
+			target = { station }
+
 	###
 
 	metroMap = ({ stations, endstations, links }, config) ->
@@ -131,11 +140,14 @@ define ['utils'], ({ P, forall, nearest01, nearestXY, rasterCircle }) ->
 			# How to calculate final criterion over multiple criteria? p 89?
 			[0,0]
 		
+		# calculates how much degree behind optimum 0°
 		getAngularResolutionCriterion: (nodes) ->
 			sum = 0
 			for node in nodes
 				edgesOfNode = @getEdgesOfNode node
 				degree = edgesOfNode.length
+				# TODO: nur nebeneinanderliegende Kanten
+				# nur die kleinsten Winkel ... Anzahl = Kanten
 				for e1 in edgesOfNode
 					for e2 in edgesOfNode
 						continue if e1 == e2
@@ -148,6 +160,7 @@ define ['utils'], ({ P, forall, nearest01, nearestXY, rasterCircle }) ->
 						l2 = Math.sqrt( Math.pow( x2, 2 ) + Math.pow( y2, 2) )
 						angle = Math.acos( scalar / l1 * l2)
 						
+						# why pi - angle?
 						sum += Math.abs( (2*Math.PI / degree) - angle ) 
 
 			sum
