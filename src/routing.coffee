@@ -180,4 +180,4 @@ define ['utils'], ({ P, forall, nearest01, nearestXY, rasterCircle }) ->
 		
 		moveNode: (node) ->
 	
-	{ metroMap, MetroMapLayout }
+	{ metroMap, MetroMapLayout, Node, Edge }
