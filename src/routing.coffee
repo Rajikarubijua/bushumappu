@@ -18,14 +18,13 @@ define ['utils', 'grid', 'graph'], (
 
 	###
 
-	metroMap = ({ nodes, endstations, edges }, config) ->
+	metroMap = (graph, config) ->
 		console.time 'metroMap'
-		graph = { nodes, edges }
 		layout = new MetroMapLayout { config, graph }
 		layout.snapNodes() if config.gridSpacing > 0
 		layout.optimize()
 		console.timeEnd 'metroMap'
-		{ nodes, endstations, edges }
+		graph
 		
 	class MetroMapLayout
 		constructor: ({ config, @graph }) ->

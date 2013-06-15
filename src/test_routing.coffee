@@ -32,14 +32,9 @@ define ['utils', 'routing', 'tests'], ({ P }, routing, T) ->
 				layout = new routing.MetroMapLayout { config, graph: { edges } }
 				T.assert name, edges, config, criteria
 
-			link  = {target: {x: 5, y: 1}, source: {x: 1, y: 1}}
-			edge1 = new routing.Edge { link }
-
-			link  = {target: {x: 1, y: 1}, source: {x: 3, y: 3}}
-			edge2 = new routing.Edge { link }
-
-			link  = {target: {x: -2, y: 1}, source: {x: 1, y: 1}}
-			edge3 = new routing.Edge { link }
+			edge1 = new routing.Edge target: {x: 5, y: 1}, source: {x: 1, y: 1}
+			edge2 = new routing.Edge target: {x: 1, y: 1}, source: {x: 3, y: 3}
+			edge3 = new routing.Edge target: {x: -2, y: 1}, source: {x: 1, y: 1}
 
 			edges1  = [ edge1 , edge3]
 			edges2  = [ edge1 , edge2]

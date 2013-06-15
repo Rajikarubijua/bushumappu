@@ -1,10 +1,9 @@
 define [], () ->
 
 	class Node
-		constructor: ({ @x, @y, @lines, @edges, @data, @style, @station }={}) ->
-			# @station deprecated
-			@x     ?= @station?.x or 0
-			@y     ?= @station?.y or 0
+		constructor: ({ @x, @y, @lines, @edges, @data, @style }={}) ->
+			@x     ?= 0
+			@y     ?= 0
 			@lines ?= []
 			@edges ?= []
 			@data  ?= {}
@@ -13,11 +12,11 @@ define [], () ->
 		coord: -> @x+"x"+@y
 	
 	class Edge
-		constructor: ({ @node0, @node1, @line, @link }={}) ->
-			# @link deprecated
-			@source ?= @link?.source or null
-			@target ?= @link?.target or null
-			@line   ?= @link?.radical or null
+		constructor: ({ @source, @target, @line, @radical }={}) ->
+			throw @radical if @radical
+			@source ?= null
+			@target ?= null
+			@line   ?= null
 		
 		getVector: ->
 			[ @target.x - @source.x, @target.y - @source.y ]
@@ -30,4 +29,10 @@ define [], () ->
 			l2 = Math.sqrt( Math.pow( x2, 2 ) + Math.pow( y2, 2) )
 			angle = Math.acos( scalar / (l1 * l2))
 
-	{ Node, Edge }
+	class Line
+		constructor: ({ @nodes, @edges, @data }={}) ->
+			@nodes ?= []
+			@edges ?= []
+			@data  ?= {}
+
+	{ Node, Edge, Line }

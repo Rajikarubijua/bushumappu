@@ -1,7 +1,7 @@
 define ["utils", "prepare_data", 'graph'], ({
 	P, length, arrayUnique, equidistantSelection, max, sunflower, getMinMax,
 	nearestXY },
-	prepare, { Node, Edge }) ->
+	prepare, { Node, Edge, Line }) ->
 
 	setupInitialEmbedding = (config) ->
 		r = 12
@@ -20,54 +20,63 @@ define ["utils", "prepare_data", 'graph'], ({
 		nodes = for data in [ kanjis..., radicals... ]
 			node = new Node { data }
 			node.vector = prepare.getRadicalVector data, radicals
-			node.label  = "?"
+			node.label  = data.kanji or data.radical
 			node.cluster = null
 			node.fixed = +config.fixednode
 			data.node = node
 			node
+		nodes_kanjis = (k.node for k in kanjis)
+		nodes_radicals = (r.node for r in radicals)
 		
-		vectors = (n.vector for n in nodes)
+		vectors = (n.vector for n in nodes_kanjis)
 		clusters_n = getClusterN vectors, config
 		if not config.kmeansInitialVectorsRandom
 			initial_vectors = equidistantSelection clusters_n, vectors
 		console.time 'prepare.setupClusterAssignment'
 		clusters = prepare.setupClusterAssignment(
-			nodes, initial_vectors, clusters_n)
+			nodes_kanjis, initial_vectors, clusters_n)
 		console.timeEnd 'prepare.setupClusterAssignment'
 		
 		setupClustersForRadicals radicals, clusters
 		setupPositions clusters, d, config
 		
-		edges = getEdges (config.filterLinkedRadicals radicals), config
-		endnodes = (radical.node for radical in radicals)
-		nodes = (kanji.node for kanji in kanjis)
-		{ nodes, endnodes, edges }
+		[ edges, lines ] = getEdges (config.filterLinkedRadicals radicals), config
+		endnodes = nodes_radicals
+		{ nodes: nodes_kanjis, endnodes, edges, lines }
 		
 	getEdges = (radicals, { circularLines }) ->
 		console.time 'getEdges'
 		edges = []
+		lines = []
 		for radical in radicals
+			lines.push line = new Line data: radical
 			nodes = (kanji.node for kanji in radical.jouyou)
 			a = radical.node
 			l = nodes.length
 			while nodes.length > 0
 				{ b, i } = nearestXY a, nodes
 				nodes[i..i] = []
-				edge = { source: a, target: b, radical }
+				edge = new Edge { source: a, target: b, line }
 				edges.push edge
 				a.lines.push edge
 				b.lines.push edge
+				line.edges.push edge
+				line.nodes.push a
 				a = b
 				if nodes.length == l
 					throw "no progres"
 				l = nodes.length
 			if circularLines
-				edge = { source: a, target: radical.node, radical }
+				b = radical.node
+				edge = new Edge { source: a, target: b, line }
 				edges.push edge
 				a.lines.push edge
 				b.lines.push edge
+				line.edges.push edge
+				line.nodes.push a
+			line.nodes.push b
 		console.timeEnd 'getEdges'
-		edges
+		[ edges, lines ]
 
 	setupPositions = (clusters, d, config) ->
 		for cluster in clusters

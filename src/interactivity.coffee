@@ -1,17 +1,18 @@
 define ['utils'], ({ P, compareNumber }) ->
 
-	setupD3 = (svg, { nodes, endnodes, edges }, config) ->
+	setupD3 = (svg, { nodes, lines, edges, endnodes }, config) ->
 		r = 12
+
+		nodes = (node for node in nodes when node not in endnodes)
 
 		edge = svg.selectAll(".edge")
 			.data(edges)
 			.enter()
 			.append("path")
 			.classed("edge", true)
-		#	.each((d) ->
-		#		d3.select(@).classed "line_"+d.line.id, true)
+			.each((d) ->
+				d3.select(@).classed "line_"+d.line.data.radical, true)
 			
-		###
 		endnode = svg.selectAll('.endnode')
 			.data(endnodes)
 			.enter()
@@ -20,7 +21,6 @@ define ['utils'], ({ P, compareNumber }) ->
 			.on('click.selectLine', (d) -> endnodeSelectLine d)
 		endnode.append("circle").attr {r}
 		endnode.append("text").text (d) -> d.label
-		###
 		
 		node = svg.selectAll('.node')
 			.data(nodes)
@@ -36,7 +36,7 @@ define ['utils'], ({ P, compareNumber }) ->
 		
 		updatePositions = ->
 			edge.attr d: (d) -> svgline [ d.source, d.target ]
-			#endnode.attr transform: (d) -> "translate(#{d.x} #{d.y})"
+			endnode.attr transform: (d) -> "translate(#{d.x} #{d.y})"
 			node.attr transform: (d) -> "translate(#{d.x} #{d.y})"
 		updatePositions()
 		
@@ -80,15 +80,15 @@ define ['utils'], ({ P, compareNumber }) ->
 			.style('top', (d3.event.pageY - 28) + 'px')
   
 	nodeMouseMove = (d, node) ->
-		d.kanji.onyomi ?= ' - ' 
-		d.kanji.kunyomi ?= ' - '
-		d.kanji.grade ?= ' - '
+		d.data.onyomi ?= ' - ' 
+		d.data.kunyomi ?= ' - '
+		d.data.grade ?= ' - '
 		tooltip.html(d.label + '<br/>' + 
-			d.kanji.meaning + '<br/>' + 
-			'strokes: ' + d.kanji.stroke_n + '<br/>' + 
-			'ON: ' + d.kanji.onyomi + '<br/>' + 
-			'KUN: '+ d.kanji.kunyomi + '<br/>' + 
-			'school year: ' + d.kanji.grade)
+			d.data.meaning + '<br/>' + 
+			'strokes: ' + d.data.stroke_n + '<br/>' + 
+			'ON: ' + d.data.onyomi + '<br/>' + 
+			'KUN: '+ d.data.kunyomi + '<br/>' + 
+			'school year: ' + d.data.grade)
 			.style('opacity', 1)
 			.style("left", (d3.event.pageX) + "px")
 			.style("top", (d3.event.pageY - 28) + "px")

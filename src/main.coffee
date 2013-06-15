@@ -2,13 +2,13 @@ config =
 	showLines: 					false
 	fixedEndstation:			false
 	fixedStation:				false
-	filterRadicals:				(radicals) -> radicals[...2]
+	filterRadicals:				(radicals) -> radicals
 	filterLinkedRadicals:		(radicals) -> radicals
 	sunflowerKanjis:			true
 	kmeansInitialVectorsRandom:	false
-	kmeansClustersN:			1 # 0 rule of thumb, -1 vector.length
+	kmeansClustersN:			-1 # 0 rule of thumb, -1 vector.length
 	forceGraph:					false
-	circularLines:				true
+	circularLines:				false
 	gridSpacing:				48*6 # 0 deactivates snapNodes
 	debugOverlay:				false
 figue.KMEANS_MAX_ITERATIONS = 1
