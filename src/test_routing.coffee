@@ -24,7 +24,7 @@ define ['utils', 'routing', 'tests'], ({ P }, routing, T) ->
 				({ x:0, y:0 } for [1..10]),
 				{ oneIsAtZero, allAreSnapped }
 
-		testNodeCriteria: ->
+		testAngularResolutionCriterion: ->
 			config = testConfig
 
 			test = (name, edges, criteria) ->
@@ -32,16 +32,26 @@ define ['utils', 'routing', 'tests'], ({ P }, routing, T) ->
 				layout = new routing.MetroMapLayout { config, graph: { edges } }
 				T.assert name, edges, config, criteria
 
-			link1  = {target: {x: 5, y: 1}, source: {x: 1, y: 1}}
-			link2  = {target: {x: 1, y: 1}, source: {x: 3, y: 3}}
-			edges  = [{  link1 }, {  link2 }]
+			link  = {target: {x: 5, y: 1}, source: {x: 1, y: 1}}
+			edge1 = new routing.Edge { link }
+
+			link  = {target: {x: 1, y: 1}, source: {x: 3, y: 3}}
+			edge2 = new routing.Edge { link }
+
+			link  = {target: {x: -2, y: 1}, source: {x: 1, y: 1}}
+			edge3 = new routing.Edge { link }
+
+			edges1  = [ edge1 , edge3]
+			edges2  = [ edge1 , edge2]
 
 			# edge getVector()
-			test "edge.getVector() test", [{ link1 }], { coordIsRight1 }
-			test "edge.getVector() test", [{ link2 }], { coordIsRight2 }
+			test "edge.getVector() test1", [edge1], { coordIsRight1 }
+			test "edge.getVector() test2", [edge2], { coordIsRight2 }
 
 			# nodeCriteria
-			# test "edge.getVector() test", [{  link1 }], config, criteria
+			test "test perfect single edge", [edge1], { criteriaIsNull }
+			test "test perfect multiple edge", edges1, { criteriaIsNull }
+			test "test multiple edge", edges2, { criteriaIsRight }
 
 			
 			
@@ -58,21 +68,36 @@ define ['utils', 'routing', 'tests'], ({ P }, routing, T) ->
 		true
 
 	coordIsRight1 = (edges) ->
-		link = edges[0].link1
-		edge = new routing.Edge { link }
-		vec = edge.getVector()
+		vec = edges[0].getVector()
 		if vec[0] == 4 & vec[1] == 0
 			return true
+		P vec
 		false
 
 	coordIsRight2 = (edges) ->
-		link = edges[0].link2
-		edge = new routing.Edge { link }
-		vec = edge.getVector()
-		if vec[0] == 2 & vec[1] == 2
+		vec = edges[0].getVector()
+		if vec[0] == -2 & vec[1] == -2
 			return true
-		false		
+		P vec
+		false
+
+	criteriaIsNull = (edges, config) ->
+		layout = new routing.MetroMapLayout { config, graph: { edges } }
+		sum = layout.getAngularResolutionCriterion(edges)
+		if sum == 0
+			return true
+		P sum
+		false
 			
+	criteriaIsRight = (edges, config) ->
+		layout = new routing.MetroMapLayout { config, graph: { edges } }
+		sum = layout.getAngularResolutionCriterion(edges)
+		optim = (2*Math.PI) / edges.length
+		if sum == (optim - Math.PI / 4)
+			return true
+		P sum
+		false
+
 	testConfig =
 		timeToOptimize:		1000
 		gridSpacing:		3

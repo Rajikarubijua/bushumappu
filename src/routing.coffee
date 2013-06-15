@@ -45,7 +45,12 @@ define ['utils'], ({ P, forall, nearest01, nearestXY, rasterCircle }) ->
 		getVector: () ->
 			[ x1,y1 ] = [ @link.source.x, @link.source.y ]
 			[ x2,y2 ] = [ @link.target.x, @link.target.y ]
-			vec 	  = [ x1 - x2, y1 - y2 ]
+			vec 	  = [ x2 - x1, y2 - y1 ]
+
+		isSame: (edge) ->
+			sameSource = @link.source.x == edge.link.source.x and @link.source.y == edge.link.source.y
+			sameTarget = @link.target.x == edge.link.target.x and @link.target.y == edge.link.target.y
+			sameTarget && sameSource
 	
 	class Grid
 		constructor:    -> @map = d3.map()
@@ -136,32 +141,29 @@ define ['utils'], ({ P, forall, nearest01, nearestXY, rasterCircle }) ->
 			P loops+" metro optimization loops"
 			
 		calculateNodesCriteria: (nodes) ->
-			# angularResolutionCriterion = @getAngularResolutionCriterion nodes
 			# How to calculate final criterion over multiple criteria? p 89?
-			[0,0]
-		
-		# calculates how much degree behind optimum 0°
-		getAngularResolutionCriterion: (nodes) ->
-			sum = 0
 			for node in nodes
 				edgesOfNode = @getEdgesOfNode node
-				degree = edgesOfNode.length
-				# TODO: nur nebeneinanderliegende Kanten
-				# nur die kleinsten Winkel ... Anzahl = Kanten
-				for e1 in edgesOfNode
-					for e2 in edgesOfNode
-						continue if e1 == e2
+				# angularResolutionCriterion = @getAngularResolutionCriterion edgesOfNode
 
-						[ x1, y1 ] = e1.getVector()
-						[ x2, y2 ] = e2.getVector()
+			[0,0]
+		
+		getAngularResolutionCriterion: (edges) ->
+			sum = 0
+			degree = edges.length
+			# TODO: nur nebeneinanderliegende Kanten
+			# nur die kleinsten Winkel ... Anzahl = Kanten
+			for e1 in edges
+				for e2 in edges
+					continue if e1.isSame(e2)
+					[ x1, y1 ] = e1.getVector()
+					[ x2, y2 ] = e2.getVector()
 
-						scalar = x1 * x2 + y1 * y2 
-						l1 = Math.sqrt( Math.pow( x1, 2 ) + Math.pow( y1, 2) )
-						l2 = Math.sqrt( Math.pow( x2, 2 ) + Math.pow( y2, 2) )
-						angle = Math.acos( scalar / l1 * l2)
-						
-						# why pi - angle?
-						sum += Math.abs( (2*Math.PI / degree) - angle ) 
+					scalar = x1 * x2 + y1 * y2 
+					l1 = Math.sqrt( Math.pow( x1, 2 ) + Math.pow( y1, 2) )
+					l2 = Math.sqrt( Math.pow( x2, 2 ) + Math.pow( y2, 2) )
+					angle = Math.acos( scalar / l1 * l2)
+					sum += Math.abs( (2*Math.PI / degree) - angle ) 
 
 			sum
 		
