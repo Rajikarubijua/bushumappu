@@ -2,7 +2,7 @@ config =
 	showLines: 					false
 	fixedEndstation:			false
 	fixedStation:				false
-	filterRadicals:				(radicals) -> radicals
+	filterRadicals:				(radicals) -> radicals[...2]
 	filterLinkedRadicals:		(radicals) -> radicals
 	sunflowerKanjis:			true
 	kmeansInitialVectorsRandom:	false
@@ -10,6 +10,7 @@ config =
 	forceGraph:					false
 	circularLines:				true
 	gridSpacing:				48*6 # 0 deactivates snapNodes
+	debugOverlay:				false
 figue.KMEANS_MAX_ITERATIONS = 1
 
 # the global object where we can put stuff into it
@@ -29,7 +30,9 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 
 	main = () ->
 		body = my.body = d3.select 'body'
-		body.append('pre').attr(id:'my').text somePrettyPrint my
+
+		if config.debugOverlay
+			showDebugOverlay body
 				
 		svg   = my.svg = body.append 'svg'
 		svg.g = svg.append 'g'
@@ -59,6 +62,9 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 		graph = setupInitialEmbedding config
 		graph = metroMap graph, config
 		setupD3 svg.g, graph, config
+			
+	showDebugOverlay = (el) ->
+		el.append('pre').attr(id:'my').text somePrettyPrint my
 			
 	testRouting.runTests()
 	loadData main
