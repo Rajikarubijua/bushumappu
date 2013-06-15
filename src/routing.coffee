@@ -110,7 +110,7 @@ define ['utils', 'grid', 'graph'], (
 			# nur die kleinsten Winkel ... Anzahl = Kanten
 			for e1 in edges
 				for e2 in edges
-					continue if e1.isSame(e2)					
+					continue if e1 == e2
 					sum += Math.abs( (2*Math.PI / degree) - e1.getAngle(e2) )
 
 			sum

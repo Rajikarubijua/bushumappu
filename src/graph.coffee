@@ -30,9 +30,4 @@ define [], () ->
 			l2 = Math.sqrt( Math.pow( x2, 2 ) + Math.pow( y2, 2) )
 			angle = Math.acos( scalar / (l1 * l2))
 
-		isSame: (edge) ->
-			sameSource = @link.source.x == edge.link.source.x and @link.source.y == edge.link.source.y
-			sameTarget = @link.target.x == edge.link.target.x and @link.target.y == edge.link.target.y
-			sameTarget && sameSource
-
 	{ Node, Edge }
