@@ -6,7 +6,7 @@ config =
 	filterLinkedRadicals:		(radicals) -> radicals
 	sunflowerKanjis:			true
 	kmeansInitialVectorsRandom:	false
-	kmeansClustersN:			-1 # 0 rule of thumb, -1 vector.length
+	kmeansClustersN:			1 # 0 rule of thumb, -1 vector.length
 	forceGraph:					false
 	circularLines:				true
 	gridSpacing:				48*6 # 0 deactivates snapNodes

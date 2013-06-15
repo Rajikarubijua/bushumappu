@@ -1,83 +1,85 @@
 define ['utils'], ({ P, compareNumber }) ->
 
-	setupD3 = (svg, { stations, endstations, links }, config) ->
+	setupD3 = (svg, { nodes, endnodes, edges }, config) ->
 		r = 12
-		link = svg.selectAll(".link")
-			.data(links)
+
+		edge = svg.selectAll(".edge")
+			.data(edges)
 			.enter()
 			.append("path")
-			.classed("link", true)
-			.each((d) ->
-				d3.select(@).classed "radical_"+d.radical.radical, true)
+			.classed("edge", true)
+		#	.each((d) ->
+		#		d3.select(@).classed "line_"+d.line.id, true)
 			
-		endstation = svg.selectAll('.endstation')
-			.data(endstations)
+		###
+		endnode = svg.selectAll('.endnode')
+			.data(endnodes)
 			.enter()
 			.append('g')
-			.classed("endstation", true)
-			.on('click.selectLine', (d) -> endstationSelectLine d)
-		endstation.append("circle").attr {r}
-		endstation.append("text").text (d) -> d.label
+			.classed("endnode", true)
+			.on('click.selectLine', (d) -> endnodeSelectLine d)
+		endnode.append("circle").attr {r}
+		endnode.append("text").text (d) -> d.label
+		###
 		
-		
-		station = svg.selectAll('.station')
-			.data(stations)
+		node = svg.selectAll('.node')
+			.data(nodes)
 			.enter()
 			.append('g')
-			.classed("station", true)
-			.on('mouseover', (d) -> stationMouseOver d)
-			.on('mouseout', (d) -> stationMouseOut d)
-			.on('mousemove', (d) -> stationMouseMove d, station)
-		station.append('rect').attr x:-r, y:-r, width:2*r, height:2*r
-		station.append('text').text (d) -> d.label
+			.classed("node", true)
+			.on('mouseover', (d) -> nodeMouseOver d)
+			.on('mouseout', (d) -> nodeMouseOut d)
+			.on('mousemove', (d) -> nodeMouseMove d, node)
+		node.append('rect').attr x:-r, y:-r, width:2*r, height:2*r
+		node.append('text').text (d) -> d.label
 
 		
 		updatePositions = ->
-			link.attr d: (d) -> svgline [ d.source, d.target ]
-			endstation.attr transform: (d) -> "translate(#{d.x} #{d.y})"
-			station.attr transform: (d) -> "translate(#{d.x} #{d.y})"
+			edge.attr d: (d) -> svgline [ d.source, d.target ]
+			#endnode.attr transform: (d) -> "translate(#{d.x} #{d.y})"
+			node.attr transform: (d) -> "translate(#{d.x} #{d.y})"
 		updatePositions()
 		
 		if config.forceGraph
 			force = d3.layout.force()
-				.nodes([stations..., endstations...])
-				.links(links)
-				.linkStrength(1)
-				.linkDistance(8*r)
+				.nodes([nodes..., endnodes...])
+				.edges(edges)
+				.edgeStrength(1)
+				.edgeDistance(8*r)
 				.charge(-3000)
 				.gravity(0.001)
 				.start()
 				.on 'tick', -> updatePositions()
-			station.call force.drag
+			node.call force.drag
 			
 	svgline = d3.svg.line()
 		.x(({x}) -> x)
 		.y(({y}) -> y)
 
-	endstationSelectLine = (d) ->
+	endnodeSelectLine = (d) ->
 		selector = ".radical_"+d.radical.radical
 		d3.selectAll(selector).classed 'highlighted', (d) ->
 			d.highlighted = !d3.select(@).classed 'highlighted'
-		d3.selectAll(".link").sort (a, b) ->
+		d3.selectAll(".edge").sort (a, b) ->
 				compareNumber a.highlighted or 0, b.highlighted or 0
 				
 	tooltip = d3.select('body').append('div')
 		.attr('class', 'tooltip')
 		.style('opacity', 0)
 
-	stationMouseOver = (d) ->
+	nodeMouseOver = (d) ->
 		tooltip.transition().duration(500)
 			.style('opacity', 1)
 			.style('left', (d3.event.pageX) + 'px')
 			.style('top', (d3.event.pageY - 28) + 'px')
     
-	stationMouseOut = (d) ->
+	nodeMouseOut = (d) ->
 		tooltip.transition().duration(500)
 			.style('opacity', 0)
 			.style('left', (d3.event.pageX) + 'px')
 			.style('top', (d3.event.pageY - 28) + 'px')
   
-	stationMouseMove = (d, station) ->
+	nodeMouseMove = (d, node) ->
 		d.kanji.onyomi ?= ' - ' 
 		d.kanji.kunyomi ?= ' - '
 		d.kanji.grade ?= ' - '

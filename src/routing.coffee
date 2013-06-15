@@ -18,21 +18,14 @@ define ['utils', 'grid', 'graph'], (
 
 	###
 
-	metroMap = ({ stations, endstations, links }, config) ->
+	metroMap = ({ nodes, endstations, edges }, config) ->
 		console.time 'metroMap'
-		nodes = for station in [ stations..., endstations... ]
-			new Node { station }
-		edges = for link in links
-			new Edge { link }
 		graph = { nodes, edges }
 		layout = new MetroMapLayout { config, graph }
 		layout.snapNodes() if config.gridSpacing > 0
 		layout.optimize()
-		for node in nodes
-			node.station.x = node.x
-			node.station.y = node.y
 		console.timeEnd 'metroMap'
-		{ stations, endstations, links }
+		{ nodes, endstations, edges }
 		
 	class MetroMapLayout
 		constructor: ({ config, @graph }) ->
@@ -118,9 +111,9 @@ define ['utils', 'grid', 'graph'], (
 		getEdgesOfNode: (node) ->
 			edgesOfNode = []
 			for edge in @graph.edges
-				kanji 	  = node.station.kanji.kanji
-				src_kanji = edge.link.source.kanji.kanji
-				tar_kanji = edge.link.target.kanji.kanji
+				kanji 	  = node.data.kanji
+				src_kanji = edge.source.data.kanji
+				tar_kanji = edge.target.data.kanji
 				if src_kanji == kanji or tar_kanji == kanji
 					edgesOfNode.push edge
 			edgesOfNode

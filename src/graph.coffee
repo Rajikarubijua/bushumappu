@@ -3,8 +3,8 @@ define [], () ->
 	class Node
 		constructor: ({ @x, @y, @lines, @edges, @data, @style, @station }={}) ->
 			# @station deprecated
-			@x     ?= @station.x or 0
-			@y     ?= @station.y or 0
+			@x     ?= @station?.x or 0
+			@y     ?= @station?.y or 0
 			@lines ?= []
 			@edges ?= []
 			@data  ?= {}
@@ -15,9 +15,9 @@ define [], () ->
 	class Edge
 		constructor: ({ @node0, @node1, @line, @link }={}) ->
 			# @link deprecated
-			@source ?= @link.source or null
-			@target ?= @link.target or null
-			@line   ?= null
+			@source ?= @link?.source or null
+			@target ?= @link?.target or null
+			@line   ?= @link?.radical or null
 		
 		getVector: ->
 			[ @target.x - @source.x, @target.y - @source.y ]
