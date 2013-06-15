@@ -1,5 +1,6 @@
-define ['utils', 'grid'], ({ P, forall, nearest01, nearestXY, rasterCircle },
-	{ Grid }) ->
+define ['utils', 'grid', 'graph'], (
+	{ P, forall, nearest01, nearestXY, rasterCircle },
+	{ Grid }, { Node, Edge }) ->
 	###
 
 		Here we stick to the terminology used in Jonathan M. Scotts thesis.
@@ -23,16 +24,6 @@ define ['utils', 'grid'], ({ P, forall, nearest01, nearestXY, rasterCircle },
 			node.station.y = node.y
 		console.timeEnd 'metroMap'
 		{ stations, endstations, links }
-	
-	class Node
-		constructor: ({ @station }) ->
-			@x = @station.x
-			@y = @station.y
-		
-		coord: -> @x+"x"+@y
-	
-	class Edge
-		constructor: ({ @link }) ->
 			
 	class MetroMapLayout
 		constructor: ({ config, @graph }) ->
