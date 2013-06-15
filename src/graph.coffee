@@ -1,19 +1,26 @@
 define [], () ->
 
 	class Node
-		constructor: ({ @station }) ->
-			@x = @station.x
-			@y = @station.y
+		constructor: ({ @x, @y, @lines, @edges, @data, @style, @station }={}) ->
+			# @station deprecated
+			@x     ?= @station.x or 0
+			@y     ?= @station.y or 0
+			@lines ?= []
+			@edges ?= []
+			@data  ?= {}
+			@style ?= {}
 		
 		coord: -> @x+"x"+@y
 	
 	class Edge
-		constructor: ({ @link }) ->
+		constructor: ({ @node0, @node1, @line, @link }={}) ->
+			# @link deprecated
+			@source ?= @link.source or null
+			@target ?= @link.target or null
+			@line   ?= null
 		
-		getVector: () ->
-			[ x1,y1 ] = [ @link.source.x, @link.source.y ]
-			[ x2,y2 ] = [ @link.target.x, @link.target.y ]
-			vec 	  = [ x2 - x1, y2 - y1 ]
+		getVector: ->
+			[ @target.x - @source.x, @target.y - @source.y ]
 
 		getAngle: (edge) ->
 			[ x1, y1 ] = @getVector()
