@@ -48,6 +48,10 @@ define ['utils', 'routing', 'tests'], ({ P }, routing, T) ->
 			test "edge.getVector() test1", [edge1], { coordIsRight1 }
 			test "edge.getVector() test2", [edge2], { coordIsRight2 }
 
+			#edge getAngle()
+			test "edge.getAngle() test", edges2, { angleIsRight }
+
+
 			# nodeCriteria
 			test "test perfect single edge", [edge1], { criteriaIsNull }
 			test "test perfect multiple edge", edges1, { criteriaIsNull }
@@ -81,6 +85,14 @@ define ['utils', 'routing', 'tests'], ({ P }, routing, T) ->
 		P vec
 		false
 
+	angleIsRight = (edges) ->
+		angle = edges[0].getAngle(edges[1])
+		output = Math.acos((-8)/(4*Math.sqrt(8)))
+		if angle == output
+			return true
+		P angle
+		false
+
 	criteriaIsNull = (edges, config) ->
 		layout = new routing.MetroMapLayout { config, graph: { edges } }
 		sum = layout.getAngularResolutionCriterion(edges)
@@ -92,9 +104,10 @@ define ['utils', 'routing', 'tests'], ({ P }, routing, T) ->
 	criteriaIsRight = (edges, config) ->
 		layout = new routing.MetroMapLayout { config, graph: { edges } }
 		sum = layout.getAngularResolutionCriterion(edges)
-		optim = (2*Math.PI) / edges.length
-		if sum == (optim - Math.PI / 4)
+		optim = ((2*Math.PI) / edges.length) -  Math.acos((-8)/(4*Math.sqrt(8)))
+		if sum == optim*2
 			return true
+		P optim
 		P sum
 		false
 
