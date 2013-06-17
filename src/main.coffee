@@ -24,8 +24,8 @@ window.my = {
 
 define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 	'interactivity', 'routing', 'test_routing'], (
-	{ P, somePrettyPrint, styleZoom },
-	loadData, prepare, { setupInitialEmbedding }, { View }, { metroMap },
+	{ P, somePrettyPrint, styleZoom, async },
+	loadData, prepare, { setupInitialEmbedding }, { View }, { MetroMapLayout },
 	testRouting) ->
 
 	main = () ->
@@ -60,9 +60,16 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 		svg.on 'touchend.cursor'  , draggingEnd
 			 
 		graph = setupInitialEmbedding config
-		graph = metroMap graph, config
 		view = new View { svg: svg.g, graph, config }
-		view.update()
+		layout = new MetroMapLayout { config, graph }
+		view.update()		
+		async.seqTimeout 1000,
+			config.gridSpacing > 0 and (->
+				layout.snapNodes()
+				view.update()),
+			(->
+				layout.optimize()
+				view.update())
 			
 	showDebugOverlay = (el) ->
 		el.append('pre').attr(id:'my').text somePrettyPrint my

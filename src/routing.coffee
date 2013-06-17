@@ -33,7 +33,7 @@ define ['utils', 'grid', 'graph'], (
 		
 		snapNodes: ->
 			console.time "snapNodes"
-			grid = new Grid
+			grid = @grid
 			nodes = @graph.nodes[..]
 			old_length = nodes.length
 			while nodes.length > 0
@@ -53,7 +53,7 @@ define ['utils', 'grid', 'graph'], (
 				old_length = nodes.length
 			console.timeEnd "snapNodes"
 			
-		nearestFreeGrid: ({ x, y, spiral }, grid) ->
+		nearestFreeGrid: ({ x, y }, grid) ->
 			g = @gridSpacing
 			gx = g*Math.round (x/g)
 			gy = g*Math.round (y/g)
@@ -67,25 +67,44 @@ define ['utils', 'grid', 'graph'], (
 			return b
 			
 		optimize: ->
-			{ nodes } = @graph
-			# somewhat like Algorithm 3.2 Metro Map Layout
-			loops = 0
+			{ nodes, edges, lines } = @graph
+			nodes = nodes[..]
 			time = @timeToOptimize+Date.now()
-			[ mT0, mN ] = @calculateNodesCriteria nodes
-			mT = mT0
-			loop
-				for node in nodes
-					mN0 = node.criteria
-					if mN < mN0
-						@moveNode node
-						[ mT, mN ] = @calculateNodesCriteria nodes
-				# XXX no clustering now
-				# no labels
-				++loops
-				break if time < +Date.now()
-				break if mT >= mT0
-				mT0 = mT
-			P loops+" metro optimization loops"
+			while time < +Date.now()
+				node = @updateCriteria nodes, lineStraightness
+				@moveNode node, lineStraightness
+			
+		moveNode: (node, criteria) ->
+			[ x, y ] = nearestFreeGrid node, @grid
+			node.x = x
+			node.y = y
+			for dep in node.crit.dependencies
+				dep.crit = undefined
+				
+		updateCriteria: (nodes, criteria) ->
+			min = null
+			for node in nodes
+				if not node.crit?
+					node.crit = criteria node
+				if not min or min.crit.value < node.crit.value
+					min = node
+			min
+
+		lineStraightness: (node) ->
+			segments = {}
+			for line in node.lines
+				segments[line.id] = []
+			dependencies = for edge in node.edges
+				if edge.target == node then edge.source else edge.target
+			for edge in node.edges
+				order = if edge.target == node then 0 else 1
+				segments[edge.line.id][order] = edge
+			straightness = d3.sum for line, edges of segments
+				[ a, b ] = edges
+				angle = a.getAngle b
+				Math.pow angle, 2
+			value: straightness
+			deps: dependencies
 			
 		calculateNodesCriteria: (nodes) ->
 			# How to calculate final criterion over multiple criteria? p 89?
@@ -119,7 +138,5 @@ define ['utils', 'grid', 'graph'], (
 
 		findLowestNodeCriteria: (nodes) ->
 			0
-		
-		moveNode: (node) ->
 	
 	{ metroMap, MetroMapLayout, Node, Edge }

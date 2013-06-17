@@ -47,6 +47,15 @@ define ->
 				cb results if (Object.keys results).length == mapped_n
 			for label, func of mapped
 				func end label
+				
+		seqTimeout: (timeout, funcs...) ->
+			funcs = (func for func in funcs when func)
+			i = 0
+			iter = -> setTimeout (->
+				funcs[i++]()
+				iter() if i < funcs.length),
+				timeout
+			iter()
 
 	strUnique = (str, base) ->
 		base ?= ""

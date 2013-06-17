@@ -35,4 +35,4 @@ define [], () ->
 			@edges ?= []
 			@data  ?= {}
 
-	{ Node, Edge, Line }
+	my.graph = { Node, Edge, Line }
