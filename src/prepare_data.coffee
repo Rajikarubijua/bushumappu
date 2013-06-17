@@ -32,20 +32,20 @@ define ['utils'], ({ P }) ->
 				vector[radical_i] = +(radical.radical in char.radicals)
 		vector
 
-	setupClusterAssignment = (stations, initial_vectors, clusters_n) ->
-		vectors = (s.vector for s in stations)
+	setupClusterAssignment = (nodes, initial_vectors, clusters_n) ->
+		vectors = (n.vector for n in nodes)
 		if undefined in vectors
-			throw "station need .vector"
+			throw "node need .vector"
 		clusters_n ?= initial_vectors?.length
-		clusters_n ?= Math.floor Math.sqrt stations.length/2
+		clusters_n ?= Math.floor Math.sqrt nodes.length/2
 		{ centroids, assignments } =
 			figue.kmeans clusters_n, vectors, initial_vectors
-		clusters = ({ centroid, stations: [] } for centroid in centroids)
+		clusters = ({ centroid, nodes: [] } for centroid in centroids)
 		for assignment, assignment_i in assignments
 			cluster = clusters[assignment]
-			station   = stations[assignment_i]
-			station.cluster = cluster
-			cluster.stations.push station
+			node = nodes[assignment_i]
+			node.cluster = cluster
+			cluster.nodes.push node
 		clusters
 
 	{ setupRadicalJouyous, setupKanjiGrades,

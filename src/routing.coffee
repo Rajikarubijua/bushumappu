@@ -1,64 +1,30 @@
-define ['utils'], ({ P, forall, nearest01, nearestXY, rasterCircle }) ->
+define ['utils', 'grid', 'graph'], (
+	{ P, forall, nearest01, nearestXY, rasterCircle },
+	{ Grid }, { Node, Edge }) ->
 	###
 
 		Here we stick to the terminology used in Jonathan M. Scotts thesis.
 		http://www.jstott.me.uk/thesis/thesis-final.pdf (main algorithm on page 90)
 		This involved graph, node, edge, metro line, ...
 
+		* data stucture
+			graph = { nodes, edges }
+			node  = { station }
+			edge  = { link }
+			station = { label, cluster,	vector, x, y, kanji, radical, fixed, links }
+			link = { source, target, radical, kanjis}
+			source = { station }
+			target = { station }
+
 	###
 
-	metroMap = ({ stations, endstations, links }, config) ->
+	metroMap = (graph, config) ->
 		console.time 'metroMap'
-		nodes = for station in [ stations..., endstations... ]
-			new Node { station }
-		edges = for link in links
-			new Edge { link }
-		graph = { nodes, edges }
 		layout = new MetroMapLayout { config, graph }
 		layout.snapNodes() if config.gridSpacing > 0
 		layout.optimize()
-		for node in nodes
-			node.station.x = node.x
-			node.station.y = node.y
 		console.timeEnd 'metroMap'
-		{ stations, endstations, links }
-	
-	class Node
-		constructor: ({ @station }) ->
-			@x = @station.x
-			@y = @station.y
-		
-		coord: -> @x+"x"+@y
-	
-	class Edge
-		constructor: ({ @link }) ->
-	
-	class Grid
-		constructor:    -> @map = d3.map()
-		get: (coord)    -> @map.get (@getCoord coord).coord
-		has: (coord)    -> @map.has (@getCoord coord).coord
-		remove: (coord) -> @map.remove (@getCoord coord).coord
-		coords:         -> @map.keys()
-		nodes:          -> @map.values()
-		entries:        -> @map.entries()
-		forEach: (func) -> @map.forEach func
-		
-		set: (coord, node) ->
-			{ coord, x, y } = @getCoord coord
-			node.x = x
-			node.y = y
-			@map.set coord, node
-		
-		getCoord: (coord) -> # just convenience
-			if typeof coord is 'string'
-				[ x, y ] = (+d for d in coord.split 'x')
-			else if Array.isArray coord
-				[ x, y ] = coord
-				coord = x+'x'+y
-			else if 'x' of coord and 'y' of coord
-				{ x, y } = coord
-				coord = x+'x'+y
-			{ coord, x, y }
+		graph
 		
 	class MetroMapLayout
 		constructor: ({ config, @graph }) ->
@@ -105,14 +71,14 @@ define ['utils'], ({ P, forall, nearest01, nearestXY, rasterCircle }) ->
 			# somewhat like Algorithm 3.2 Metro Map Layout
 			loops = 0
 			time = @timeToOptimize+Date.now()
-			mT0 = @calculateNodeCriteria nodes
+			[ mT0, mN ] = @calculateNodesCriteria nodes
+			mT = mT0
 			loop
 				for node in nodes
-					mN0 = @calculateNodeCriteria nodes
-					mN  = @findLowestNodeCriteria nodes
+					mN0 = node.criteria
 					if mN < mN0
 						@moveNode node
-				mT = @calculateNodeCriteria nodes
+						[ mT, mN ] = @calculateNodesCriteria nodes
 				# XXX no clustering now
 				# no labels
 				++loops
@@ -121,42 +87,32 @@ define ['utils'], ({ P, forall, nearest01, nearestXY, rasterCircle }) ->
 				mT0 = mT
 			P loops+" metro optimization loops"
 			
-		calculateNodeCriteria: (nodes) ->
-			# angularResolutionCriterion = @getAngularResolutionCriterion nodes
+		calculateNodesCriteria: (nodes) ->
 			# How to calculate final criterion over multiple criteria? p 89?
-			0
-		
-		getAngularResolutionCriterion: (nodes) ->
-			sum = 0
 			for node in nodes
 				edgesOfNode = @getEdgesOfNode node
-				degree = edgesOfNode.length
-				l_vec = @getVector edgesOfNode[0]
-				for edge in edgesOfNode
-					continue if edge == undefined 
-					c_vec = @getVector edge
-					continue if c_vec == l_vec
+				# angularResolutionCriterion = @getAngularResolutionCriterion edgesOfNode
 
-					scalar = c_vec[0] * l_vec[0] + c_vec[1] * l_vec[1] 
-					c_length = Math.sqrt( Math.pow( c_vec[0], 2 ) + Math.pow( c_vec[1], 2) )
-					l_length = Math.sqrt( Math.pow( l_vec[0], 2 ) + Math.pow( l_vec[1], 2) )
-					angle = scalar / c_length * l_length
-					sum += Math.abs( (2*Math.PI / degree) - angle ) 
+			[0,0]
+		
+		getAngularResolutionCriterion: (edges) ->
+			sum = 0
+			degree = edges.length
+			# TODO: nur nebeneinanderliegende Kanten
+			# nur die kleinsten Winkel ... Anzahl = Kanten
+			for e1 in edges
+				for e2 in edges
+					continue if e1 == e2
+					sum += Math.abs( (2*Math.PI / degree) - e1.getAngle(e2) )
 
-					l_vec = @getVector edge
 			sum
-
-		getVector: (edge) ->
-			p1 = [ edge.link.source.x, edge.link.source.y ]
-			p2 = [ edge.link.target.x, edge.link.target.y ]
-			vec= [ p1[0] - p2[0], 	p1[1] - p2[1] ]
 		
 		getEdgesOfNode: (node) ->
 			edgesOfNode = []
 			for edge in @graph.edges
-				kanji 	  = node.station.kanji.kanji
-				src_kanji = edge.link.source.kanji.kanji
-				tar_kanji = edge.link.target.kanji.kanji
+				kanji 	  = node.data.kanji
+				src_kanji = edge.source.data.kanji
+				tar_kanji = edge.target.data.kanji
 				if src_kanji == kanji or tar_kanji == kanji
 					edgesOfNode.push edge
 			edgesOfNode
@@ -166,4 +122,4 @@ define ['utils'], ({ P, forall, nearest01, nearestXY, rasterCircle }) ->
 		
 		moveNode: (node) ->
 	
-	{ metroMap, MetroMapLayout }
+	{ metroMap, MetroMapLayout, Node, Edge }

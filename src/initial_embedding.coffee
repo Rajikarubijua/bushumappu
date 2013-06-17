@@ -1,7 +1,7 @@
-define ["utils", "prepare_data"], ({
+define ["utils", "prepare_data", 'graph'], ({
 	P, length, arrayUnique, equidistantSelection, max, sunflower, getMinMax,
 	nearestXY },
-	prepare) ->
+	prepare, { Node, Edge, Line }) ->
 
 	setupInitialEmbedding = (config) ->
 		r = 12
@@ -17,73 +17,79 @@ define ["utils", "prepare_data"], ({
 		
 		kanjis = getKanjis radicals
 		
-		stations = for x in [ kanjis..., radicals... ]
-			x.station =
-				label:		x.kanji or x.radical
-				cluster:	null
-				vector:		prepare.getRadicalVector x, radicals
-				x:			0
-				y:			0
-				kanji:		x.kanji? and x
-				radical:	x.radical? and x
-				fixed:		+config.fixedStation
-				links:		[]
+		nodes = for data in [ kanjis..., radicals... ]
+			node = new Node { data }
+			node.vector = prepare.getRadicalVector data, radicals
+			node.label  = data.kanji or data.radical
+			node.cluster = null
+			node.fixed = +config.fixednode
+			data.node = node
+			node
+		nodes_kanjis = (k.node for k in kanjis)
+		nodes_radicals = (r.node for r in radicals)
 		
-		vectors = (k.station.vector for k in kanjis)
+		vectors = (n.vector for n in nodes_kanjis)
 		clusters_n = getClusterN vectors, config
 		if not config.kmeansInitialVectorsRandom
 			initial_vectors = equidistantSelection clusters_n, vectors
 		console.time 'prepare.setupClusterAssignment'
 		clusters = prepare.setupClusterAssignment(
-			(k.station for k in kanjis), initial_vectors, clusters_n)
+			nodes_kanjis, initial_vectors, clusters_n)
 		console.timeEnd 'prepare.setupClusterAssignment'
 		
 		setupClustersForRadicals radicals, clusters
 		setupPositions clusters, d, config
 		
-		links = getLinks (config.filterLinkedRadicals radicals), config
-		endstations = (radical.station for radical in radicals)
-		stations = (kanji.station for kanji in kanjis)
-		{ stations, endstations, links }
+		[ edges, lines ] = getEdges (config.filterLinkedRadicals radicals), config
+		endnodes = nodes_radicals
+		{ nodes: nodes_kanjis, endnodes, edges, lines }
 		
-	getLinks = (radicals, { circularLines }) ->
-		console.time 'getLinks'
-		links = []
+	getEdges = (radicals, { circularLines }) ->
+		console.time 'getEdges'
+		edges = []
+		lines = []
 		for radical in radicals
-			stations = (kanji.station for kanji in radical.jouyou)
-			a = radical.station
-			l = stations.length
-			while stations.length > 0
-				{ b, i } = nearestXY a, stations
-				stations[i..i] = []
-				link = { source: a, target: b, radical }
-				links.push link
-				a.links.push link
-				b.links.push link
+			lines.push line = new Line data: radical
+			nodes = (kanji.node for kanji in radical.jouyou)
+			a = radical.node
+			l = nodes.length
+			while nodes.length > 0
+				{ b, i } = nearestXY a, nodes
+				nodes[i..i] = []
+				edge = new Edge { source: a, target: b, line }
+				edges.push edge
+				a.lines.push edge
+				b.lines.push edge
+				line.edges.push edge
+				line.nodes.push a
 				a = b
-				if stations.length == l
+				if nodes.length == l
 					throw "no progres"
-				l = stations.length
+				l = nodes.length
 			if circularLines
-				link = { source: a, target: radical.station, radical }
-				links.push link
-				a.links.push link
-				b.links.push link
-		console.timeEnd 'getLinks'
-		links
+				b = radical.node
+				edge = new Edge { source: a, target: b, line }
+				edges.push edge
+				a.lines.push edge
+				b.lines.push edge
+				line.edges.push edge
+				line.nodes.push a
+			line.nodes.push b
+		console.timeEnd 'getEdges'
+		[ edges, lines ]
 
 	setupPositions = (clusters, d, config) ->
 		for cluster in clusters
-			for station, i in cluster.stations
-				{ x, y } = getStationPosition(
-					station, i, d, cluster.stations.length, config)
-				station.x = x
-				station.y = y
+			for node, i in cluster.nodes
+				{ x, y } = getNodePosition(
+					node, i, d, cluster.nodes.length, config)
+				node.x = x
+				node.y = y
 		setupClusterPosition clusters, d
 		for cluster in clusters
-			for station in cluster.stations
-				station.x += cluster.x
-				station.y += cluster.y
+			for node in cluster.nodes
+				node.x += cluster.x
+				node.y += cluster.y
 
 	getClusterN = (vectors, { kmeansClustersN }) ->
 		Math.min vectors.length,
@@ -100,19 +106,19 @@ define ["utils", "prepare_data"], ({
 		kanjis.sort (x) -> x.kanji
 
 	getKanjisForRadicalInCluster = (radical, cluster) ->
-		kanjis = (station.kanji for station in cluster.stations when \
-			station.kanji and radical.radical in station.kanji.radicals)
+		kanjis = (node.data for node in cluster.nodes when \
+			node.data.kanji and radical.radical in node.data.radicals)
 
 	setupClustersForRadicals = (radicals, clusters) ->
 		for radical in radicals
 			cluster = max clusters, (cluster) ->
 				length getKanjisForRadicalInCluster radical, cluster
-			radical.station.cluster = cluster
-			cluster.stations.push radical.station
+			radical.node.cluster = cluster
+			cluster.nodes.push radical.node
 
 	setupClusterPosition = (clusters, d) ->
 		for cluster in clusters
-			minmax = getMinMax cluster.stations, { "x", "y" }
+			minmax = getMinMax cluster.nodes, { "x", "y" }
 			dx = minmax.max_x.x - minmax.min_x.x
 			dy = minmax.max_y.y - minmax.min_y.y
 			cluster.r = 0.5*Math.max dx, dy
@@ -123,9 +129,9 @@ define ["utils", "prepare_data"], ({
 			cluster.x = x
 			cluster.y = y
 
-	getStationPosition = (station, index, d, n, { sunflowerKanjis }) ->
+	getNodePosition = (node, index, d, n, { sunflowerKanjis }) ->
 		x = y = 0
-		cluster_index = station.cluster.stations.indexOf station
+		cluster_index = node.cluster.nodes.indexOf node
 		if sunflowerKanjis
 			{ x, y } = sunflower { index: cluster_index+1, factor: 2.7*d }
 		else
