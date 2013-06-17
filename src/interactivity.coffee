@@ -1,60 +1,65 @@
 define ['utils'], ({ P, compareNumber }) ->
 
-	setupD3 = (svg, { nodes, lines, edges, endnodes }, config) ->
-		r = 12
+	class View
+		constructor: ({ @svg, @graph, @config }) ->
+			@r = 12
+	
+		update: ->
+			{ svg, r, config } = this
+			{ nodes, lines, edges, endnodes } = @graph
 
-		nodes = (node for node in nodes when node not in endnodes)
+			nodes = (node for node in nodes when node not in endnodes)
 
-		# join
-		edge = svg.selectAll(".edge")
-			.data(edges)#, (d) -> d)
-		node = svg.selectAll('.node')
-			.data(nodes)#, (d) -> d)
-		endnode = svg.selectAll('.endnode')
-			.data(endnodes)#, (d) -> d)
+			# join
+			edge = svg.selectAll(".edge")
+				.data(edges)
+			node = svg.selectAll('.node')
+				.data(nodes)
+			endnode = svg.selectAll('.endnode')
+				.data(endnodes)
 			
-		# enter
-		edge.enter()
-			.append("path")
-			.classed("edge", true)
-		node.enter()
-			.append('g')
-			.classed("node", true)
-			.on('mouseover', (d) -> nodeMouseOver d)
-			.on('mouseout', (d) -> nodeMouseOut d)
-			.on('mousemove', (d) -> nodeMouseMove d, node)
-		node.append('rect').attr x:-r, y:-r, width:2*r, height:2*r
-		node.append('text').text (d) -> d.label
-		endnode.enter()
-			.append('g')
-			.classed("endnode", true)
-			.on('click.selectLine', (d) -> endnodeSelectLine d)
-		endnode.append("circle").attr {r}
-		endnode.append("text").text (d) -> d.label
+			# enter
+			edge.enter()
+				.append("path")
+				.classed("edge", true)
+			node.enter()
+				.append('g')
+				.classed("node", true)
+				.on('mouseover', (d) -> nodeMouseOver d)
+				.on('mouseout', (d) -> nodeMouseOut d)
+				.on('mousemove', (d) -> nodeMouseMove d, node)
+			node.append('rect').attr x:-r, y:-r, width:2*r, height:2*r
+			node.append('text').text (d) -> d.label
+			endnode.enter()
+				.append('g')
+				.classed("endnode", true)
+				.on('click.selectLine', (d) -> endnodeSelectLine d)
+			endnode.append("circle").attr {r}
+			endnode.append("text").text (d) -> d.label
 		
-		# update
-		edge.each((d) ->
-			d3.select(@).classed "line_"+d.line.data.radical, true)
-			.attr d: (d) -> svgline [ d.source, d.target ]
-		node.attr transform: (d) -> "translate(#{d.x} #{d.y})"
-		endnode.attr transform: (d) -> "translate(#{d.x} #{d.y})"
+			# update
+			edge.each((d) ->
+				d3.select(@).classed "line_"+d.line.data.radical, true)
+				.attr d: (d) -> svgline [ d.source, d.target ]
+			node.attr transform: (d) -> "translate(#{d.x} #{d.y})"
+			endnode.attr transform: (d) -> "translate(#{d.x} #{d.y})"
 		
-		# exit
-		edge.exit().remove()
-		node.exit().remove()
-		endnode.exit().remove()
+			# exit
+			edge.exit().remove()
+			node.exit().remove()
+			endnode.exit().remove()
 
-		if config.forceGraph
-			force = d3.layout.force()
-				.nodes([nodes..., endnodes...])
-				.edges(edges)
-				.edgeStrength(1)
-				.edgeDistance(8*r)
-				.charge(-3000)
-				.gravity(0.001)
-				.start()
-				.on 'tick', -> updatePositions()
-			node.call force.drag
+			if config.forceGraph
+				force = d3.layout.force()
+					.nodes([nodes..., endnodes...])
+					.edges(edges)
+					.edgeStrength(1)
+					.edgeDistance(8*r)
+					.charge(-3000)
+					.gravity(0.001)
+					.start()
+					.on 'tick', -> updatePositions()
+				node.call force.drag
 			
 	svgline = d3.svg.line()
 		.x(({x}) -> x)
@@ -97,4 +102,4 @@ define ['utils'], ({ P, compareNumber }) ->
 			.style("left", (d3.event.pageX) + "px")
 			.style("top", (d3.event.pageY - 28) + "px")
 
-	{ setupD3 }
+	{ View }

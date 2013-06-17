@@ -25,7 +25,7 @@ window.my = {
 define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 	'interactivity', 'routing', 'test_routing'], (
 	{ P, somePrettyPrint, styleZoom },
-	loadData, prepare, { setupInitialEmbedding }, { setupD3 }, { metroMap },
+	loadData, prepare, { setupInitialEmbedding }, { View }, { metroMap },
 	testRouting) ->
 
 	main = () ->
@@ -61,7 +61,8 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 			 
 		graph = setupInitialEmbedding config
 		graph = metroMap graph, config
-		setupD3 svg.g, graph, config
+		view = new View { svg: svg.g, graph, config }
+		view.update()
 			
 	showDebugOverlay = (el) ->
 		el.append('pre').attr(id:'my').text somePrettyPrint my
