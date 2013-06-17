@@ -5,26 +5,19 @@ define ['utils'], ({ P, compareNumber }) ->
 
 		nodes = (node for node in nodes when node not in endnodes)
 
+		# join
 		edge = svg.selectAll(".edge")
-			.data(edges)
-			.enter()
+			.data(edges)#, (d) -> d)
+		node = svg.selectAll('.node')
+			.data(nodes)#, (d) -> d)
+		endnode = svg.selectAll('.endnode')
+			.data(endnodes)#, (d) -> d)
+			
+		# enter
+		edge.enter()
 			.append("path")
 			.classed("edge", true)
-			.each((d) ->
-				d3.select(@).classed "line_"+d.line.data.radical, true)
-			
-		endnode = svg.selectAll('.endnode')
-			.data(endnodes)
-			.enter()
-			.append('g')
-			.classed("endnode", true)
-			.on('click.selectLine', (d) -> endnodeSelectLine d)
-		endnode.append("circle").attr {r}
-		endnode.append("text").text (d) -> d.label
-		
-		node = svg.selectAll('.node')
-			.data(nodes)
-			.enter()
+		node.enter()
 			.append('g')
 			.classed("node", true)
 			.on('mouseover', (d) -> nodeMouseOver d)
@@ -32,14 +25,25 @@ define ['utils'], ({ P, compareNumber }) ->
 			.on('mousemove', (d) -> nodeMouseMove d, node)
 		node.append('rect').attr x:-r, y:-r, width:2*r, height:2*r
 		node.append('text').text (d) -> d.label
+		endnode.enter()
+			.append('g')
+			.classed("endnode", true)
+			.on('click.selectLine', (d) -> endnodeSelectLine d)
+		endnode.append("circle").attr {r}
+		endnode.append("text").text (d) -> d.label
+		
+		# update
+		edge.each((d) ->
+			d3.select(@).classed "line_"+d.line.data.radical, true)
+			.attr d: (d) -> svgline [ d.source, d.target ]
+		node.attr transform: (d) -> "translate(#{d.x} #{d.y})"
+		endnode.attr transform: (d) -> "translate(#{d.x} #{d.y})"
+		
+		# exit
+		edge.exit().remove()
+		node.exit().remove()
+		endnode.exit().remove()
 
-		
-		updatePositions = ->
-			edge.attr d: (d) -> svgline [ d.source, d.target ]
-			endnode.attr transform: (d) -> "translate(#{d.x} #{d.y})"
-			node.attr transform: (d) -> "translate(#{d.x} #{d.y})"
-		updatePositions()
-		
 		if config.forceGraph
 			force = d3.layout.force()
 				.nodes([nodes..., endnodes...])
