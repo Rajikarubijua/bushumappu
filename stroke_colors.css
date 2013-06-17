@@ -1,5 +1,9 @@
 @charset "UTF-8";
 
+.stroke_color0 {
+	stroke: rgb(255,231,161)
+}
+
 .stroke_color1 {
 	stroke: rgb(105,210,231)
 }
