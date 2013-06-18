@@ -13,6 +13,7 @@ config =
 	debugOverlay:				false
 	transitionTime:				750*2
 	initialScale:				0.06
+	edgesBeforeSnap:			true
 figue.KMEANS_MAX_ITERATIONS = 1
 
 # the global object where we can put stuff into it
@@ -27,7 +28,7 @@ window.my = {
 define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 	'interactivity', 'routing', 'test_routing'], (
 	{ P, somePrettyPrint, styleZoom, async },
-	loadData, prepare, { setupInitialEmbedding }, { View }, { MetroMapLayout },
+	loadData, prepare, { Embedder }, { View }, { MetroMapLayout },
 	testRouting) ->
 
 	main = () ->
@@ -61,13 +62,19 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 		svg.on 'touchstart.cursor', draggingStart
 		svg.on 'touchend.cursor'  , draggingEnd
 			 
-		graph = setupInitialEmbedding config
+		embedder = new Embedder { config }
+		embedder.setup()
+		if config.edgesBeforeSnap
+			embedder.generateEdges()
+		graph = embedder.graph
 		view = new View { svg: svg.g, graph, config }
 		layout = new MetroMapLayout { config, graph }
 		view.update()		
 		async.seqTimeout config.transitionTime,
 			config.gridSpacing > 0 and (->
 				layout.snapNodes()
+				if not config.edgesBeforeSnap
+					embedder.generateEdges()
 				view.update()),
 			(->
 				layout.optimize()
