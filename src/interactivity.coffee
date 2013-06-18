@@ -27,20 +27,21 @@ define ['utils'], ({ P, compareNumber }) ->
 				.classed("edge", true)
 				# for transitions; nodes start at 0,0. so should edges
 				.attr d: (d) -> svgline [ {x:0,y:0}, {x:0,y:0} ]
-			node.enter()
+			node_g = node.enter()
 				.append('g')
 				.classed("node", true)
 				.on('mouseover', (d) -> nodeMouseOver d)
 				.on('mouseout', (d) -> nodeMouseOut d)
 				.on('mousemove', (d) -> nodeMouseMove d, node)
-			node.append('rect').attr x:-r, y:-r, width:2*r, height:2*r
-			node.append('text').text (d) -> d.label
-			endnode.enter()
+			node_g.append('rect').attr x:-r, y:-r, width:2*r, height:2*r
+			node_g.append('text').text (d) -> d.label
+
+			endnode_g = endnode.enter()
 				.append('g')
 				.classed("endnode", true)
 				.on('click.selectLine', (d) -> endnodeSelectLine d)
-			endnode.append("circle").attr {r}
-			endnode.append("text").text (d) -> d.label
+			endnode_g.append("circle").attr {r}
+			endnode_g.append("text").text (d) -> d.label
 		
 			# update
 			edge.each((d) ->
