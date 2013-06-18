@@ -8,6 +8,33 @@ define ->
 	# 	1 + foo P 'bar', bar
 	P = (args...) -> console.log args...; return args[-1..][0]
 	PN= (args...) -> console.log args[...-1]...; return args[-1..][0]
+	PD= (args...) ->
+		str = prettyDebug args
+		console.debug str if my.debug
+		args[-1..][0]
+
+	prettyDebug = (x, known=[], depth=0) ->
+		if x in known
+			'###'
+		else if typeof x is 'string'
+			if depth <= 1 then x else '"'+x+'"'
+		else if typeof x is 'number'
+			x=""+x
+			x = x[..2+x.indexOf '.']
+		else if Array.isArray x
+			known.push x
+			s = if depth == 0 then ' ' else ','
+			x = (for y in x
+				prettyDebug y, known, depth+1
+			).join s
+			if depth == 0 then x else '['+x+']'
+		else
+			known.push x
+			x = (for k, v of x
+				v = prettyDebug v, known, depth+1
+				'"'+k+'": '+v
+			).join ','
+			'{'+x+'}'
 
 	# appends 'fill' to 'str' such that 'str.length == width'
 	W = (width, str, fill) ->
@@ -220,7 +247,7 @@ define ->
 			[x0+x, y0+y], [x0-x, y0+y], [x0+x, y0-y], [x0-x, y0-y],
 			[x0+y, y0+x], [x0-y, y0+x], [x0+y, y0-x], [x0-y, y0-x] ]
 
-	{ copyAttrs, P, PN, W, async, strUnique, expect, somePrettyPrint, length,
+	{ copyAttrs, P, PN, PD, W, async, strUnique, expect, somePrettyPrint, length,
 	  sort, styleZoom, sunflower, vecX, vecY, vec, compareNumber, max,
   	  parseMaybeNumber, equidistantSelection, getMinMax, arrayUnique,
   	  distanceSqrXY, nearestXY, nearest01, distanceSqr01, nearest, forall,
