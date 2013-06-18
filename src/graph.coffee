@@ -1,13 +1,15 @@
 define [], () ->
 
 	class Node
-		constructor: ({ @x, @y, @lines, @edges, @data, @style }={}) ->
+		next_id = 0
+		constructor: ({ @x, @y, @lines, @edges, @data, @style, @id }={}) ->
 			@x     ?= 0
 			@y     ?= 0
 			@lines ?= []
 			@edges ?= []
 			@data  ?= {}
 			@style ?= {}
+			@id    ?= next_id++
 		
 		coord: -> @x+"x"+@y
 	
@@ -30,9 +32,11 @@ define [], () ->
 			angle = Math.acos( scalar / (l1 * l2))
 
 	class Line
-		constructor: ({ @nodes, @edges, @data }={}) ->
+		next_id = 0
+		constructor: ({ @nodes, @edges, @data, @id }={}) ->
 			@nodes ?= []
 			@edges ?= []
 			@data  ?= {}
+			@id    ?= next_id++
 
 	my.graph = { Node, Edge, Line }
