@@ -85,4 +85,5 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 		el.append('pre').attr(id:'my').text somePrettyPrint my
 			
 	testRouting.runTests()
+	console.info 'end of tests'
 	loadData main
