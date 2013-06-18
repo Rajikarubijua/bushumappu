@@ -67,12 +67,6 @@ define ['utils', 'grid', 'graph'], (
 			return b
 			
 		optimize: ->
-			{ nodes, edges, lines } = @graph
-			nodes = nodes[..]
-			time = @timeToOptimize+Date.now()
-			while time < +Date.now()
-				node = @updateCriteria nodes, lineStraightness
-				@moveNode node, lineStraightness
 			
 		moveNode: (node, criteria) ->
 			[ x, y ] = nearestFreeGrid node, @grid
@@ -99,11 +93,11 @@ define ['utils', 'grid', 'graph'], (
 			for edge in node.edges
 				order = if edge.target == node then 0 else 1
 				segments[edge.line.id][order] = edge
-			straightness = d3.sum for line, edges of segments
+			straightness = for line, edges of segments
 				[ a, b ] = edges
 				angle = a.getAngle b
 				Math.pow angle, 2
-			value: straightness
+			value: d3.sum straightness
 			deps: dependencies
 			
 		calculateNodesCriteria: (nodes) ->
