@@ -65,20 +65,26 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 			 
 		embedder = new Embedder { config }
 		embedder.setup()
-		if config.edgesBeforeSnap
+		generateEdges = ->
+			console.info 'generate edges...'
 			embedder.generateEdges()
+			console.info 'generate edges done'
+		generateEdges() if config.edgesBeforeSnap
 		graph = embedder.graph
 		view = new View { svg: svg.g, graph, config }
 		layout = new MetroMapLayout { config, graph }
 		view.update()		
 		async.seqTimeout config.transitionTime,
 			config.gridSpacing > 0 and (->
+				console.info 'snap nodes...'
 				layout.snapNodes()
-				if not config.edgesBeforeSnap
-					embedder.generateEdges()
+				console.info 'snap node done'
+				generateEdges() if not config.edgesBeforeSnap
 				view.update()
 			),(->
-				layout.optimize()
+				console.info 'optimize...'
+				{ stats } = layout.optimize()
+				console.info 'optimize done', stats
 				view.update()
 			)
 			

@@ -60,7 +60,6 @@ define ["utils", "prepare_data", 'graph'], ({
 			graph.lines = lines
 		
 	getEdges = (radicals, { circularLines }) ->
-		console.time 'getEdges'
 		edges = []
 		lines = []
 		for radical in radicals
@@ -93,7 +92,6 @@ define ["utils", "prepare_data", 'graph'], ({
 				a.lines.push line
 			line.nodes.push b
 			b.lines.push line
-		console.timeEnd 'getEdges'
 		[ edges, lines ]
 
 	setupPositions = (clusters, d, config) ->
