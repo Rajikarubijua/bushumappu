@@ -75,7 +75,7 @@ define ['utils'], ({ P, compareNumber }) ->
 		.y(({y}) -> y)
 
 	endnodeSelectLine = (d) ->
-		selector = ".radical_"+d.data.radical
+		selector = ".line_"+d.data.radical
 		d3.selectAll(selector).classed 'highlighted', (d) ->
 			d.highlighted = !d3.select(@).classed 'highlighted'
 		d3.selectAll(".edge").sort (a, b) ->
