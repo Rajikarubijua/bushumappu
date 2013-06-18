@@ -3,25 +3,30 @@ define ['utils'], ({ P, compareNumber }) ->
 	class View
 		constructor: ({ @svg, @graph, @config }) ->
 			@r = 12
+			@g_edges = @svg.append 'g'
+			@g_nodes = @svg.append 'g'
+			@g_endnodes = @svg.append 'g'
 	
 		update: ->
-			{ svg, r, config } = this
+			{ svg, r, config, g_edges, g_nodes, g_endnodes } = this
 			{ nodes, lines, edges, endnodes } = @graph
 
 			nodes = (node for node in nodes when node not in endnodes)
 
 			# join
-			edge = svg.selectAll(".edge")
+			edge = g_edges.selectAll(".edge")
 				.data(edges)
-			node = svg.selectAll('.node')
+			node = g_nodes.selectAll('.node')
 				.data(nodes)
-			endnode = svg.selectAll('.endnode')
+			endnode = g_endnodes.selectAll('.endnode')
 				.data(endnodes)
 			
 			# enter
 			edge.enter()
 				.append("path")
 				.classed("edge", true)
+				# for transitions; nodes start at 0,0. so should edges
+				.attr d: (d) -> svgline [ {x:0,y:0}, {x:0,y:0} ]
 			node.enter()
 				.append('g')
 				.classed("node", true)
@@ -40,9 +45,12 @@ define ['utils'], ({ P, compareNumber }) ->
 			# update
 			edge.each((d) ->
 				d3.select(@).classed "line_"+d.line.data.radical, true)
+				.transition().duration(config.transitionTime)
 				.attr d: (d) -> svgline [ d.source, d.target ]
-			node.attr transform: (d) -> "translate(#{d.x} #{d.y})"
-			endnode.attr transform: (d) -> "translate(#{d.x} #{d.y})"
+			node.transition().duration(config.transitionTime)
+				.attr transform: (d) -> "translate(#{d.x} #{d.y})"
+			endnode.transition().duration(config.transitionTime)
+				.attr transform: (d) -> "translate(#{d.x} #{d.y})"
 		
 			# exit
 			edge.exit().remove()

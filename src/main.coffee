@@ -2,7 +2,7 @@ config =
 	showLines: 					false
 	fixedEndstation:			false
 	fixedStation:				false
-	filterRadicals:				(radicals) -> radicals
+	filterRadicals:				(radicals) -> radicals[...14]
 	filterLinkedRadicals:		(radicals) -> radicals
 	sunflowerKanjis:			true
 	kmeansInitialVectorsRandom:	false
@@ -11,6 +11,8 @@ config =
 	circularLines:				false
 	gridSpacing:				48*6 # 0 deactivates snapNodes
 	debugOverlay:				false
+	transitionTime:				750*2
+	initialScale:				0.06
 figue.KMEANS_MAX_ITERATIONS = 1
 
 # the global object where we can put stuff into it
@@ -50,7 +52,7 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 				
 		svg.call (zoom = d3.behavior.zoom())
 			.translate([w()/2, h()/2])
-			.scale(0.03)
+			.scale(config.initialScale)
 			.on 'zoom', styleZoom svg.g, zoom
 		draggingStart = -> svg.classed 'dragging', true
 		draggingEnd   = -> svg.classed 'dragging', false
@@ -63,7 +65,7 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 		view = new View { svg: svg.g, graph, config }
 		layout = new MetroMapLayout { config, graph }
 		view.update()		
-		async.seqTimeout 1000,
+		async.seqTimeout config.transitionTime,
 			config.gridSpacing > 0 and (->
 				layout.snapNodes()
 				view.update()),
