@@ -13,7 +13,7 @@ config =
 	debugOverlay:				false
 	transitionTime:				750*2
 	initialScale:				0.06
-	edgesBeforeSnap:			true
+	edgesBeforeSnap:			false
 figue.KMEANS_MAX_ITERATIONS = 1
 
 # the global object where we can put stuff into it
