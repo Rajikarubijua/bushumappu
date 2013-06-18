@@ -73,10 +73,11 @@ define ["utils", "prepare_data", 'graph'], ({
 				nodes[i..i] = []
 				edge = new Edge { source: a, target: b, line }
 				edges.push edge
-				a.lines.push edge
-				b.lines.push edge
+				a.edges.push edge
+				b.edges.push edge
 				line.edges.push edge
 				line.nodes.push a
+				a.lines.push line
 				a = b
 				if nodes.length == l
 					throw "no progres"
@@ -85,11 +86,13 @@ define ["utils", "prepare_data", 'graph'], ({
 				b = radical.node
 				edge = new Edge { source: a, target: b, line }
 				edges.push edge
-				a.lines.push edge
-				b.lines.push edge
+				a.edges.push edge
+				b.edges.push edge
 				line.edges.push edge
 				line.nodes.push a
+				a.lines.push line
 			line.nodes.push b
+			b.lines.push line
 		console.timeEnd 'getEdges'
 		[ edges, lines ]
 
