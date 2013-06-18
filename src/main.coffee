@@ -75,10 +75,11 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 				layout.snapNodes()
 				if not config.edgesBeforeSnap
 					embedder.generateEdges()
-				view.update()),
-			(->
+				view.update()
+			),(->
 				layout.optimize()
-				view.update())
+				view.update()
+			)
 			
 	showDebugOverlay = (el) ->
 		el.append('pre').attr(id:'my').text somePrettyPrint my
