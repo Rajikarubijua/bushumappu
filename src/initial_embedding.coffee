@@ -3,46 +3,61 @@ define ["utils", "prepare_data", 'graph'], ({
 	nearestXY },
 	prepare, { Node, Edge, Line }) ->
 
-	setupInitialEmbedding = (config) ->
-		r = 12
-		d = 2*r
+	class Embedder
+		constructor: ({ @config }) ->
+			@r = 12
+			@graph = {}
+			@radicals = []
 
-		prepare.setupRadicalJouyous()
-		prepare.setupKanjiGrades()
+		setup: ->
+			{ r, config } = this
+			d = 2*r
 
-		radicals = (my.radicals[radical] for radical of my.jouyou_radicals)
-		radicals = config.filterRadicals radicals
-		radicals.sort (x) -> x.radical
-		radicals_n = length radicals
+			prepare.setupRadicalJouyous()
+			prepare.setupKanjiGrades()
+
+			radicals = (my.radicals[radical] for radical of my.jouyou_radicals)
+			radicals = config.filterRadicals radicals
+			radicals.sort (x) -> x.radical
+			radicals_n = length radicals
 		
-		kanjis = getKanjis radicals
+			kanjis = getKanjis radicals
 		
-		nodes = for data in [ kanjis..., radicals... ]
-			node = new Node { data }
-			node.vector = prepare.getRadicalVector data, radicals
-			node.label  = data.kanji or data.radical
-			node.cluster = null
-			node.fixed = +config.fixednode
-			data.node = node
-			node
-		nodes_kanjis = (k.node for k in kanjis)
-		nodes_radicals = (r.node for r in radicals)
+			nodes = for data in [ kanjis..., radicals... ]
+				node = new Node { data }
+				node.vector = prepare.getRadicalVector data, radicals
+				node.label  = data.kanji or data.radical
+				node.cluster = null
+				node.fixed = +config.fixednode
+				data.node = node
+				node
+			nodes_kanjis = (k.node for k in kanjis)
+			nodes_radicals = (r.node for r in radicals)
 		
-		vectors = (n.vector for n in nodes_kanjis)
-		clusters_n = getClusterN vectors, config
-		if not config.kmeansInitialVectorsRandom
-			initial_vectors = equidistantSelection clusters_n, vectors
-		console.time 'prepare.setupClusterAssignment'
-		clusters = prepare.setupClusterAssignment(
-			nodes_kanjis, initial_vectors, clusters_n)
-		console.timeEnd 'prepare.setupClusterAssignment'
+			vectors = (n.vector for n in nodes_kanjis)
+			clusters_n = getClusterN vectors, config
+			if not config.kmeansInitialVectorsRandom
+				initial_vectors = equidistantSelection clusters_n, vectors
+			console.time 'prepare.setupClusterAssignment'
+			clusters = prepare.setupClusterAssignment(
+				nodes_kanjis, initial_vectors, clusters_n)
+			console.timeEnd 'prepare.setupClusterAssignment'
 		
-		setupClustersForRadicals radicals, clusters
-		setupPositions clusters, d, config
+			setupClustersForRadicals radicals, clusters
+			setupPositions clusters, d, config
 		
-		[ edges, lines ] = getEdges (config.filterLinkedRadicals radicals), config
-		endnodes = nodes_radicals
-		{ nodes: nodes_kanjis, endnodes, edges, lines }
+			edges = []
+			lines = []
+			endnodes = nodes_radicals
+			@radicals = radicals
+			@graph = { nodes: nodes_kanjis, endnodes, edges, lines }
+		
+		generateEdges: ->
+			{ radicals, graph, config } = this
+			radicals = config.filterLinkedRadicals radicals
+			[ edges, lines ] = getEdges radicals, config
+			graph.edges = edges
+			graph.lines = lines
 		
 	getEdges = (radicals, { circularLines }) ->
 		console.time 'getEdges'
@@ -140,4 +155,4 @@ define ["utils", "prepare_data", 'graph'], ({
 			y = 2*d * Math.floor index / columns
 		{ x, y }
 
-	{ setupInitialEmbedding }
+	{ Embedder }
