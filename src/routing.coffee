@@ -1,6 +1,6 @@
-define ['utils', 'grid', 'graph'], (
-	{ P, forall, nearest01, nearestXY, rasterCircle },
-	{ Grid }, { Node, Edge }) ->
+define ['utils', 'grid'], (
+	{ P, PD, forall, nearest01, nearestXY, rasterCircle, length, compareNumber },
+	{ Grid }) ->
 	###
 
 		Here we stick to the terminology used in Jonathan M. Scotts thesis.
@@ -32,7 +32,6 @@ define ['utils', 'grid', 'graph'], (
 			@grid = new Grid
 		
 		snapNodes: ->
-			console.time "snapNodes"
 			grid = @grid
 			nodes = @graph.nodes[..]
 			old_length = nodes.length
@@ -51,38 +50,75 @@ define ['utils', 'grid', 'graph'], (
 				if nodes.length >= old_length
 					throw "no progress"
 				old_length = nodes.length
-			console.timeEnd "snapNodes"
 			
 		nearestFreeGrid: ({ x, y }, grid) ->
 			g = @gridSpacing
+			coords = new GridCoordGenerator {
+				x, y
+				spacing: g
+				filter: (coord) -> not grid.has coord
+			}
 			gx = g*Math.round (x/g)
 			gy = g*Math.round (y/g)
-			r = 0
-			coords = []
-			while coords.length == 0
-				coords = rasterCircle 0, 0, r++
-				coords = ([ gx+g*ox, gy+g*oy ] for [ox,oy] in coords)
-				coords = (coord for coord in coords when not grid.has coord)
-			{ b } = nearest01 [ x, y ], coords
+			{ b } = nearest01 [ x, y ], [[ gx, gy ], coords.next()...]
 			return b
 			
-		optimize: ->
+		optimize: (timeAvailable) ->
+			timeAvailable ?= @timeToOptimize
+			{ nodes, edges, lines } = @graph
+			nodes = nodes[..]
+			time = timeAvailable+Date.now()
+			moved = {}
+			loops = 0
+			while time > +Date.now()
+				++loops
+				@sortByCriteria nodes, @lineStraightness
+				for node in nodes
+					if node.crit?.value > 0 and @moveNode node, @lineStraightness
+						moved[node.data.kanji] = true
+			stats =
+				moved: length moved
+				loops: loops
+			{ stats }
 			
-		moveNode: (node, criteria) ->
-			[ x, y ] = nearestFreeGrid node, @grid
-			node.x = x
-			node.y = y
-			for dep in node.crit.dependencies
-				dep.crit = undefined
+		moveNode: (node, criteria) -> 
+			generator = new GridCoordGenerator
+				x: node.x
+				y: node.y
+				spacing: @gridSpacing
+				filter: (coord) => not @grid.has coord
+			coords = []
+			while generator.r < 9
+				coords = [ coords..., generator.next()... ]
+			min = { crit: node.crit, coord: [ node.x, node.y ] }
+			copy =
+				x: node.x
+				y: node.y
+			for coord in coords
+				node.x = coord[0]
+				node.y = coord[1]
+				crit = criteria node
+				if min.crit.value > crit.value
+					min.crit = crit
+					min.coord = coord
+			[ x, y ] = min.coord
+			if x != node.x or y != node.y
+				for dep in node.crit.deps
+					dep.crit = undefined
+				@grid.remove node
+				@grid.set [x,y], node
+				node.crit = min.crit
+				node
+			else
+				node.x = copy.x
+				node.y = copy.y
+				null
 				
-		updateCriteria: (nodes, criteria) ->
-			min = null
-			for node in nodes
-				if not node.crit?
-					node.crit = criteria node
-				if not min or min.crit.value < node.crit.value
-					min = node
-			min
+		sortByCriteria: (nodes, criteria) ->
+			nodes.sort (a, b) ->
+				for node in [ a, b ]
+					node.crit = criteria node if not node.crit?
+				compareNumber b.crit.value, a.crit.value
 
 		lineStraightness: (node) ->
 			segments = {}
@@ -95,9 +131,11 @@ define ['utils', 'grid', 'graph'], (
 				segments[edge.line.id][order] = edge
 			straightness = for line, edges of segments
 				[ a, b ] = edges
-				angle = a.getAngle b
-				Math.pow angle, 2
-			value: d3.sum straightness
+				if a and b
+					angle = a.getAngle b
+					Math.pow angle, 2
+			straightness = d3.sum (x for x in straightness when x)
+			value: straightness
 			deps: dependencies
 			
 		calculateNodesCriteria: (nodes) ->
@@ -133,4 +171,33 @@ define ['utils', 'grid', 'graph'], (
 		findLowestNodeCriteria: (nodes) ->
 			0
 	
-	{ metroMap, MetroMapLayout, Node, Edge }
+	class GridCoordGenerator
+		constructor: ({ spacing: @g, @filter, @r, @x, @y }={}) ->
+			@r ?= 1
+			@x ?= 0
+			@y ?= 0
+			@g ?= 1
+			@filter ?= -> true
+		
+		next: ->
+			{ g, filter, x, y } = this
+			gx = g*Math.round (x/g)
+			gy = g*Math.round (y/g)
+			coords = []
+			while coords.length == 0
+				coords = @coords @r++
+				coords = ([gx+g*c[0],gy+g*c[1]] for c in coords)
+				coords = (coord for coord in coords when filter coord)
+			coords
+			
+		coords: (r) ->
+			coords = []
+			for x in [0..r]
+				y = r-Math.abs x
+				coords.push [ +x, +y ]
+				coords.push [ -x, -y ]
+				coords.push [ -x, +y ] if x != 0 and y != 0
+				coords.push [ +x, -y ] if x != 0 and y != 0
+			coords
+	
+	{ metroMap, MetroMapLayout }
