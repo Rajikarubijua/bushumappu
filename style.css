@@ -1,5 +1,7 @@
 @charset "UTF-8";
 
+@import url('stroke_colors.css')
+
 body { overflow: hidden; margin: 0; }
 
 circle, rect {
@@ -42,7 +44,6 @@ div.tooltip {
 */
 
 .highlighted {
-	stroke: rgb(229,53,23);
 	stroke-width: 10pt;
 }
 
