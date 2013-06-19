@@ -30,6 +30,8 @@ define ['utils', 'grid'], (
 		constructor: ({ config, @graph }) ->
 			{ @timeToOptimize, @gridSpacing } = config
 			@grid = new Grid
+			for node in @graph.nodes or []
+				@grid.set node, node
 		
 		snapNodes: ->
 			grid = @grid
@@ -44,6 +46,7 @@ define ['utils', 'grid'], (
 				for coord, list of toMove
 					[ x, y ] = (+d for d in coord.split 'x')
 					{ b, i } = nearestXY { x, y }, list
+					grid.remove b
 					grid.set [x,y], b
 					list[i..i] = []
 					nodes = [ nodes..., list... ]
