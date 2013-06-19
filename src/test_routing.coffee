@@ -1,4 +1,4 @@
-define ['utils', 'routing', 'graph', 'tests'], ({ P }, routing,
+define ['utils', 'routing', 'graph', 'tests'], ({ P, PD }, routing,
 	{ Node, Edge, Line }, T) ->
 
 	tests =
@@ -6,23 +6,24 @@ define ['utils', 'routing', 'graph', 'tests'], ({ P }, routing,
 			config = testConfig
 			g = config.gridSpacing
 
-			test = (name, nodes, criteria) ->
+			test = (name, graph, criteria) ->
 				console.info "     "+name
-				layout = new routing.MetroMapLayout { config, graph: { nodes } }
+				graph = createGraph graph
+				layout = new routing.MetroMapLayout { config, graph }
 				layout.snapNodes()
-				T.assert name, nodes, config, criteria
+				T.assert name, graph.nodes, config, criteria
 			
 			test "single node",
-				[{ x: -1, y: -1 }],
+				[[{ x: -1, y: -1 }]],
 				{ oneIsAtZero, allAreSnapped }		
 			test "two, different grid",
-				[{ x: -1, y: -1 }, { x: -1+g, y: -1+g }],
+				[[{ x: -1, y: -1 }, { x: -1+g, y: -1+g }]],
 				{ oneIsAtZero, allAreSnapped }		
 			test "two, same distance",
-				[{ x: -1, y: -1 }, { x: 1, y: 1 }],
+				[[{ x: -1, y: -1 }, { x: 1, y: 1 }]],
 				{ oneIsAtZero, allAreSnapped }
 			test "ten, same position",
-				({ x:0, y:0 } for [1..10]),
+				[({ x:0, y:0 } for [1..10])],
 				{ oneIsAtZero, allAreSnapped }
 
 		testAngularResolutionCriterion: ->
