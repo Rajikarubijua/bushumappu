@@ -30,6 +30,10 @@ define [], () ->
 			l1 = Math.sqrt( Math.pow( x1, 2 ) + Math.pow( y1, 2) )
 			l2 = Math.sqrt( Math.pow( x2, 2 ) + Math.pow( y2, 2) )
 			angle = Math.acos( scalar / (l1 * l2))
+			
+		lengthSqr: ->
+			[ x, y ] = @getVector()
+			(Math.pow x, 2) + (Math.pow y, 2)
 
 	class Line
 		next_id = 0
