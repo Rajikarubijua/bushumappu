@@ -30,9 +30,9 @@ define ['utils'], ({ P, compareNumber }) ->
 			node_g = node.enter()
 				.append('g')
 				.classed("node", true)
-				.on('mouseover', (d) -> nodeMouseOver d)
-				.on('mouseout', (d) -> nodeMouseOut d)
-				.on('mousemove', (d) -> nodeMouseMove d, node)
+				#.on('mouseover', (d) -> nodeMouseOver d)
+				#.on('mouseout', (d) -> nodeMouseOut d)
+				#.on('mousemove', (d) -> nodeMouseMove d, node)
 			node_g.append('rect').attr x:-r, y:-r, width:2*r, height:2*r
 			node_g.append('text').text (d) -> d.label
 

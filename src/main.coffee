@@ -42,7 +42,33 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 				
 		svg   = my.svg = body.append 'svg'
 		svg.g = svg.append 'g'
-				
+		
+		table = d3.selectAll('body').append('div').attr('class', 'footer')
+		table.html('<table border="0">
+			<thead> Kani Details </thead>
+			<tr>
+				<td> </td>
+				<td> Please select a Kanji to see its details </td>
+			</tr>
+			<tr>
+				<td>Trasnlation</td>
+				<td> - </td>
+			</tr>
+			<tr>
+				<td>Radicals</td>
+				<td> - </td>
+			</tr>
+			<tr>
+				<td>ON</td>
+				<td> - </td>
+			</tr>
+			<tr>
+				<td>KUN</td>
+				<td> - </td>
+			</tr>
+		</table>')
+		
+		
 		w = new Signal
 		h = new Signal
 		window.onresize = ->
@@ -50,7 +76,7 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 			h window.innerHeight
 		window.onresize()
 		new Observer ->
-			attrs = { width : w(), height: h() }
+			attrs = { width : w(), height: 0.8*h() }
 			svg.attr attrs
 			svg.style attrs
 				
@@ -98,7 +124,7 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 			
 	showDebugOverlay = (el) ->
 		el.append('pre').attr(id:'my').text somePrettyPrint my
-			
+	
 	testRouting.runTests []
 	console.info 'end of tests'
 	loadData main
