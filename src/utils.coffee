@@ -16,11 +16,14 @@ define ->
 	prettyDebug = (x, known=[], depth=0) ->
 		if x in known
 			'###'
+		else if typeof x in ['undefined', 'boolean']
+			''+x
 		else if typeof x is 'string'
 			if depth <= 1 then x else '"'+x+'"'
 		else if typeof x is 'number'
-			x=""+x
-			x = x[..2+x.indexOf '.']
+			x = 0.01*Math.round x*100
+		else if typeof x is 'function'
+			(""+x).split('{')[0]
 		else if Array.isArray x
 			known.push x
 			s = if depth == 0 then ' ' else ','
@@ -32,7 +35,7 @@ define ->
 			known.push x
 			x = (for k, v of x
 				v = prettyDebug v, known, depth+1
-				'"'+k+'": '+v
+				k+':'+v
 			).join ','
 			'{'+x+'}'
 
@@ -251,4 +254,4 @@ define ->
 	  sort, styleZoom, sunflower, vecX, vecY, vec, compareNumber, max,
   	  parseMaybeNumber, equidistantSelection, getMinMax, arrayUnique,
   	  distanceSqrXY, nearestXY, nearest01, distanceSqr01, nearest, forall,
-  	  rasterCircle }
+  	  rasterCircle, prettyDebug }
