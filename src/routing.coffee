@@ -53,14 +53,15 @@ define ['utils', 'grid'], (
 			
 		nearestFreeGrid: ({ x, y }, grid) ->
 			g = @gridSpacing
-			coords = new GridCoordGenerator {
+			generator = new GridCoordGenerator {
 				x, y
 				spacing: g
 				filter: (coord) -> not grid.has coord
 			}
-			gx = g*Math.round (x/g)
-			gy = g*Math.round (y/g)
-			{ b } = nearest01 [ x, y ], [[ gx, gy ], coords.next()...]
+			coord = [ (g*Math.round (x/g)), (g*Math.round (y/g)) ]
+			coords = generator.next()
+			coords.push coord if not grid.has coord
+			{ b } = nearest01 [ x, y ], coords
 			return b
 			
 		optimize: (timeAvailable) ->
