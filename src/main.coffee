@@ -39,7 +39,7 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 
 		if config.debugOverlay
 			showDebugOverlay body
-				
+		
 		svg   = my.svg = body.append 'svg'
 		svg.g = svg.append 'g'
 		
@@ -50,7 +50,7 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 			h window.innerHeight
 		window.onresize()
 		new Observer ->
-			attrs = { width : w(), height: 0.8*h() }
+			attrs = { width : w(), height: h() }
 			svg.attr attrs
 			svg.style attrs
 				

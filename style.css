@@ -18,13 +18,30 @@ path {
 	stroke-width: 2pt;
 }
 
-.kanjiDetails{
+div#svg {
+	position: absolute;
+}
+
+div#bottomBar {
 	top: auto;
-	width: 100%;
+	background: #fff;
 	bottom: 0px;
 	position: absolute;
-	text-align: left;
-  padding: 8px;
+	border: solid 1px #aaa;
+}
+
+div#miniMap {
+	float: left;
+	width: 30%;
+	height: 100%;
+	border: solid 1px #aaa;
+}
+
+dv#kanjiDetails {
+	float: right;
+	width: 70%;
+	height: 100%;
+  /*padding: 8px;*/
   font: 16px sans-serif;
   border: solid 1px #aaa;
 }
