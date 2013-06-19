@@ -54,7 +54,7 @@ define ['utils', 'routing', 'graph', 'tests'], ({ P, PD }, routing,
 			test "test perfect multiple edge", edges1, { criteriaIsNull }
 			test "test multiple edge", edges2, { criteriaIsRight }
 
-		testLineStraightness: ->
+		testOptimizeLineStraightness: ->
 			config = testConfig
 			config.gridSpacing = 1
 			
@@ -72,27 +72,95 @@ define ['utils', 'routing', 'graph', 'tests'], ({ P, PD }, routing,
 				value = { graphA, graphB, criteria: graphCriteria, stats,
 					critsBefore, critsAfter }
 				T.assert name, value, config, criteria
+				graphB
 			
-			a = { x: -1, y:  0 }
-			b = { x:  0, y:  0 }
-			c = { x:  1, y:  0 }
+			a = { x: -1, y:  0, id: 'a' }
+			b = { x:  0, y:  0, id: 'b' }
+			c = { x:  1, y:  0, id: 'c' }
 			test "single line, optimal",
-				[[a,b,c]], { noMovement, optimal }
+				[[a,b,c]], { noMovement, optimal, noOverlap }
 			
-			b = { x:  0, y:  1 }
+			b = { x:  0, y:  1, id: 'b' }
 			test "single line, single error",
-				[[a,b,c]], { movement, optimal }
+				[[a,b,c]], { movement, optimal, noOverlap }
 			
-			b = { x:  0, y:  0 }
-			d = { x:  0, y: -1 }
-			e = { x:  0, y:  1 }
+			b = { x:  0, y:  0, id: 'b' }
+			d = { x:  0, y: -1, id: 'd' }
+			e = { x:  0, y:  1, id: 'e' }
 			test "two lines, optimal",
-				[[a, b, c], [d, b, e]], { noMovement, optimal }
+				[[a, b, c], [d, b, e]], { noMovement, optimal, noOverlap }
 			
 			b = { x:  1, y:  1, id: 'b' }
 			test "two lines, single error",
-				[[a, b, c], [d, b, e]], { movement, optimal }
+				[[a, b, c], [d, b, e]], { movement, optimal, noOverlap }
+				
+			a = x: -1, y: -1, id: 'a'
+			b = x:  1, y: -1, id: 'b'
+			c = x:  1, y:  1, id: 'c'
+			d = x: -1, y:  1, id: 'd'
+			test "one line, U turn",
+				[[a,b,c,d]], { movement, optimal, noOverlap }
 			
+		testLineStraightness: ->
+			config = testConfig
+			
+			test = (name, graph, result) ->
+				graph = createGraph graph
+				layout = new routing.MetroMapLayout { config, graph }
+				values = for node in graph.nodes
+					(layout.lineStraightness node).value
+				T.assert name, null, null, correct: ->
+					correct = for v, i in values
+						r = result[i]
+						if r == 0
+							v == 0
+						else if r == true
+							v > 0
+						else
+							true
+					[ not (false in correct), values ]
+				values
+			
+			a = x: -1, y:  0, id: 'a'
+			b = x:  0, y:  0, id: 'b'
+			c = x:  1, y:  0, id: 'c'
+			d = x:  2, y:  0, id: 'd'
+			result = [0,0,0,0]
+			test '', [[a,b,c,d]], result
+			
+			a = x: -1, y:  0, id: 'a'
+			b = x:  0, y:  1, id: 'b'
+			c = x:  1, y:  0, id: 'c'
+			d = x:  2, y:  0, id: 'd'
+			result = [true,true,true,true]
+			test '', [[a,b,c,d]], result
+			
+			a = x: -1, y:  0, id: 'a'
+			b = x:  0, y:  1, id: 'b'
+			c = x:  1, y:  1, id: 'c'
+			d = x:  2, y:  0, id: 'd'
+			result = [true,true,true,true]
+			test '', [[a,b,c,d]], result
+			
+			a = x: -1, y:  0, id: 'a'
+			b = x: -1, y:  1, id: 'b'
+			c = x:  1, y:  1, id: 'c'
+			d = x:  1, y:  0, id: 'd'
+			result = [true,true,true,true]
+			test '', [[a,b,c,d]], result
+			
+			a = x: -1, y: -1, id: 'a'
+			b = x:  0, y:  0, id: 'b'
+			c = x:  1, y:  1, id: 'c'
+			d = x:  2, y:  2, id: 'd'
+			result = [0,0,0,0]
+			test '', [[a,b,c,d]], result
+
+	debug = (func) ->
+		my.debug = true
+		func()
+		my.debug = false
+
 	createGraph = (lines) ->
 		graph =
 			nodes: []
@@ -121,26 +189,37 @@ define ['utils', 'routing', 'graph', 'tests'], ({ P, PD }, routing,
 				source = target
 		graph
 			
-	noMovement = ({ graphA, graphB }) ->
-		for a, i in graphA.nodes
-			b = graphB.nodes[i]
-			if not (a.x == b.x and a.y == b.y)
-				return false
+	noOverlap = ({ graphB }) ->
+		for a in graphB.nodes
+			for b in graphB.nodes
+				continue if a == b
+				if a.x == b.x and a.y == b.y
+					return false
 		true
+			
+	noMovement = (args...) ->
+		result = movement args...
+		if Array.isArray result
+			result[0] = !result[0]
+		else
+			result = !result
+		result
 		
 	movement = ({ graphA, graphB }) ->
 		moved = []
 		for a, i in graphA.nodes
 			b = graphB.nodes[i]
 			if not (a.x == b.x and a.y == b.y)
-				moved.push [[a.x,a.y],[b.x,b.y]]
-		if moved.length then moved else false
+				(o = {})[a.id] = [[a.x,a.y],[b.x,b.y]]
+				moved.push o
+		if moved.length then [true, moved] else false
 		
-	optimal = ({ graphA, graphB, criteria }) ->
-		for node in graphB.nodes
-			if 0 < (criteria node).value
-				return false
-		true
+	optimal = ({ graphB, criteria }) ->
+		values = for node in graphB.nodes
+			[node.id, (criteria node).value]
+		for v in values
+			return [ false, values ] if v[1] != 0
+		[ true, values ]
 			
 	oneIsAtZero = (nodes) ->
 		for node in nodes
