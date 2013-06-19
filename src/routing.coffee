@@ -1,5 +1,6 @@
 define ['utils', 'grid'], (
-	{ P, PD, forall, nearest01, nearestXY, rasterCircle, length, compareNumber },
+	{ P, PD, forall, nearest01, nearestXY, rasterCircle, length, compareNumber,
+	sortSomewhat },
 	{ Grid }) ->
 	###
 
@@ -27,8 +28,8 @@ define ['utils', 'grid'], (
 		graph
 		
 	class MetroMapLayout
-		constructor: ({ config, @graph }) ->
-			{ @timeToOptimize, @gridSpacing } = config
+		constructor: ({ @config, @graph }) ->
+			{ @timeToOptimize, @gridSpacing } = @config
 			@grid = new Grid
 			for node in @graph.nodes or []
 				@grid.set node, node
@@ -73,45 +74,60 @@ define ['utils', 'grid'], (
 			nodes = nodes[..]
 			time = timeAvailable+Date.now()
 			moved = {}
-			loops = 0
-			while time > +Date.now()
-				++loops
+			steps = 0
+			bench = []
+			while time > +Date.now() and steps < @config.optimizeMaxSteps
+				++steps
 				@sortByCriteria nodes, @lineStraightness
+				bench.push d3.sum (n.crit.value for n in nodes)
 				for node in nodes
-					if node.crit?.value > 0 and @moveNode node, @lineStraightness
-						moved[node.data.kanji] = true
+					if not node.crit
+						node.crit = @lineStraightness node
+					if node.crit.value > 0
+						if @moveNode node, @lineStraightness
+							moved[node.data.kanji] = true
+			@sortByCriteria nodes, @lineStraightness
+			bench.push d3.sum (n.crit.value for n in nodes)
 			stats =
 				moved: length moved
-				loops: loops
+				steps: steps
+				bench: bench[-1..][0] / bench[0]
 			{ stats }
 			
-		moveNode: (node, criteria) -> 
+		moveNode: (node, criteria) ->
+			update = (crit) -> n.crit = criteria n for n in crit.deps
+			sum = (crit) -> crit.value + d3.sum (n.crit.value for n in crit.deps)
+			
 			generator = new GridCoordGenerator
 				x: node.x
 				y: node.y
 				spacing: @gridSpacing
 				filter: (coord) => not @grid.has coord
-			coords = []
-			while generator.r < 9
-				coords = [ coords..., generator.next()... ]
-			min = { crit: node.crit, coord: [ node.x, node.y ] }
-			copy =
-				x: node.x
-				y: node.y
+			coords = generator.next()
+			coords.push generator.next()...
+				
+			copy   = x: node.x, y: node.y
+			update node.crit
+			before = sum node.crit
+			min    = value: before, coord: [ node.x, node.y ]
+			
 			for coord in coords
 				node.x = coord[0]
 				node.y = coord[1]
-				crit = criteria node
-				if min.crit.value > crit.value
-					min.crit = crit
+				node.crit = criteria node
+				update node.crit
+				value = sum node.crit
+				value = 0 if value < 0.0001
+				if min.value > value
+					min.value = value
 					min.coord = coord
+					break if min.value == 0
 			[ x, y ] = min.coord
-			if x != node.x or y != node.y
-				for dep in node.crit.deps
-					dep.crit = undefined
-				@grid.remove node
+			if x != copy.x or y != copy.y
+				@grid.remove copy
 				@grid.set [x,y], node
-				node.crit = min.crit
+				node.crit = criteria node
+				update node.crit
 				node
 			else
 				node.x = copy.x
@@ -124,23 +140,43 @@ define ['utils', 'grid'], (
 					node.crit = criteria node if not node.crit?
 				compareNumber b.crit.value, a.crit.value
 
-		lineStraightness: (node) ->
+		lineStraightness: (node) =>
 			segments = {}
-			for line in node.lines
-				segments[line.id] = []
-			dependencies = for edge in node.edges
-				if edge.target == node then edge.source else edge.target
+			segments[line.id] = [] for line in node.lines
 			for edge in node.edges
-				order = if edge.target == node then 0 else 1
-				segments[edge.line.id][order] = edge
-			straightness = for line, edges of segments
-				[ a, b ] = edges
-				if a and b
+				other_node = @otherNode node, edge
+				other = @otherEdge other_node, edge
+				segment = segments[edge.line.id]
+				segment.push edge
+				segment.push other if other
+			deps = []
+			for line,edges of segments
+				for edge in edges
+					for n in [edge.source, edge.target]
+						if n != node and n not in deps
+							deps.push n
+			angles = for line, edges of segments
+				edges = sortSomewhat edges, (a, b) ->
+					return -1 if a.target == b.source
+					return  1 if a.source == b.target
+				a = edges[0]
+				for b in edges[1..]
 					angle = a.getAngle b
-					Math.pow angle, 2
-			straightness = d3.sum (x for x in straightness when x)
+					angle = Math.pow angle, 2
+					if angle < 0.00001 then 0 else angle
+			straightness = d3.sum d3.merge angles
 			value: straightness
-			deps: dependencies
+			deps: deps
+			
+		otherNode: (node, edge) ->
+			if edge.source == node then edge.target else edge.source
+			
+		otherEdge: (node, edge) ->
+			for other in node.edges
+				continue if other == edge
+				if other.line.id == edge.line.id
+					return other
+			null
 			
 		calculateNodesCriteria: (nodes) ->
 			# How to calculate final criterion over multiple criteria? p 89?

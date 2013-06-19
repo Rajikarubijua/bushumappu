@@ -250,8 +250,32 @@ define ->
 			[x0+x, y0+y], [x0-x, y0+y], [x0+x, y0-y], [x0-x, y0-y],
 			[x0+y, y0+x], [x0-y, y0+x], [x0+y, y0-x], [x0-y, y0-x] ]
 
+	sortSomewhat = (xs, cmp) ->
+		xs = xs[..]
+		min = x: xs[0], i: 0
+		for x, i in xs
+			if (cmp x, min.x) == -1
+				min = { x, i }
+		a = min.x
+		xs[min.i..min.i] = []
+		sorted = [a]
+		l = xs.length
+		while xs.length
+			for [0...xs.length]
+				b = xs.shift()
+				if (cmp a, b) == -1
+					sorted.push b
+					a = b
+				else
+					xs.push b
+			if xs.length >= l
+				P sorted, xs
+				throw "not somewhat sortable"
+		sorted
+			
+
 	{ copyAttrs, P, PN, PD, W, async, strUnique, expect, somePrettyPrint, length,
 	  sort, styleZoom, sunflower, vecX, vecY, vec, compareNumber, max,
   	  parseMaybeNumber, equidistantSelection, getMinMax, arrayUnique,
   	  distanceSqrXY, nearestXY, nearest01, distanceSqr01, nearest, forall,
-  	  rasterCircle, prettyDebug }
+  	  rasterCircle, prettyDebug, sortSomewhat }

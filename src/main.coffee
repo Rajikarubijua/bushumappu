@@ -15,6 +15,8 @@ config =
 	initialScale:				0.06
 	edgesBeforeSnap:			false
 	timeToOptimize:				3000
+	optimizeMaxLoops:			3
+	optimizeMaxSteps:			1
 figue.KMEANS_MAX_ITERATIONS = 1
 
 # the global object where we can put stuff into it
@@ -28,7 +30,7 @@ window.my = {
 
 define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 	'interactivity', 'routing', 'test_routing'], (
-	{ P, somePrettyPrint, styleZoom, async },
+	{ P, somePrettyPrint, styleZoom, async, prettyDebug },
 	loadData, prepare, { Embedder }, { View }, { MetroMapLayout },
 	testRouting) ->
 
@@ -73,7 +75,7 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 		graph = embedder.graph
 		view = new View { svg: svg.g, graph, config }
 		layout = new MetroMapLayout { config, graph }
-		view.update()		
+		view.update()
 		async.seqTimeout config.transitionTime,
 			config.gridSpacing > 0 and (->
 				console.info 'snap nodes...'
@@ -82,15 +84,21 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 				generateEdges() if not config.edgesBeforeSnap
 				view.update()
 			),(->
-				console.info 'optimize...'
-				{ stats } = layout.optimize()
-				console.info 'optimize done', stats
-				view.update()
+				optimize_loop()	
 			)
+		optimize_loop = ->
+			console.info 'optimize...'
+			{ stats } = layout.optimize()
+			console.info 'optimize done', prettyDebug stats
+			view.update()
+			if (config.optimizeMaxLoops == -1) or (
+				++optimize_loop.loops < config.optimizeMaxLoops)
+				setTimeout optimize_loop, config.transitionTime
+		optimize_loop.loops = 0
 			
 	showDebugOverlay = (el) ->
 		el.append('pre').attr(id:'my').text somePrettyPrint my
 			
-	testRouting.runTests()
+	testRouting.runTests []
 	console.info 'end of tests'
 	loadData main

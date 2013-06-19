@@ -81,7 +81,7 @@ define ['utils', 'routing', 'graph', 'tests'], ({ P, PD }, routing,
 				[[a,b,c]], { noMovement, optimal, noOverlap }
 			
 			b = { x:  0, y:  1, id: 'b' }
-			test "single line, single error",
+			debug -> test "single line, single error",
 				[[a,b,c]], { movement, optimal, noOverlap }
 			
 			b = { x:  0, y:  0, id: 'b' }
@@ -98,8 +98,10 @@ define ['utils', 'routing', 'graph', 'tests'], ({ P, PD }, routing,
 			b = x:  1, y: -1, id: 'b'
 			c = x:  1, y:  1, id: 'c'
 			d = x: -1, y:  1, id: 'd'
+			config.optimizeMaxSteps = 3
 			test "one line, U turn",
 				[[a,b,c,d]], { movement, optimal, noOverlap }
+			config.optimizeMaxSteps = 1
 			
 		testLineStraightness: ->
 			config = testConfig
@@ -276,6 +278,7 @@ define ['utils', 'routing', 'graph', 'tests'], ({ P, PD }, routing,
 	testConfig =
 		timeToOptimize:		1000
 		gridSpacing:		3
+		optimizeMaxSteps:	1
 			
 	runTests = (which)-> T.run tests, which
 			
