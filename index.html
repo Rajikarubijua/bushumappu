@@ -12,43 +12,49 @@ var require = {
 <script src="lib/reactor.js"></script>
 <script data-main="js/main.js" src="lib/require.js"></script>
 <link href="style.css" rel="stylesheet" type="text/css" />
+<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.2.0/pure-min.css">
 </head>
 <body>
-	<div id="svg"> </div>
+	<svg id="graph"> </svg>
 	<!--Div containing the Kanji detail table and the MiniMap-->
 	<div id="bottomBar">
 	
 		<!--MiniMap for better overview of the user-->
-		<div id="miniMap">
+		<div id="minimap">
 		mini mappu
 		</div>
 		
 		<!--Table containing details of selected Kanji-->
-		<div id= "kanjiDetails">
-			<table border="0" rules="all" frame="box">
-				<thead> Kani details </thead>
+		<table id="details" class="pure-table pure-table-striped">
+			<thead>
+				<tr>
+					<th>Kanji details<th>
+				</tr>
+			</thead>
+			
+			<tbody>
 				<tr>
 					<td> </td>
-					<td> Please select a Kanji to see it's details </td>
+					<td> click Kanjis to see details </td>
 				</tr>
 				<tr>
-					<td>Translation</td>
-					<td> - </td>
+					<td>english</td>
+					<td> </td>
 				</tr>
 				<tr>
-					<td>Radicals</td>
-					<td> - </td>
+					<td>radicals</td>
+					<td> </td>
 				</tr>
 				<tr>
-					<td>ON</td>
-					<td> - </td>
+					<td>onyomi</td>
+					<td> </td>
 				</tr>
 				<tr>
-					<td>KUN</td>
-					<td> - </td>
+					<td>kunyomi</td>
+					<td> </td>
 				</tr>
-			</table>
-		</div>
+			</tbody>
+		</table>
 		
 	</div> <!-- bottomBar div ends here -->
 </body>

@@ -18,34 +18,6 @@ path {
 	stroke-width: 2pt;
 }
 
-div#svg {
-	position: absolute;
-}
-
-div#bottomBar {
-	top: auto;
-	background: #fff;
-	bottom: 0px;
-	position: absolute;
-	border: solid 1px #aaa;
-}
-
-div#miniMap {
-	float: left;
-	width: 30%;
-	height: 100%;
-	border: solid 1px #aaa;
-}
-
-dv#kanjiDetails {
-	float: right;
-	width: 70%;
-	height: 100%;
-  /*padding: 8px;*/
-  font: 16px sans-serif;
-  border: solid 1px #aaa;
-}
-
 /* Output colors
     [229,  53,  23, 1, "red"    ]
     [151, 190,  13, 1, "green"  ]
@@ -68,4 +40,26 @@ pre#my { position: absolute; }
 svg > g * {
 	transition: 1s;
 	-webkit-transition: 1s;
+}
+
+#graph {
+}
+#bottomBar {
+	display: -webkit-flex;
+	border: 1px solid silver;
+}
+#bottomBar > * {
+}
+#minimap {
+	width: 200px;
+	height: 200px;
+	border: 1px solid silver;
+	text-align: center;
+	display: -webkit-flex;
+	-webkit-justify-content: center;
+	-webkit-align-items: center;
+}
+#details {
+	-webkit-min-width: fill-c;
+	height: 202px;
 }

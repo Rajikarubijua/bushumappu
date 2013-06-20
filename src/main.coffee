@@ -40,7 +40,7 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 		if config.debugOverlay
 			showDebugOverlay body
 		
-		svg   = my.svg = body.append 'svg'
+		svg   = my.svg = body.select 'svg#graph'
 		svg.g = svg.append 'g'
 		
 		w = new Signal
@@ -50,7 +50,7 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 			h window.innerHeight
 		window.onresize()
 		new Observer ->
-			attrs = { width : w(), height: h() }
+			attrs = width : 0.95*w(), height: 0.66*h()
 			svg.attr attrs
 			svg.style attrs
 				
