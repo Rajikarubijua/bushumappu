@@ -82,9 +82,8 @@ define ->
 			funcs = (func for func in funcs when func)
 			i = 0
 			iter = -> setTimeout (->
-				funcs[i++]()
-				iter() if i < funcs.length),
-				timeout
+				funcs[i++] (-> iter() if i < funcs.length)
+				), timeout
 			iter()
 
 	strUnique = (str, base) ->

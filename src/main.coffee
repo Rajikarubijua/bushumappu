@@ -77,23 +77,26 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 		layout = new MetroMapLayout { config, graph }
 		view.update()
 		async.seqTimeout config.transitionTime,
-			config.gridSpacing > 0 and (->
+			config.gridSpacing > 0 and ((cb) ->
 				console.info 'snap nodes...'
 				layout.snapNodes()
 				console.info 'snap node done'
 				generateEdges() if not config.edgesBeforeSnap
 				view.update()
-			),(->
-				optimize_loop()	
+				cb()
+			),((cb) ->
+				optimize_loop cb
 			)
-		optimize_loop = ->
+		optimize_loop = (cb) ->
 			console.info 'optimize...'
 			{ stats } = layout.optimize()
 			console.info 'optimize done', prettyDebug stats
 			view.update()
 			if (config.optimizeMaxLoops == -1) or (
 				++optimize_loop.loops < config.optimizeMaxLoops)
-				setTimeout optimize_loop, config.transitionTime
+				setTimeout (-> optimize_loop cb), config.transitionTime
+			else
+				cb()
 		optimize_loop.loops = 0
 			
 	showDebugOverlay = (el) ->
