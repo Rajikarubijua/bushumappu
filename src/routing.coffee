@@ -1,7 +1,7 @@
 define ['utils', 'grid'], (
 	{ P, PD, forall, nearest01, nearestXY, rasterCircle, length, compareNumber,
 	sortSomewhat },
-	{ Grid }) ->
+	{ Grid, GridCoordGenerator }) ->
 	###
 
 		Here we stick to the terminology used in Jonathan M. Scotts thesis.
@@ -210,34 +210,5 @@ define ['utils', 'grid'], (
 
 		findLowestNodeCriteria: (nodes) ->
 			0
-	
-	class GridCoordGenerator
-		constructor: ({ spacing: @g, @filter, @r, @x, @y }={}) ->
-			@r ?= 1
-			@x ?= 0
-			@y ?= 0
-			@g ?= 1
-			@filter ?= -> true
-		
-		next: ->
-			{ g, filter, x, y } = this
-			gx = g*Math.round (x/g)
-			gy = g*Math.round (y/g)
-			coords = []
-			while coords.length == 0
-				coords = @coords @r++
-				coords = ([gx+g*c[0],gy+g*c[1]] for c in coords)
-				coords = (coord for coord in coords when filter coord)
-			coords
-			
-		coords: (r) ->
-			coords = []
-			for x in [0..r]
-				y = r-Math.abs x
-				coords.push [ +x, +y ]
-				coords.push [ -x, -y ]
-				coords.push [ -x, +y ] if x != 0 and y != 0
-				coords.push [ +x, -y ] if x != 0 and y != 0
-			coords
 	
 	{ metroMap, MetroMapLayout }
