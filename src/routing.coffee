@@ -1,6 +1,8 @@
-define ['utils', 'grid'], (utils, { Grid, GridCoordGenerator }) ->
+define ['utils', 'grid', 'criteria'], (utils, { Grid, GridCoordGenerator },
+	criteria) ->
 	{ P, PD, forall, nearest01, nearestXY, rasterCircle, length, compareNumber,
-	sortSomewhat } = utils
+	  sortSomewhat } = utils
+	optimizeCriterias = criteria
 	###
 
 		Here we stick to the terminology used in Jonathan M. Scotts thesis.
@@ -183,44 +185,5 @@ define ['utils', 'grid'], (utils, { Grid, GridCoordGenerator }) ->
 
 		findLowestNodeCriteria: (nodes) ->
 			0
-			
-	optimizeCriterias =
-		lineStraightness: (node) ->
-			segments = {}
-			segments[line.id] = [] for line in node.lines
-			for edge in node.edges
-				other_node = otherNode node, edge
-				other = otherEdge other_node, edge
-				segment = segments[edge.line.id]
-				segment.push edge
-				segment.push other if other
-			deps = []
-			for line,edges of segments
-				for edge in edges
-					for n in [edge.source, edge.target]
-						if n != node and n not in deps
-							deps.push n
-			angles = for line, edges of segments
-				edges = sortSomewhat edges, (a, b) ->
-					return -1 if a.target == b.source
-					return  1 if a.source == b.target
-				a = edges[0]
-				for b in edges[1..]
-					angle = a.getAngle b
-					angle = Math.pow angle, 2
-					if angle < 0.00001 then 0 else angle
-			straightness = d3.sum d3.merge angles
-			value: straightness
-			deps: deps
-			
-	otherNode = (node, edge) ->
-		if edge.source == node then edge.target else edge.source
-		
-	otherEdge = (node, edge) ->
-		for other in node.edges
-			continue if other == edge
-			if other.line.id == edge.line.id
-				return other
-		null
 	
 	{ metroMap, MetroMapLayout, optimizeCriterias }
