@@ -29,10 +29,10 @@ window.my = {
 	config }
 
 define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
-	'interactivity', 'routing', 'test_routing'], (
+	'interactivity', 'routing', 'test_routing', 'tests'], (
 	{ P, somePrettyPrint, styleZoom, async, prettyDebug },
 	loadData, prepare, { Embedder }, { View }, { MetroMapLayout },
-	testRouting) ->
+	testRouting, tests) ->
 
 	main = () ->
 		body = my.body = d3.select 'body'
@@ -102,6 +102,6 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 	showDebugOverlay = (el) ->
 		el.append('pre').attr(id:'my').text somePrettyPrint my
 	
-	testRouting.runTests []
+	tests.run testRouting.tests, []
 	console.info 'end of tests'
 	loadData main

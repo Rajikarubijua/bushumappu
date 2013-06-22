@@ -280,6 +280,4 @@ define ['utils', 'routing', 'graph', 'tests'], ({ P, PD }, routing,
 		gridSpacing:		3
 		optimizeMaxSteps:	1
 			
-	runTests = (which)-> T.run tests, which
-			
-	{ runTests }
+	{ tests }
