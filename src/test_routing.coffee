@@ -58,18 +58,18 @@ define ['utils', 'routing', 'graph', 'tests'], ({ P, PD }, routing,
 			config = testConfig
 			config.gridSpacing = 1
 			
+			{ lineStraightness } = routing.optimizeCriterias
 			test = (name, graph, criteria) ->
 				console.info "     "+name
 				graphA = createGraph graph
 				graphB = createGraph graph
 				layout = new routing.MetroMapLayout { config, graph: graphB }
-				graphCriteria = layout.lineStraightness
-				{ stats } = layout.optimize 100
+				{ stats } = layout.optimize criterias: { lineStraightness }
 				critsBefore = for node in graphA.nodes
-					(graphCriteria node).value
+					(lineStraightness node).value
 				critsAfter = for node in graphB.nodes
-					(graphCriteria node).value
-				value = { graphA, graphB, criteria: graphCriteria, stats,
+					(lineStraightness node).value
+				value = { graphA, graphB, criteria: lineStraightness, stats,
 					critsBefore, critsAfter }
 				T.assert name, value, config, criteria
 				graphB
@@ -81,7 +81,7 @@ define ['utils', 'routing', 'graph', 'tests'], ({ P, PD }, routing,
 				[[a,b,c]], { noMovement, optimal, noOverlap }
 			
 			b = { x:  0, y:  1, id: 'b' }
-			debug -> test "single line, single error",
+			test "single line, single error",
 				[[a,b,c]], { movement, optimal, noOverlap }
 			
 			b = { x:  0, y:  0, id: 'b' }
@@ -106,11 +106,12 @@ define ['utils', 'routing', 'graph', 'tests'], ({ P, PD }, routing,
 		testLineStraightness: ->
 			config = testConfig
 			
+			{ lineStraightness } = routing.optimizeCriterias
 			test = (name, graph, result) ->
 				graph = createGraph graph
 				layout = new routing.MetroMapLayout { config, graph }
 				values = for node in graph.nodes
-					(layout.lineStraightness node).value
+					(lineStraightness node).value
 				T.assert name, null, null, correct: ->
 					correct = for v, i in values
 						r = result[i]
