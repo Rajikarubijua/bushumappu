@@ -2,33 +2,33 @@ define ['utils'], (utils) ->
 	
 	lineStraightness = (node) -> new LineStraightness node	
 	class LineStraightness
-		constructor: (@node) ->
-			@segments = @createSegments()
-			@deps     = @createDeps()
-			@value    = @createValue()
+		constructor: (node) ->
+			segments = @createSegments node
+			@deps     = @createDeps node, segments
+			@value    = @createValue segments
 	
-		createSegments: ->
+		createSegments: (node) ->
 			segments = {}
-			segments[line.id] = [] for line in @node.lines
-			for edge in @node.edges
-				other_node = otherNode @node, edge
+			segments[line.id] = [] for line in node.lines
+			for edge in node.edges
+				other_node = otherNode node, edge
 				other = otherEdge other_node, edge
 				segment = segments[edge.line.id]
 				segment.push edge
 				segment.push other if other
-			segments
+			d3.values segments
 	
-		createDeps: ->
+		createDeps: (node, segments) ->
 			deps = []
-			for line,edges of @segments
+			for edges in segments
 				for edge in edges
 					for n in [edge.source, edge.target]
-						if n != @node and n not in deps
+						if n != node and n not in deps
 							deps.push n
 			deps
 			
-		createValue: ->
-			angles = for line, edges of @segments
+		createValue: (segments) ->
+			angles = for edges in segments
 				edges = utils.sortSomewhat edges, (a, b) ->
 					return -1 if a.target == b.source
 					return  1 if a.source == b.target
