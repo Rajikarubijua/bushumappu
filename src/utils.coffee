@@ -21,7 +21,7 @@ define ->
 		else if typeof x is 'string'
 			if depth <= 1 then x else '"'+x+'"'
 		else if typeof x is 'number'
-			x = 0.01*Math.round x*100
+			x = ""+(0.01*Math.round x*100)
 		else if typeof x is 'function'
 			(""+x).split('{')[0]
 		else if Array.isArray x
