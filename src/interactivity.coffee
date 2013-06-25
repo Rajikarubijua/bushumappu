@@ -113,12 +113,17 @@ define ['utils'], ({ P, compareNumber }) ->
 			.style("top", (d3.event.pageY - 28) + "px")
 	
 	nodeDoubleClick = (d) ->
+		#selector = d.data.kanji
+		#console.info(selector)
+		#d3.selectAll(selector).classed 'highlighted', (d) ->
+		#	d.highlighted = !d3.select(@).classed 'highlighted'
+		
 		translation = d.data.meaning
 		radicals = d.data.radicals
 		onyumi = d.data.onyumi
 		kunyomi = d.data.kunyomi
 
-	descriptions = [
+		descriptions = [
 			[''],
 			['english'],
 			['radicals'],
@@ -134,7 +139,10 @@ define ['utils'], ({ P, compareNumber }) ->
 			[kunyomi],
 		]
 		
-		d3.selectAll('tbody tr').selectAll('td').remove()
+		#remve second column if it is still empty
+		if(d3.selectAll('tbody tr').selectAll('td')[0][1].textContent == " click Kanjis to see details ")
+			d3.selectAll('tbody tr').selectAll('td').remove()
+		
 		d3.selectAll('tbody tr').append('td')
 				.data(descriptions)
 			.text((d) -> d)
