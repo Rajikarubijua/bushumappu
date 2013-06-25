@@ -118,6 +118,14 @@ define ['utils'], ({ P, compareNumber }) ->
 		onyumi = d.data.onyumi
 		kunyomi = d.data.kunyomi
 
+	descriptions = [
+			[''],
+			['english'],
+			['radicals'],
+			['onyomi'],
+			['kunyomi'],
+		]
+	
 		matrix = [
 			[d.label],
 			[translation],
@@ -126,7 +134,10 @@ define ['utils'], ({ P, compareNumber }) ->
 			[kunyomi],
 		]
 		
-		
+		d3.selectAll('tbody tr').selectAll('td').remove()
+		d3.selectAll('tbody tr').append('td')
+				.data(descriptions)
+			.text((d) -> d)
 		d3.selectAll('tbody tr').append('td')
 				.data(matrix)
 			.text((d) -> d)
