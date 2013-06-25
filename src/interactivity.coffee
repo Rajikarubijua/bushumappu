@@ -30,9 +30,9 @@ define ['utils'], ({ P, compareNumber }) ->
 			node_g = node.enter()
 				.append('g')
 				.classed("node", true)
-				#.on('mouseover', (d) -> nodeMouseOver d)
-				#.on('mouseout', (d) -> nodeMouseOut d)
-				#.on('mousemove', (d) -> nodeMouseMove d)
+				.on('mouseover', (d) -> nodeMouseOver d)
+				.on('mouseout', (d) -> nodeMouseOut d)
+				.on('mousemove', (d) -> nodeMouseMove d)
 				.on('click', (d) -> nodeDoubleClick d)
 			node_g.append('rect').attr x:-r, y:-r, width:2*r, height:2*r
 			node_g.append('text').text (d) -> d.label
@@ -82,21 +82,22 @@ define ['utils'], ({ P, compareNumber }) ->
 		d3.selectAll(".edge").sort (a, b) ->
 				compareNumber a.highlighted or 0, b.highlighted or 0
 				
-	#tooltip = d3.select('body').append('div')
-		#.attr('class', 'tooltip')
-		#.style('opacity', 0)
+	tooltip = d3.select('div')
+		.attr('class', 'tooltip')
+		.style('opacity', 0)
+	console.log(tooltip)
 	
 	nodeMouseOver = (d) ->
 		tooltip.transition().duration(500)
 			.style('opacity', 1)
 			.style('left', (d3.event.pageX) + 'px')
-			.style('top', (d3.event.pageY - 28) + 'px')
+			.style('top', (d3.event.pageY + 10) + 'px')
     
 	nodeMouseOut = (d) ->
 		tooltip.transition().duration(500)
 			.style('opacity', 0)
 			.style('left', (d3.event.pageX) + 'px')
-			.style('top', (d3.event.pageY - 28) + 'px')
+			.style('top', (d3.event.pageY + 10) + 'px')
   
 	nodeMouseMove = (d) ->
 		d.data.onyomi ?= ' - ' 
@@ -110,7 +111,7 @@ define ['utils'], ({ P, compareNumber }) ->
 			'school year: ' + d.data.grade)
 			.style('opacity', 1)
 			.style("left", (d3.event.pageX) + "px")
-			.style("top", (d3.event.pageY - 28) + "px")
+			.style("top", (d3.event.pageY + 10) + "px")
 	
 	nodeDoubleClick = (d) ->
 		#selector = d.data.kanji
