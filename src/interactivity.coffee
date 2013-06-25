@@ -86,10 +86,6 @@ define ['utils'], ({ P, compareNumber }) ->
 		#.attr('class', 'tooltip')
 		#.style('opacity', 0)
 	
-	tableRows = d3.selectAll('tbody tr').selectAll('td')
-	tableCols = d3.selectAll('tbody tr')
-	table = d3.selectAll('tbody')
-	
 	nodeMouseOver = (d) ->
 		tooltip.transition().duration(500)
 			.style('opacity', 1)
@@ -118,20 +114,20 @@ define ['utils'], ({ P, compareNumber }) ->
 	
 	nodeDoubleClick = (d) ->
 		translation = d.data.meaning
-		strokes = d.data.stroke_n
+		radicals = d.data.radicals
 		onyumi = d.data.onyumi
 		kunyomi = d.data.kunyomi
 
 		matrix = [
 			[d.label],
 			[translation],
-			[strokes],
+			[radicals],
 			[onyumi],
 			[kunyomi],
 		]
 		
-		newcol = d3.selectAll('tbody tr').append('td')
-		newcol
+		
+		d3.selectAll('tbody tr').append('td')
 				.data(matrix)
 			.text((d) -> d)
 		
