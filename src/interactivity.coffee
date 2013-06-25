@@ -117,11 +117,6 @@ define ['utils'], ({ P, compareNumber }) ->
 		#console.info(selector)
 		#d3.selectAll(selector).classed 'highlighted', (d) ->
 		#	d.highlighted = !d3.select(@).classed 'highlighted'
-		
-		translation = d.data.meaning
-		radicals = d.data.radicals
-		onyumi = d.data.onyumi
-		kunyomi = d.data.kunyomi
 
 		descriptions = [
 			[''],
@@ -133,21 +128,39 @@ define ['utils'], ({ P, compareNumber }) ->
 	
 		matrix = [
 			[d.label],
-			[translation],
-			[radicals],
-			[onyumi],
-			[kunyomi],
+			[d.data.meaning],
+			[d.data.radicals],
+			[d.data.onyumi],
+			[d.data.kunyomi],
 		]
 		
-		#remve second column if it is still empty
+		#do not display same kanji twice
+		i = 1
+		nothingtodo = false
+		for k in d3.selectAll('tbody tr').selectAll('td')
+			item = d3.selectAll('tbody tr').selectAll('td')[0][i]
+			if item == undefined
+				break
+			if(item.textContent == d.label)
+				nothingtodo = true;
+				break
+			i++
+			
+		#remve second column if it is still empty, ie first kanji selected
+		emptycolremoved = false
 		if(d3.selectAll('tbody tr').selectAll('td')[0][1].textContent == " click Kanjis to see details ")
 			d3.selectAll('tbody tr').selectAll('td').remove()
-		
-		d3.selectAll('tbody tr').append('td')
-				.data(descriptions)
-			.text((d) -> d)
-		d3.selectAll('tbody tr').append('td')
-				.data(matrix)
-			.text((d) -> d)
+			d3.selectAll('tbody tr').append('td')
+					.data(descriptions)
+				.text((d) -> d)
+			d3.selectAll('tbody tr').append('td')
+					.data(matrix)
+				.text((d) -> d)
+			emptycolremoved = true
+		#add extra column if a new kanji will be displayed
+		if(!emptycolremoved and !nothingtodo)
+			d3.selectAll('tbody tr').append('td')
+					.data(matrix)
+				.text((d) -> d)
 		
 	{ View }
