@@ -44,6 +44,17 @@ svg > g * {
 
 #graph {
 }
+
+#tooltip {
+	min-height: 150px;
+	min-width: 10px;
+	position: absolute;
+	background: white;
+	border-radius: 8px;
+}
+#tooltip > svg{
+}
+
 #bottomBar {
 	display: -webkit-flex;
 	border: 1px solid silver;
