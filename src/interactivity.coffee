@@ -113,6 +113,7 @@ define ['utils'], ({ P, compareNumber }) ->
 			.style("left", (d3.event.pageX) + "px")
 			.style("top", (d3.event.pageY + 10) + "px")
 	
+	table_data = [[],[],[],[],[]]
 	nodeDoubleClick = (d) ->
 		#selector = d.data.kanji
 		#console.info(selector)
@@ -127,13 +128,37 @@ define ['utils'], ({ P, compareNumber }) ->
 			['kunyomi'],
 		]
 	
-		matrix = [
-			[d.label],
-			[d.data.meaning],
-			[d.data.radicals],
-			[d.data.onyumi],
-			[d.data.kunyomi],
-		]
+		table_data[0].push d.label
+		table_data[1].push d.data.meaning
+		table_data[2].push d.data.radicals
+		table_data[3].push d.data.onyumi
+		table_data[4].push d.data.kunyomi
+		
+		table    = d3.select('table#details tbody')
+		
+		# join
+		table_tr = table.selectAll('tr')
+			.data(table_data)
+		
+		# enter
+		table_tr.enter()
+			.append("tr")
+		
+		table_td = table_tr.selectAll('td.content')
+			.data((d) -> d)
+			
+		table_td.enter()
+			.append('td')
+			.classed("content", true)
+		
+		# update	
+		table_td.text((d) -> d)
+		
+		# exit
+		
+			
+		###
+		d3.selectAll('tbody '
 		
 		#do not display same kanji twice
 		i = 1
@@ -163,5 +188,6 @@ define ['utils'], ({ P, compareNumber }) ->
 			d3.selectAll('tbody tr').append('td')
 					.data(matrix)
 				.text((d) -> d)
+		###
 		
 	{ View }
