@@ -33,7 +33,7 @@ define ['utils'], ({ P, compareNumber }) ->
 				.on('mouseover', (d) -> nodeMouseOver d)
 				.on('mouseout', (d) -> nodeMouseOut d)
 				.on('mousemove', (d) -> nodeMouseMove d)
-				.on('click', (d) -> nodeDoubleClick d)
+				.on('click.selectNode', (d) -> nodeDoubleClick d)
 			node_g.append('rect').attr x:-r, y:-r, width:2*r, height:2*r
 			node_g.append('text').text (d) -> d.label
 
