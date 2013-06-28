@@ -11,12 +11,12 @@ config =
 	circularLines:				false
 	gridSpacing:				48 # 0 deactivates snapNodes
 	debugOverlay:				false
-	transitionTime:				750*2
+	transitionTime:				100
 	initialScale:				0.06
 	edgesBeforeSnap:			false
-	timeToOptimize:				3000
-	optimizeMaxLoops:			3
-	optimizeMaxSteps:			1
+	timeToOptimize:				0
+	optimizeMaxLoops:			0
+	optimizeMaxSteps:			0
 figue.KMEANS_MAX_ITERATIONS = 1
 
 # the global object where we can put stuff into it
@@ -50,7 +50,7 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 			h window.innerHeight
 		window.onresize()
 		new Observer ->
-			attrs = width : 0.95*w(), height: 0.66*h()
+			attrs = width : 0.95*w(), height: 0.95*h()
 			svg.attr attrs
 			svg.style attrs
 				
