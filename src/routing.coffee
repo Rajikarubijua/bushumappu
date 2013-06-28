@@ -29,8 +29,11 @@ define ['utils', 'grid', 'criteria'], (utils, { Grid, GridCoordGenerator },
 		graph
 		
 	class MetroMapLayout
-		constructor: ({ @config, @graph }) ->
-			{ @timeToOptimize, @gridSpacing } = @config
+		constructor: ({ @config, @graph }={}) ->
+			@config ?=
+				timeToOptimize: 100
+				gridSpacing: 1
+				optimizeMaxSteps: 1
 			@grid = new Grid
 			for node in @graph.nodes or []
 				@grid.set node, node
@@ -57,7 +60,7 @@ define ['utils', 'grid', 'criteria'], (utils, { Grid, GridCoordGenerator },
 				old_length = nodes.length
 			
 		nearestFreeGrid: ({ x, y }, grid) ->
-			g = @gridSpacing
+			g = @config.gridSpacing
 			generator = new GridCoordGenerator {
 				x, y
 				spacing: g
@@ -70,7 +73,7 @@ define ['utils', 'grid', 'criteria'], (utils, { Grid, GridCoordGenerator },
 			return b
 			
 		optimize: ({ timeAvailable, criterias }={}) ->
-			timeAvailable ?= @timeToOptimize
+			timeAvailable ?= @config.timeToOptimize
 			criterias ?= optimizeCriterias
 			{ optimizeMaxSteps } = @config
 			{ nodes, edges, lines } = @graph
@@ -114,7 +117,7 @@ define ['utils', 'grid', 'criteria'], (utils, { Grid, GridCoordGenerator },
 			generator = new GridCoordGenerator
 				x: node.x
 				y: node.y
-				spacing: @gridSpacing
+				spacing: @config.gridSpacing
 				filter: (coord) => not @grid.has coord
 			coords = generator.next()
 			coords.push generator.next()...

@@ -43,4 +43,31 @@ define [], () ->
 			@data  ?= {}
 			@id    ?= next_id++
 
-	my.graph = { Node, Edge, Line }
+	class Graph
+		constructor: (lines) ->
+			@nodes = []
+			@edges = []
+			@lines = []
+			nodes = []
+			for line_nodes in lines
+				for node in line_nodes
+					nodes.push node if node not in nodes
+			@nodes = (new Node node for node in nodes)
+			@lines = for orig_line_nodes in lines
+				line = new Line
+				line.nodes = for node in orig_line_nodes
+					node = @nodes[nodes.indexOf node]
+					node.lines.push line
+					node
+				line
+			for line in @lines
+				source = line.nodes[0]
+				for target in line.nodes[1..]
+					edge = new Edge { source, target, line }
+					source.edges.push edge
+					target.edges.push edge
+					@edges.push edge
+					line.edges.push edge
+					source = target
+
+	my.graph = { Node, Edge, Line, Graph }
