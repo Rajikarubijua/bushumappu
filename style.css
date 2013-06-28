@@ -74,3 +74,24 @@ svg > g * {
 	-webkit-min-width: fill-c;
 	height: 202px;
 }
+
+#seafil {
+	width: 33%;
+}
+#seafil table td{
+	padding-bottom: 5px;
+	padding-left: 5px;
+}
+#seafil form input{
+	width: 10em;
+}
+#seafil form .half{
+	width: 3em;
+}
+#history {
+	width: 10%;
+	
+}
+.no-wrap{
+	white-space: nowrap;
+}

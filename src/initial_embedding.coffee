@@ -50,7 +50,7 @@ define ["utils", "prepare_data", 'graph'], ({
 			lines = []
 			endnodes = nodes_radicals
 			@radicals = radicals
-			@graph = { nodes: nodes_kanjis, endnodes, edges, lines }
+			@graph = { nodes: nodes_kanjis, endnodes, edges, lines , kanjis}
 		
 		generateEdges: ->
 			{ radicals, graph, config } = this
