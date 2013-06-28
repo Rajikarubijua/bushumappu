@@ -87,15 +87,14 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 				optimize_loop cb
 			)
 		optimize_loop = (cb) ->
+			if config.optimizeMaxLoops != -1 and (
+				++optimize_loop.loops >= config.optimizeMaxLoops)
+				return cb()
 			console.info 'optimize...'
 			{ stats } = layout.optimize()
 			console.info 'optimize done', prettyDebug stats
 			view.update()
-			if (config.optimizeMaxLoops == -1) or (
-				++optimize_loop.loops < config.optimizeMaxLoops)
-				setTimeout (-> optimize_loop cb), config.transitionTime
-			else
-				cb()
+			setTimeout (-> optimize_loop cb), config.transitionTime
 		optimize_loop.loops = 0
 			
 	showDebugOverlay = (el) ->
