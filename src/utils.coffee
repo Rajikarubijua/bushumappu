@@ -1,6 +1,9 @@
 define ->
 	# copies every attribute of a object 'b' to object 'a'
-	copyAttrs = (a, b) -> a[k] = v for k, v of b; a
+	copyAttrs = (a, bs...) ->
+		for b in bs
+			a[k] = v for k, v of b
+		a
 
 	# shorthand for console.log, also returns the last argument
 	# usage:
@@ -21,7 +24,7 @@ define ->
 		else if typeof x is 'string'
 			if depth <= 1 then x else '"'+x+'"'
 		else if typeof x is 'number'
-			x = 0.01*Math.round x*100
+			x = ""+(0.01*Math.round x*100)
 		else if typeof x is 'function'
 			(""+x).split('{')[0]
 		else if Array.isArray x

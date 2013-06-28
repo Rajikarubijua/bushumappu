@@ -1,7 +1,8 @@
-define ['utils', 'grid'], (
+define ['utils', 'grid', 'criteria'], (utils, { Grid, GridCoordGenerator },
+	criteria) ->
 	{ P, PD, forall, nearest01, nearestXY, rasterCircle, length, compareNumber,
-	sortSomewhat },
-	{ Grid, GridCoordGenerator }) ->
+	  sortSomewhat } = utils
+	optimizeCriterias = criteria
 	###
 
 		Here we stick to the terminology used in Jonathan M. Scotts thesis.
@@ -28,8 +29,11 @@ define ['utils', 'grid'], (
 		graph
 		
 	class MetroMapLayout
-		constructor: ({ @config, @graph }) ->
-			{ @timeToOptimize, @gridSpacing } = @config
+		constructor: ({ @config, @graph }={}) ->
+			@config ?=
+				timeToOptimize: 100
+				gridSpacing: 1
+				optimizeMaxSteps: 1
 			@grid = new Grid
 			for node in @graph.nodes or []
 				@grid.set node, node
@@ -56,7 +60,7 @@ define ['utils', 'grid'], (
 				old_length = nodes.length
 			
 		nearestFreeGrid: ({ x, y }, grid) ->
-			g = @gridSpacing
+			g = @config.gridSpacing
 			generator = new GridCoordGenerator {
 				x, y
 				spacing: g
@@ -68,30 +72,42 @@ define ['utils', 'grid'], (
 			{ b } = nearest01 [ x, y ], coords
 			return b
 			
-		optimize: (timeAvailable) ->
-			timeAvailable ?= @timeToOptimize
+		optimize: ({ timeAvailable, criterias }={}) ->
+			timeAvailable ?= @config.timeToOptimize
+			criterias ?= optimizeCriterias
+			{ optimizeMaxSteps } = @config
 			{ nodes, edges, lines } = @graph
+			
 			nodes = nodes[..]
+			criteria = (node) ->
+				crits = for name, crit of criterias
+					crit node
+				value = 0
+				deps = []
+				for crit in crits
+					value += crit.value
+					utils.arrayUnique crit.deps, deps
+				{ value, deps }
+			
+			stats =
+				moved: {}
+				steps: 0
+				bench: []
 			time = timeAvailable+Date.now()
-			moved = {}
-			steps = 0
-			bench = []
-			while time > +Date.now() and steps < @config.optimizeMaxSteps
-				++steps
-				@sortByCriteria nodes, @lineStraightness
-				bench.push d3.sum (n.crit.value for n in nodes)
+			while time > +Date.now() and stats.steps < optimizeMaxSteps
+				++stats.steps
+				@sortByCriteria nodes, criteria
+				stats.bench.push d3.sum (n.crit.value for n in nodes)
 				for node in nodes
 					if not node.crit
-						node.crit = @lineStraightness node
+						node.crit = criteria node
 					if node.crit.value > 0
-						if @moveNode node, @lineStraightness
-							moved[node.data.kanji] = true
-			@sortByCriteria nodes, @lineStraightness
-			bench.push d3.sum (n.crit.value for n in nodes)
-			stats =
-				moved: length moved
-				steps: steps
-				bench: bench[-1..][0] / bench[0]
+						if @moveNode node, criteria
+							stats.moved[node.data.kanji] = true
+			@sortByCriteria nodes, criteria
+			stats.bench.push d3.sum (n.crit.value for n in nodes)
+			stats.moved = length stats.moved
+			stats.better = stats.bench[-1..][0] / stats.bench[0]
 			{ stats }
 			
 		moveNode: (node, criteria) ->
@@ -101,7 +117,7 @@ define ['utils', 'grid'], (
 			generator = new GridCoordGenerator
 				x: node.x
 				y: node.y
-				spacing: @gridSpacing
+				spacing: @config.gridSpacing
 				filter: (coord) => not @grid.has coord
 			coords = generator.next()
 			coords.push generator.next()...
@@ -139,44 +155,6 @@ define ['utils', 'grid'], (
 				for node in [ a, b ]
 					node.crit = criteria node if not node.crit?
 				compareNumber b.crit.value, a.crit.value
-
-		lineStraightness: (node) =>
-			segments = {}
-			segments[line.id] = [] for line in node.lines
-			for edge in node.edges
-				other_node = @otherNode node, edge
-				other = @otherEdge other_node, edge
-				segment = segments[edge.line.id]
-				segment.push edge
-				segment.push other if other
-			deps = []
-			for line,edges of segments
-				for edge in edges
-					for n in [edge.source, edge.target]
-						if n != node and n not in deps
-							deps.push n
-			angles = for line, edges of segments
-				edges = sortSomewhat edges, (a, b) ->
-					return -1 if a.target == b.source
-					return  1 if a.source == b.target
-				a = edges[0]
-				for b in edges[1..]
-					angle = a.getAngle b
-					angle = Math.pow angle, 2
-					if angle < 0.00001 then 0 else angle
-			straightness = d3.sum d3.merge angles
-			value: straightness
-			deps: deps
-			
-		otherNode: (node, edge) ->
-			if edge.source == node then edge.target else edge.source
-			
-		otherEdge: (node, edge) ->
-			for other in node.edges
-				continue if other == edge
-				if other.line.id == edge.line.id
-					return other
-			null
 			
 		calculateNodesCriteria: (nodes) ->
 			# How to calculate final criterion over multiple criteria? p 89?
@@ -211,4 +189,4 @@ define ['utils', 'grid'], (
 		findLowestNodeCriteria: (nodes) ->
 			0
 	
-	{ metroMap, MetroMapLayout }
+	{ metroMap, MetroMapLayout, optimizeCriterias }

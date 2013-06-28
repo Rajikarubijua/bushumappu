@@ -29,10 +29,10 @@ window.my = {
 	config }
 
 define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
-	'interactivity', 'routing', 'test_routing'], (
-	{ P, somePrettyPrint, styleZoom, async, prettyDebug },
+	'interactivity', 'routing', 'test_routing', 'test_bench', 'tests'], (
+	{ P, somePrettyPrint, styleZoom, async, prettyDebug, copyAttrs },
 	loadData, prepare, { Embedder }, { View }, { MetroMapLayout },
-	testRouting) ->
+	testRouting, testBench, tests) ->
 
 	main = () ->
 		body = my.body = d3.select 'body'
@@ -112,15 +112,14 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 				optimize_loop cb
 			)
 		optimize_loop = (cb) ->
+			if config.optimizeMaxLoops != -1 and (
+				++optimize_loop.loops >= config.optimizeMaxLoops)
+				return cb()
 			console.info 'optimize...'
 			{ stats } = layout.optimize()
 			console.info 'optimize done', prettyDebug stats
 			view.update()
-			if (config.optimizeMaxLoops == -1) or (
-				++optimize_loop.loops < config.optimizeMaxLoops)
-				setTimeout (-> optimize_loop cb), config.transitionTime
-			else
-				cb()
+			setTimeout (-> optimize_loop cb), config.transitionTime
 		optimize_loop.loops = 0
 			
 	showDebugOverlay = (el) ->
@@ -146,6 +145,7 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 	searchKanji = ->
 		P 'hello search'
 	
-	testRouting.runTests []
+	all_tests = copyAttrs {}, testRouting.tests, testBench.tests
+	tests.run all_tests, []
 	console.info 'end of tests'
 	loadData main
