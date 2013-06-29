@@ -21,7 +21,7 @@ figue.KMEANS_MAX_ITERATIONS = 1
 
 # the global object where we can put stuff into it
 window.my = {
-	kanjis: {} 				# "kanji": { "kanji", "radicals", "strokes_n", "freq", "onyomi", "kunyomi", "meaning"}
+	kanjis: {} 				# "kanji": { "kanji", "radicals", "stroke_n", "freq", "onyomi", "kunyomi", "meaning"}
 	radicals: {} 			# "radical" . {"radical", "kanjis"}
 	jouyou_radicals: {} 	# "radical" value "kanjikanjikanji"
 	jouyou: []				# list of jouyou kanji
@@ -29,10 +29,10 @@ window.my = {
 	config }
 
 define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
-	'interactivity', 'routing', 'test_routing', 'tests'], (
-	{ P, somePrettyPrint, styleZoom, async, prettyDebug },
+	'interactivity', 'routing', 'test_routing', 'test_bench', 'tests'], (
+	{ P, somePrettyPrint, styleZoom, async, prettyDebug, copyAttrs },
 	loadData, prepare, { Embedder }, { View }, { MetroMapLayout },
-	testRouting, tests) ->
+	testRouting, testBench, tests) ->
 
 	main = () ->
 		body = my.body = d3.select 'body'
@@ -57,13 +57,12 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 		svg.call (zoom = d3.behavior.zoom())
 			.translate([w()/2, h()/2])
 			.scale(config.initialScale)
-			.on 'zoom', styleZoom svg.g, zoom
-		draggingStart = -> svg.classed 'dragging', true
-		draggingEnd   = -> svg.classed 'dragging', false
-		svg.on 'mousedown.cursor' , draggingStart
-		svg.on 'mouseup.cursor'   , draggingEnd
-		svg.on 'touchstart.cursor', draggingStart
-		svg.on 'touchend.cursor'  , draggingEnd
+			.on('zoom', styleZoom svg.g, zoom)
+		# Deactivates zoom on dblclick. According to d3 source code
+		# d3.behavior.zoom registers dblclick.zoom. So we can deactivate it.
+		# And we need it to do defered, cause d3 would fail unexpectetly.
+		# This hasn't been reported yet.
+		svg.on('dblclick.zoom', null)
 			 
 		embedder = new Embedder { config }
 		embedder.setup()
@@ -73,6 +72,30 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 			console.info 'generate edges done'
 		generateEdges() if config.edgesBeforeSnap
 		graph = embedder.graph
+
+		fillSeaFil = ->
+			strokeMin 	= 1
+			strokeMax 	= getStrokeCountMax(graph)
+			frqMin		= getFreqMax(graph)
+			frqMax		= 1
+			gradeMin	= 1
+			gradeMax	= Object.keys(my.jouyou_grade).length
+			#jlptMin	= 1
+			#jlptMax	= 5
+			form = d3.select '#seafil form'
+			form.select('#count_min').attr('value', strokeMin)
+			form.select('#count_max').attr('value', strokeMax)
+			form.select('#frq_min').attr('value',   frqMin)
+			form.select('#frq_max').attr('value', 	frqMax)
+			form.select('#grade_min').attr('value', gradeMin)
+			form.select('#grade_max').attr('value', gradeMax)
+			#form.select('#jlpt_min').attr('value', 	jlptMin)
+			#form.select('#jlpt_max').attr('value', 	jlptMax)
+
+		fillSeaFil()
+		body.select('#btn_filter').on 'click' , filterKanji
+		body.select('#btn_search').on 'click' , searchKanji
+
 		view = new View { svg: svg.g, graph, config }
 		layout = new MetroMapLayout { config, graph }
 		view.update()
@@ -88,20 +111,40 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 				optimize_loop cb
 			)
 		optimize_loop = (cb) ->
+			if config.optimizeMaxLoops != -1 and (
+				++optimize_loop.loops >= config.optimizeMaxLoops)
+				return cb()
 			console.info 'optimize...'
 			{ stats } = layout.optimize()
 			console.info 'optimize done', prettyDebug stats
 			view.update()
-			if (config.optimizeMaxLoops == -1) or (
-				++optimize_loop.loops < config.optimizeMaxLoops)
-				setTimeout (-> optimize_loop cb), config.transitionTime
-			else
-				cb()
+			setTimeout (-> optimize_loop cb), config.transitionTime
 		optimize_loop.loops = 0
 			
 	showDebugOverlay = (el) ->
 		el.append('pre').attr(id:'my').text somePrettyPrint my
+
+	getStrokeCountMax = (graph) ->
+		max = 1
+		for kanji in graph.kanjis
+			if kanji.stroke_n > max
+				max = kanji.stroke_n
+		max
+
+	getFreqMax = (graph) ->
+		max = 1
+		for kanji in graph.kanjis
+			if kanji.freq > max
+				max = kanji.freq
+		max	
+
+	filterKanji = ->
+		P 'hello filter'
+
+	searchKanji = ->
+		P 'hello search'
 	
-	tests.run testRouting.tests, []
+	all_tests = copyAttrs {}, testRouting.tests, testBench.tests
+	tests.run all_tests, []
 	console.info 'end of tests'
 	loadData main

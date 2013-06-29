@@ -1,6 +1,9 @@
 define ->
 	# copies every attribute of a object 'b' to object 'a'
-	copyAttrs = (a, b) -> a[k] = v for k, v of b; a
+	copyAttrs = (a, bs...) ->
+		for b in bs
+			a[k] = v for k, v of b
+		a
 
 	# shorthand for console.log, also returns the last argument
 	# usage:

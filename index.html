@@ -21,11 +21,62 @@ var require = {
 	<!--Div containing the Kanji detail table and the MiniMap-->
 	<div id="bottomBar">
 	
-		<!--MiniMap for better overview of the user-->
-		<div id="minimap">
-		mini mappu
+		<!--Search and Filter Function -->
+		<div id="seafil">
+		
+			<form>
+				<table>
+					<tr>
+						<td>Kanji</td>
+						<td><input id="kanjistring"></td>
+						<td>Strokecount</td>
+						<td class="no-wrap">
+							<input class="half" id="count_min"> - <input class="half" id="count_max">
+						</td>
+					</tr>
+					<tr>
+						<td>Onyomi</td>
+						<td><input id="onyomistring"></td>
+						<td>Frequency</td>
+						<td class="no-wrap">
+							<input class="half" id="frq_min"> - <input class="half" id="frq_max">
+						</td>
+					</tr>
+					<tr>
+						<td>Kunyomi</td>
+						<td><input id="kunyomistring"></td>
+						<td>Schoolgrade</td>
+						<td class="no-wrap">
+							<input class="half" id="grade_min"> - <input class="half" id="grade_max">
+						</td>
+					</tr>
+					<tr>
+						<td>Meaning</td>
+						<td><input id="meaningstring"></td>
+						<td colspan="2"> </td>
+						<!--
+						<td>JLPT Level</td>
+						<td class="no-wrap">
+							<input class="half" id="jlpt_min"> - <input class="half" id="jlpt_max">
+						</td>
+						-->
+					</tr>
+					<tr>
+						<td colspan="2"></td>
+						<td> <input type="button" value="filter" id="btn_filter"> </td>
+						<td> <input type="button" value="search" id="btn_search"> </td>
+					</tr>
+				</table>
+
+			</form>
+
 		</div>
 		
+		<!--History of focus kanji -->
+		<div id="history">
+		history
+		</div>
+
 		<!--Table containing details of selected Kanji-->
 		<table id="details" class="pure-table pure-table-striped">
 			<thead>

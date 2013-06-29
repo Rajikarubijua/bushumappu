@@ -1,5 +1,5 @@
 define ['utils', 'routing', 'graph', 'tests'], ({ P, PD }, routing,
-	{ Node, Edge, Line }, T) ->
+	{ Node, Edge, Line, Graph }, T) ->
 
 	tests =
 		testSnapNodes: ->
@@ -164,33 +164,7 @@ define ['utils', 'routing', 'graph', 'tests'], ({ P, PD }, routing,
 		func()
 		my.debug = false
 
-	createGraph = (lines) ->
-		graph =
-			nodes: []
-			edges: []
-			lines: []
-		nodes = []
-		for line_nodes in lines
-			for node in line_nodes
-				nodes.push node if node not in nodes
-		graph.nodes = (new Node node for node in nodes)
-		graph.lines = for orig_line_nodes in lines
-			line = new Line
-			line.nodes = for node in orig_line_nodes
-				node = graph.nodes[nodes.indexOf node]
-				node.lines.push line
-				node
-			line
-		for line in graph.lines
-			source = line.nodes[0]
-			for target in line.nodes[1..]
-				edge = new Edge { source, target, line }
-				source.edges.push edge
-				target.edges.push edge
-				graph.edges.push edge
-				line.edges.push edge
-				source = target
-		graph
+	createGraph = (lines) -> new Graph lines
 			
 	noOverlap = ({ graphB }) ->
 		for a in graphB.nodes
