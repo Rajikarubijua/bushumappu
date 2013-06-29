@@ -113,33 +113,15 @@ define ['utils'], ({ P, compareNumber }) ->
 			.style("left", (d3.event.pageX) + "px")
 			.style("top", (d3.event.pageY + 10) + "px")
 	
+	table_data = [[],[],[],[],[]]
 	nodeDoubleClick = (d) ->
-		#selector = d.data.kanji
-		#console.info(selector)
-		#d3.selectAll(selector).classed 'highlighted', (d) ->
-		#	d.highlighted = !d3.select(@).classed 'highlighted'
-
-		descriptions = [
-			[''],
-			['english'],
-			['radicals'],
-			['onyomi'],
-			['kunyomi'],
-		]
-	
-		matrix = [
-			[d.label],
-			[d.data.meaning],
-			[d.data.radicals],
-			[d.data.onyumi],
-			[d.data.kunyomi],
-		]
+		table = d3.select('table#details tbody')
+		tablehead = d3.select('thead').selectAll('tr')
 		
-		#do not display same kanji twice
 		i = 1
 		nothingtodo = false
-		for k in d3.selectAll('tbody tr').selectAll('td')
-			item = d3.selectAll('tbody tr').selectAll('td')[0][i]
+		for k in table.selectAll('tr').selectAll('td')
+			item = table.selectAll('tr').selectAll('td')[0][i]
 			if item == undefined
 				break
 			if(item.textContent == d.label)
@@ -147,21 +129,37 @@ define ['utils'], ({ P, compareNumber }) ->
 				break
 			i++
 			
-		#remve second column if it is still empty, ie first kanji selected
-		emptycolremoved = false
-		if(d3.selectAll('tbody tr').selectAll('td')[0][1].textContent == " click Kanjis to see details ")
-			d3.selectAll('tbody tr').selectAll('td').remove()
-			d3.selectAll('tbody tr').append('td')
-					.data(descriptions)
-				.text((d) -> d)
-			d3.selectAll('tbody tr').append('td')
-					.data(matrix)
-				.text((d) -> d)
-			emptycolremoved = true
-		#add extra column if a new kanji will be displayed
-		if(!emptycolremoved and !nothingtodo)
-			d3.selectAll('tbody tr').append('td')
-					.data(matrix)
-				.text((d) -> d)
+		if(!nothingtodo)
+			table_data[0].push d.label
+			table_data[1].push d.data.meaning
+			table_data[2].push d.data.radicals
+			table_data[3].push d.data.onyomi
+			table_data[4].push d.data.kunyomi
+		
+		# join
+		table_tr = table.selectAll('tr')
+			.data(table_data)
+		
+		# enter
+		table_td = table_tr.selectAll('td.content')
+			.data((d) -> d)
+			
+		if(!nothingtodo)
+			table_tr.enter()
+				.append('tr')
+			
+			table_td.enter()
+				.append('td')
+				.classed("content", true)
+		
+		tablecontentcols = table.select('tr').selectAll('td')[0].length
+		tableheadcols = tablehead.selectAll('th')[0].length
+		
+		if tableheadcols < tablecontentcols
+			tablehead.append('th')
+		
+		# update	
+		table_td.text((d) -> d)
+		# exit
 		
 	{ View }
