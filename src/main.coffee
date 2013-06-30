@@ -73,30 +73,23 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 		generateEdges() if config.edgesBeforeSnap
 		graph = embedder.graph
 
+		fillInputData = (id, value) ->
+			path = "#seafil form #{id}"
+			d3.select(path).property 'value', value
+
 		fillSeaFil = (graph)->
-			strokeMin 	= 1
-			strokeMax 	= getStrokeCountMax(graph)
-			frqMin		= getFreqMax(graph)
-			frqMax		= 1
-			gradeMin	= 1
-			gradeMax	= Object.keys(my.jouyou_grade).length
-			#jlptMin	= 1
-			#jlptMax	= 5
-			form = d3.select '#seafil form'
-			form.select('#count_min').attr('value', strokeMin)
-			form.select('#count_max').attr('value', strokeMax)
-			form.select('#frq_min').attr('value',   frqMin)
-			form.select('#frq_max').attr('value', 	frqMax)
-			form.select('#grade_min').attr('value', gradeMin)
-			form.select('#grade_max').attr('value', gradeMax)
-			#form.select('#jlpt_min').attr('value', 	jlptMin)
-			#form.select('#jlpt_max').attr('value', 	jlptMax)
+			fillInputData '#count_min',	1
+			fillInputData '#count_max', getStrokeCountMax(graph)
+			fillInputData '#frq_min',	getFreqMax(graph)
+			fillInputData '#frq_max',	1
+			fillInputData '#grade_min',	1
+			fillInputData '#grade_max',	Object.keys(my.jouyou_grade).length
 
 			# testing
-			form.select('#kanjistring').attr('value', '日,木,森')
-			form.select('#onyomistring').attr('value', 'ニチ')
-			form.select('#kunyomistring').attr('value', 'ひ,き')
-			form.select('#meaningstring').attr('value', 'day')
+			fillInputData '#kanjistring',	'日,木,森'
+			fillInputData '#onyomistring',	'ニチ'
+			fillInputData '#kunyomistring', 'ひ,き'
+			fillInputData '#meaningstring', 'day'
 
 		fillSeaFil(graph)
 
@@ -134,61 +127,71 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 			path = "#seafil form #{id}"
 			d3.select(path).property('value').trim().split(',')
 
-		filterKanji = ->
+		getInputData = () ->
 			strokeMin 	= getInputInt '#count_min'
 			strokeMax 	= getInputInt '#count_max'
 			frqMin		= getInputInt '#frq_min'
 			frqMax		= getInputInt '#frq_max'
 			gradeMin	= getInputInt '#grade_min'
 			gradeMax	= getInputInt '#grade_max'
-			#jlptMin	= getInputInt '#jlpt_min'
-			#jlptMax	= getInputInt '#jlpt_max'
 			strKanji 	= getInputArr '#kanjistring'
 			strOn 		= getInputArr '#onyomistring'
 			strKun 		= getInputArr '#kunyomistring'
 			strMean 	= getInputArr '#meaningstring'
 
+			{strokeMin, strokeMax, frqMin, frqMax, gradeMin, gradeMax, strKanji, strOn, strKun, strMean}
 
-			hideNode = (node, flag) ->
+		# check if in kanjidata has at least one item of inputdata
+		check = (kanjidata, inputdata) ->
+			if inputdata.length == 1 and inputdata[0] == ''
+				return true
+			if kanjidata == undefined
+				return false
+			for item in inputdata
+				if kanjidata.indexOf(item) != -1 and item != ''
+					return true
+			false
+
+		isWithinCriteria = (k) ->
+			{strokeMin, strokeMax, frqMin, frqMax, gradeMin, gradeMax, strKanji, strOn, strKun, strMean} = getInputData()
+			withinStroke 	= k.stroke_n >= strokeMin and k.stroke_n <= strokeMax
+			withinFrq 		= k.freq <= frqMin and k.freq >= frqMax   #attention: sort upside down
+			withinGrade 	= k.grade >= gradeMin and k.grade <= gradeMax
+			withinStrKanji 	= check k.kanji, strKanji
+			withinStrOn 	= check k.onyomi, strOn
+			withinStrKun	= check k.kunyomi, strKun
+			withinStrMean	= check k.meaning, strMean
+
+			# check if every criteria fits
+			withinStroke and withinFrq and withinGrade and withinStrKanji and withinStrOn and withinStrKun and withinStrMean
+			
+
+		filterKanji = ->
+
+			toggleNode = (node, flag) ->
 				flag ?= true
 				node.style.filtered = flag
 				for edge in node.edges
-					edge.style.filtered = flag
-
-			check = (kanjidata, inputdata) ->
-				if inputdata.length == 1 and inputdata[0] == ''
-					return true
-				if kanjidata == undefined
-					return false
-				for item in inputdata
-					if kanjidata.indexOf(item) != -1 and item != ''
-						return true
-				false
+					edge.style.filtered = flag			
 
 			for node in graph.nodes
-				hideNode(node, false)
-				k = node.data
-				withinStroke 	= k.stroke_n >= strokeMin and k.stroke_n <= strokeMax
-				withinFrq 		= k.freq <= frqMin and k.freq >= frqMax   #attention: sort upside down
-				withinGrade 	= k.grade >= gradeMin and k.grade <= gradeMax
-				withinJLPT		= true
-				withinStrKanji 	= check k.kanji, strKanji
-				withinStrOn 	= check k.onyomi, strOn
-				withinStrKun	= check k.kunyomi, strKun
-				withinStrMean	= check k.meaning, strMean
+				toggleNode(node, false)
 
-				if !withinStroke or !withinFrq or !withinGrade or !withinJLPT or !withinStrKanji or !withinStrOn or !withinStrKun or !withinStrMean
-					hideNode(node, true)	
+				if isWithinCriteria(node.data)
+					P 'not filtered'
+					P node.data.kanji
 				else
-					P 'show'
-					P k.kanji
+					toggleNode(node, true)		
 
-			view.update()
-					
+			view.update()					
 
 		searchKanji = ->
-			P 'hello search'
-			view.update()
+			resultString = ''
+			for node in graph.nodes
+				if isWithinCriteria(node.data)
+					resultString = "#{resultString} #{node.data.kanji}"
+			
+			d3.select('table #kanjiresult')[0][0].innerHTML = 'searchresult: #{resultString}'
 
 		body.select('#btn_filter').on 'click' , filterKanji
 		body.select('#btn_search').on 'click' , searchKanji
