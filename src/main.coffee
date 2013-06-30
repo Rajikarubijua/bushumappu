@@ -73,7 +73,7 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 		generateEdges() if config.edgesBeforeSnap
 		graph = embedder.graph
 
-		fillSeaFil = ->
+		fillSeaFil = (graph)->
 			strokeMin 	= 1
 			strokeMax 	= getStrokeCountMax(graph)
 			frqMin		= getFreqMax(graph)
@@ -92,9 +92,13 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 			#form.select('#jlpt_min').attr('value', 	jlptMin)
 			#form.select('#jlpt_max').attr('value', 	jlptMax)
 
-		fillSeaFil()
-		body.select('#btn_filter').on 'click' , filterKanji
-		body.select('#btn_search').on 'click' , searchKanji
+			# testing
+			form.select('#kanjistring').attr('value', '日,木,森')
+			form.select('#onyomistring').attr('value', 'ニチ')
+			form.select('#kunyomistring').attr('value', 'ひ,き')
+			form.select('#meaningstring').attr('value', 'day')
+
+		fillSeaFil(graph)
 
 		view = new View { svg: svg.g, graph, config }
 		layout = new MetroMapLayout { config, graph }
@@ -120,6 +124,74 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 			view.update()
 			setTimeout (-> optimize_loop cb), config.transitionTime
 		optimize_loop.loops = 0
+
+
+		getInputInt = (id) ->
+			path = "#seafil form #{id}"
+			+d3.select(path).property('value').trim()
+
+		getInputArr = (id) ->
+			path = "#seafil form #{id}"
+			d3.select(path).property('value').trim().split(',')
+
+		filterKanji = ->
+			strokeMin 	= getInputInt '#count_min'
+			strokeMax 	= getInputInt '#count_max'
+			frqMin		= getInputInt '#frq_min'
+			frqMax		= getInputInt '#frq_max'
+			gradeMin	= getInputInt '#grade_min'
+			gradeMax	= getInputInt '#grade_max'
+			#jlptMin	= getInputInt '#jlpt_min'
+			#jlptMax	= getInputInt '#jlpt_max'
+			strKanji 	= getInputArr '#kanjistring'
+			strOn 		= getInputArr '#onyomistring'
+			strKun 		= getInputArr '#kunyomistring'
+			strMean 	= getInputArr '#meaningstring'
+
+
+			hideNode = (node, flag) ->
+				flag ?= true
+				node.style.filtered = flag
+				for edge in node.edges
+					edge.style.filtered = flag
+
+			check = (kanjidata, inputdata) ->
+				if inputdata.length == 1 and inputdata[0] == ''
+					return true
+				if kanjidata == undefined
+					return false
+				for item in inputdata
+					if kanjidata.indexOf(item) != -1 and item != ''
+						return true
+				false
+
+			for node in graph.nodes
+				hideNode(node, false)
+				k = node.data
+				withinStroke 	= k.stroke_n >= strokeMin and k.stroke_n <= strokeMax
+				withinFrq 		= k.freq <= frqMin and k.freq >= frqMax   #attention: sort upside down
+				withinGrade 	= k.grade >= gradeMin and k.grade <= gradeMax
+				withinJLPT		= true
+				withinStrKanji 	= check k.kanji, strKanji
+				withinStrOn 	= check k.onyomi, strOn
+				withinStrKun	= check k.kunyomi, strKun
+				withinStrMean	= check k.meaning, strMean
+
+				if !withinStroke or !withinFrq or !withinGrade or !withinJLPT or !withinStrKanji or !withinStrOn or !withinStrKun or !withinStrMean
+					hideNode(node, true)	
+				else
+					P 'show'
+					P k.kanji
+
+			view.update()
+					
+
+		searchKanji = ->
+			P 'hello search'
+			view.update()
+
+		body.select('#btn_filter').on 'click' , filterKanji
+		body.select('#btn_search').on 'click' , searchKanji
 			
 	showDebugOverlay = (el) ->
 		el.append('pre').attr(id:'my').text somePrettyPrint my
@@ -137,14 +209,8 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 			if kanji.freq > max
 				max = kanji.freq
 		max	
-
-	filterKanji = ->
-		P 'hello filter'
-
-	searchKanji = ->
-		P 'hello search'
 	
 	all_tests = copyAttrs {}, testRouting.tests, testBench.tests
-	tests.run all_tests, []
+	# tests.run all_tests, []
 	console.info 'end of tests'
 	loadData main

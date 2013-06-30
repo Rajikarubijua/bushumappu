@@ -32,6 +32,10 @@ path {
 	stroke-width: 10pt;
 }
 
+.filtered {
+	display: none;
+}
+
 .dragable { cursor: pointer; cursor: hand; }
 .dragging { cursor: move; }
 
