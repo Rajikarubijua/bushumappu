@@ -1,4 +1,4 @@
-define ['utils'], ({ P, compareNumber }) ->
+define ['utils', 'tubeEdges'], ({ P, compareNumber }, {createTubes}) ->
 
 	class View
 		constructor: ({ @svg, @graph, @config }) ->
@@ -43,19 +43,24 @@ define ['utils'], ({ P, compareNumber }) ->
 				.on('click.selectLine', (d) -> endnodeSelectLine d)
 			endnode_g.append("circle").attr {r}
 			endnode_g.append("text").text (d) -> d.label
+			
 		
 			# update
 			edge.each((d) ->
 				d3.select(@).classed "line_"+d.line.data.radical, true)
 				.transition().duration(config.transitionTime)
-				.attr d: (d) -> svgline [ d.source, d.target ]
+				.attr d: (d) -> 
+					svgline01 createTubes d
+			edge.each((d) -> d3.select(@).style("color", "magenta") if d.calc)
 			edge.classed("filtered", (d) -> d.style.filtered)
 			node.transition().duration(config.transitionTime)
 				.attr(transform: (d) -> "translate(#{d.x} #{d.y})")
 			node.classed("filtered", (d) -> d.style.filtered)
 			endnode.transition().duration(config.transitionTime)
 				.attr transform: (d) -> "translate(#{d.x} #{d.y})"
-		
+			
+
+			
 			# exit
 			edge.exit().remove()
 			node.exit().remove()
@@ -76,6 +81,11 @@ define ['utils'], ({ P, compareNumber }) ->
 	svgline = d3.svg.line()
 		.x(({x}) -> x)
 		.y(({y}) -> y)
+		
+	svgline01 = d3.svg.line()
+		.x( (d) -> d[0])
+		.y( (d) -> d[1])
+	
 
 	endnodeSelectLine = (d) ->
 		selector = ".line_"+d.data.radical
@@ -164,4 +174,4 @@ define ['utils'], ({ P, compareNumber }) ->
 		table_td.text((d) -> d)
 		# exit
 		
-	{ View }
+	{ View}

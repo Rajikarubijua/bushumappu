@@ -14,9 +14,9 @@ config =
 	transitionTime:				750*2
 	initialScale:				0.06
 	edgesBeforeSnap:			false
-	timeToOptimize:				3000
-	optimizeMaxLoops:			3
-	optimizeMaxSteps:			1
+	timeToOptimize:				0
+	optimizeMaxLoops:			0
+	optimizeMaxSteps:			0
 figue.KMEANS_MAX_ITERATIONS = 1
 
 # the global object where we can put stuff into it
