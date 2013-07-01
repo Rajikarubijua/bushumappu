@@ -8,10 +8,17 @@ circle, rect {
 	fill: white;
 	stroke: black;
 }
-text {
+
+.node > text{
 	alignment-baseline: central;
 	text-anchor: middle;
 }
+
+.station-label > text {
+	alignment-baseline: central;
+	text-anchor: start;
+}
+
 path {
 	fill: none;
 	stroke: black;

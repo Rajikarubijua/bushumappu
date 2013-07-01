@@ -22,6 +22,22 @@ define ['utils'], ({ P, compareNumber }) ->
 				.data(endnodes)
 			
 			# enter
+			closeStationLabel = (d) ->
+				console.log('removing' , d.label)
+				d3.select(this).remove()
+			
+			showStationLabel = (d) ->
+				stationLabel = d3.select(this).append('g').classed("station-label", true)
+					.on('click.closeLabel', closeStationLabel)
+				rectLength = d.data.meaning.length + 2
+				stationLabel.append('rect')	
+					.attr(x:20, y:-r-3)
+					.attr(width: 8*rectLength, height: 2.5*r)
+				stationLabel.append('text').classed('station-label', true)
+					.text((d) -> d.data.meaning or '?')
+					.attr(x:23, y:-r/2+4)
+				this.stationLabel = stationLabel
+			
 			edge.enter()
 				.append("path")
 				.classed("edge", true)
@@ -30,10 +46,8 @@ define ['utils'], ({ P, compareNumber }) ->
 			node_g = node.enter()
 				.append('g')
 				.classed("node", true)
-				.on('mouseenter.Node', (d) -> nodeMouseEnter d)
-				#.on('mouseout', (d) -> nodeMouseOut d)
-				#.on('mousemove', (d) -> nodeMouseMove d)
-				.on('click.selectNode', (d) -> nodeDoubleClick d)
+				.on('click.showLabel', showStationLabel)
+				.on('dblclick.selectNode', (d) -> nodeDoubleClick d)
 			node_g.append('rect').attr x:-r, y:-r, width:2*r, height:2*r
 			node_g.append('text').text (d) -> d.label
 
@@ -43,9 +57,6 @@ define ['utils'], ({ P, compareNumber }) ->
 				.on('click.selectLine', (d) -> endnodeSelectLine d)
 			endnode_g.append("circle").attr {r}
 			endnode_g.append("text").text (d) -> d.label
-			
-			nodeMouseEnter = (d) ->
-				console.log ('mouseover ' + d.label)
 		
 			# update
 			edge.each((d) ->
@@ -61,7 +72,6 @@ define ['utils'], ({ P, compareNumber }) ->
 			edge.exit().remove()
 			node.exit().remove()
 			endnode.exit().remove()
-			that.stationlabel?.remove()
 
 			if config.forceGraph
 				force = d3.layout.force()
