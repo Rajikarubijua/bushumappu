@@ -22,20 +22,21 @@ define ['utils'], ({ P, compareNumber }) ->
 			
 			# enter
 			closeStationLabel = (d) ->
-				console.log('removing' , d.label)
+				# stops showStationLabel to be called right after finishing here
+				d3.event.stopPropagation()
 				d3.select(this).remove()
 			
 			showStationLabel = (d) ->
+				return if this.stationLabel
 				stationLabel = d3.select(this).append('g').classed("station-label", true)
 					.on('click.closeLabel', closeStationLabel)
 				rectLength = d.data.meaning.length + 2
 				stationLabel.append('rect')	
 					.attr(x:20, y:-r-3)
 					.attr(width: 8*rectLength, height: 2.5*r)
-				stationLabel.append('text').classed('station-label', true)
+				stationLabel.append('text').classed("station-label", true)
 					.text((d) -> d.data.meaning or '?')
 					.attr(x:23, y:-r/2+4)
-				this.stationLabel = stationLabel
 			
 			edge.enter()
 				.append("path")
