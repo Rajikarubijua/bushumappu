@@ -11,7 +11,7 @@ define ['utils'], ({ P, compareNumber }) ->
 			{ nodes, lines, edges, endnodes } = @graph
 			r = config.nodeSize
 			nodes = (node for node in nodes when node not in endnodes)
-
+			that = this
 			# join
 			edge = g_edges.selectAll(".edge")
 				.data(edges)
@@ -21,6 +21,22 @@ define ['utils'], ({ P, compareNumber }) ->
 				.data(endnodes)
 			
 			# enter
+			closeStationLabel = (d) ->
+				console.log('removing' , d.label)
+				d3.select(this).remove()
+			
+			showStationLabel = (d) ->
+				stationLabel = d3.select(this).append('g').classed("station-label", true)
+					.on('click.closeLabel', closeStationLabel)
+				rectLength = d.data.meaning.length + 2
+				stationLabel.append('rect')	
+					.attr(x:20, y:-r-3)
+					.attr(width: 8*rectLength, height: 2.5*r)
+				stationLabel.append('text').classed('station-label', true)
+					.text((d) -> d.data.meaning or '?')
+					.attr(x:23, y:-r/2+4)
+				this.stationLabel = stationLabel
+			
 			edge.enter()
 				.append("path")
 				.classed("edge", true)
@@ -29,10 +45,8 @@ define ['utils'], ({ P, compareNumber }) ->
 			node_g = node.enter()
 				.append('g')
 				.classed("node", true)
-				.on('mouseover', (d) -> nodeMouseOver d)
-				.on('mouseout', (d) -> nodeMouseOut d)
-				.on('mousemove', (d) -> nodeMouseMove d)
-				.on('click', (d) -> nodeDoubleClick d)
+				.on('click.showLabel', showStationLabel)
+				.on('dblclick.selectNode', (d) -> nodeDoubleClick d)
 			node_g.append('rect').attr x:-r, y:-r, width:2*r, height:2*r
 			node_g.append('text').text (d) -> d.label
 
@@ -84,36 +98,6 @@ define ['utils'], ({ P, compareNumber }) ->
 		d3.selectAll(".edge").sort (a, b) ->
 				compareNumber a.highlighted or 0, b.highlighted or 0
 				
-	tooltip = d3.select('div')
-		.attr('class', 'tooltip')
-		.style('opacity', 0)
-	console.log(tooltip)
-	
-	nodeMouseOver = (d) ->
-		tooltip.transition().duration(500)
-			.style('opacity', 1)
-			.style('left', (d3.event.pageX) + 'px')
-			.style('top', (d3.event.pageY + 10) + 'px')
-    
-	nodeMouseOut = (d) ->
-		tooltip.transition().duration(500)
-			.style('opacity', 0)
-			.style('left', (d3.event.pageX) + 'px')
-			.style('top', (d3.event.pageY + 10) + 'px')
-  
-	nodeMouseMove = (d) ->
-		d.data.onyomi ?= ' - ' 
-		d.data.kunyomi ?= ' - '
-		d.data.grade ?= ' - '
-		tooltip.html(d.label + '<br/>' + 
-			d.data.meaning + '<br/>' + 
-			'strokes: ' + d.data.stroke_n + '<br/>' + 
-			'ON: ' + d.data.onyomi + '<br/>' + 
-			'KUN: '+ d.data.kunyomi + '<br/>' + 
-			'school year: ' + d.data.grade)
-			.style('opacity', 1)
-			.style("left", (d3.event.pageX) + "px")
-			.style("top", (d3.event.pageY + 10) + "px")
 	
 	table_data = [[],[],[],[],[]]
 	nodeDoubleClick = (d) ->

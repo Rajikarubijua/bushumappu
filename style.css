@@ -8,10 +8,17 @@ circle, rect {
 	fill: white;
 	stroke: black;
 }
-text {
+
+.node > text{
 	alignment-baseline: central;
 	text-anchor: middle;
 }
+
+.station-label > text {
+	alignment-baseline: central;
+	text-anchor: start;
+}
+
 path {
 	fill: none;
 	stroke: black;
@@ -54,16 +61,6 @@ svg > g * {
 #graph {
 }
 
-#tooltip {
-	min-height: 150px;
-	min-width: 10px;
-	position: absolute;
-	background: white;
-	border-radius: 8px;
-}
-#tooltip > svg{
-}
-
 #bottomBar {
 	display: -webkit-flex;
 	border: 1px solid silver;
@@ -80,7 +77,8 @@ svg > g * {
 	-webkit-align-items: center;
 }
 #details {
-	-webkit-min-width: fill-c;
+	min-width: 30%;
+	max-width: 45%;
 	height: 202px;
 }
 
