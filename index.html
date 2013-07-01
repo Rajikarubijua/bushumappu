@@ -30,33 +30,36 @@ var require = {
 						<td><input id="kanjistring"></td>
 						<td>Strokecount</td>
 						<td class="no-wrap">
-							<input class="half" id="count_min"> - <input class="half" id="count_max">
+							<input class="half" id="count_min"> - <input type="text" class="half" id="count_max">
+							<input type="button" value="x" id="btn_clear1" class="btn_clear">
 						</td>
 					</tr>
 					<tr>
 						<td>Onyomi</td>
-						<td><input id="onyomistring"></td>
+						<td><input type="text" id="onyomistring"></td>
 						<td>Frequency</td>
 						<td class="no-wrap">
-							<input class="half" id="frq_min"> - <input class="half" id="frq_max">
+							<input type="text" class="half" id="frq_min"> - <input type="text" class="half" id="frq_max">
+							<input type="button" value="x" id="btn_clear2" class="btn_clear">
 						</td>
 					</tr>
 					<tr>
 						<td>Kunyomi</td>
-						<td><input id="kunyomistring"></td>
+						<td><input type="text" id="kunyomistring"></td>
 						<td>Schoolgrade</td>
 						<td class="no-wrap">
-							<input class="half" id="grade_min"> - <input class="half" id="grade_max">
+							<input type="text" class="half" id="grade_min"> - <input type="text" class="half" id="grade_max">
+							<input type="button" value="x" id="btn_clear3" class="btn_clear">
 						</td>
 					</tr>
 					<tr>
 						<td>Meaning</td>
-						<td><input id="meaningstring"></td>
+						<td><input type="text" id="meaningstring"></td>
 						<td colspan="2"> </td>
 						<!--
 						<td>JLPT Level</td>
 						<td class="no-wrap">
-							<input class="half" id="jlpt_min"> - <input class="half" id="jlpt_max">
+							<input type="text" class="half" id="jlpt_min"> - <input type="text" class="half" id="jlpt_max">
 						</td>
 						-->
 					</tr>
@@ -65,6 +68,11 @@ var require = {
 						<td> <input type="button" value="filter" id="btn_filter"> </td>
 						<td> <input type="button" value="search" id="btn_search"> </td>
 					</tr>
+					<tr>
+						<td colspan="2"></td>
+						<td colspan="2" id="kanjiresult">searchresult:</td>
+					</tr>
+
 				</table>
 
 			</form>

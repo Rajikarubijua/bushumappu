@@ -19,6 +19,7 @@ define [], () ->
 			@source ?= null
 			@target ?= null
 			@line   ?= null
+			@style ?= {}
 		
 		getVector: ->
 			[ @target.x - @source.x, @target.y - @source.y ]

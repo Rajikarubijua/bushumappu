@@ -15,8 +15,8 @@ config =
 	initialScale:				0.06
 	edgesBeforeSnap:			false
 	timeToOptimize:				3000
-	optimizeMaxLoops:			3
-	optimizeMaxSteps:			1
+	optimizeMaxLoops:			0
+	optimizeMaxSteps:			0
 figue.KMEANS_MAX_ITERATIONS = 1
 
 # the global object where we can put stuff into it
@@ -73,28 +73,36 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 		generateEdges() if config.edgesBeforeSnap
 		graph = embedder.graph
 
-		fillSeaFil = ->
-			strokeMin 	= 1
-			strokeMax 	= getStrokeCountMax(graph)
-			frqMin		= getFreqMax(graph)
-			frqMax		= 1
-			gradeMin	= 1
-			gradeMax	= Object.keys(my.jouyou_grade).length
-			#jlptMin	= 1
-			#jlptMax	= 5
-			form = d3.select '#seafil form'
-			form.select('#count_min').attr('value', strokeMin)
-			form.select('#count_max').attr('value', strokeMax)
-			form.select('#frq_min').attr('value',   frqMin)
-			form.select('#frq_max').attr('value', 	frqMax)
-			form.select('#grade_min').attr('value', gradeMin)
-			form.select('#grade_max').attr('value', gradeMax)
-			#form.select('#jlpt_min').attr('value', 	jlptMin)
-			#form.select('#jlpt_max').attr('value', 	jlptMax)
+		fillInputData = (id, value) ->
+			path = "#seafil form #{id}"
+			d3.select(path).property 'value', value
 
-		fillSeaFil()
-		body.select('#btn_filter').on 'click' , filterKanji
-		body.select('#btn_search').on 'click' , searchKanji
+
+		fillStandardInput = (id, flag) ->
+			flag ?= false
+			if id == 'btn_clear1' or flag
+				fillInputData '#count_min',	1
+				fillInputData '#count_max', getStrokeCountMax(graph)
+			if id == 'btn_clear2' or flag
+				fillInputData '#frq_min',	getFreqMax(graph)
+				fillInputData '#frq_max',	1
+			if id == 'btn_clear3' or flag
+				fillInputData '#grade_min',	1
+				fillInputData '#grade_max',	Object.keys(my.jouyou_grade).length
+
+
+
+
+		fillSeaFil = (graph)->
+			fillStandardInput('', true)
+
+			# testing
+			fillInputData '#kanjistring',	'日,木,森'
+			fillInputData '#onyomistring',	'ニチ'
+			fillInputData '#kunyomistring', 'ひ,き'
+			fillInputData '#meaningstring', 'day'
+
+		fillSeaFil(graph)
 
 		view = new View { svg: svg.g, graph, config }
 		layout = new MetroMapLayout { config, graph }
@@ -120,6 +128,92 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 			view.update()
 			setTimeout (-> optimize_loop cb), config.transitionTime
 		optimize_loop.loops = 0
+
+
+		getInputInt = (id) ->
+			path = "#seafil form #{id}"
+			+d3.select(path).property('value').trim()
+
+		getInputArr = (id) ->
+			path = "#seafil form #{id}"
+			d3.select(path).property('value').trim().split(',')
+
+		getInputData = () ->
+			strokeMin 	= getInputInt '#count_min'
+			strokeMax 	= getInputInt '#count_max'
+			frqMin		= getInputInt '#frq_min'
+			frqMax		= getInputInt '#frq_max'
+			gradeMin	= getInputInt '#grade_min'
+			gradeMax	= getInputInt '#grade_max'
+			strKanji 	= getInputArr '#kanjistring'
+			strOn 		= getInputArr '#onyomistring'
+			strKun 		= getInputArr '#kunyomistring'
+			strMean 	= getInputArr '#meaningstring'
+
+			{strokeMin, strokeMax, frqMin, frqMax, gradeMin, gradeMax, strKanji, strOn, strKun, strMean}
+
+
+		# check if in kanjidata has at least one item of inputdata
+		check = (kanjidata, inputdata) ->
+			if inputdata.length == 1 and inputdata[0] == ''
+				return true
+			if kanjidata == undefined
+				return false
+			for item in inputdata
+				if kanjidata.indexOf(item) != -1 and item != ''
+					return true
+			false
+
+		isWithinCriteria = (k) ->
+			{strokeMin, strokeMax, frqMin, frqMax, gradeMin, gradeMax, strKanji, strOn, strKun, strMean} = getInputData()
+			withinStroke 	= k.stroke_n >= strokeMin and k.stroke_n <= strokeMax
+			withinFrq 		= k.freq <= frqMin and k.freq >= frqMax   #attention: sort upside down
+			withinGrade 	= k.grade >= gradeMin and k.grade <= gradeMax
+			withinStrKanji 	= check k.kanji, strKanji
+			withinStrOn 	= check k.onyomi, strOn
+			withinStrKun	= check k.kunyomi, strKun
+			withinStrMean	= check k.meaning, strMean
+
+			# check if every criteria fits
+			withinStroke and withinFrq and withinGrade and withinStrKanji and withinStrOn and withinStrKun and withinStrMean
+			
+
+		filterKanji = ->
+
+			toggleNode = (node, flag) ->
+				flag ?= true
+				node.style.filtered = flag
+				for edge in node.edges
+					edge.style.filtered = flag			
+
+			for node in graph.nodes
+				toggleNode(node, false)
+
+				if isWithinCriteria(node.data)
+					#P 'not filtered'
+					#P node.data.kanji
+				else
+					toggleNode(node, true)		
+
+			view.update()					
+
+		searchKanji = ->
+			resultString = ''
+			for node in graph.nodes
+				if isWithinCriteria(node.data)
+					resultString = "#{resultString} #{node.data.kanji}"
+			
+			d3.select('table #kanjiresult')[0][0].innerHTML = "searchresult: #{resultString}"
+
+		resetFilter = () ->
+			id = d3.event.srcElement.id
+			fillStandardInput(id)
+
+		body.select('#btn_filter').on 'click' , filterKanji
+		body.select('#btn_search').on 'click' , searchKanji
+		body.selectAll('#btn_clear1').on 'click' ,  resetFilter
+		body.selectAll('#btn_clear2').on 'click' ,  resetFilter
+		body.selectAll('#btn_clear3').on 'click' ,  resetFilter
 			
 	showDebugOverlay = (el) ->
 		el.append('pre').attr(id:'my').text somePrettyPrint my
@@ -137,14 +231,8 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 			if kanji.freq > max
 				max = kanji.freq
 		max	
-
-	filterKanji = ->
-		P 'hello filter'
-
-	searchKanji = ->
-		P 'hello search'
 	
 	all_tests = copyAttrs {}, testRouting.tests, testBench.tests
-	tests.run all_tests, []
+	# tests.run all_tests, []
 	console.info 'end of tests'
 	loadData main

@@ -63,8 +63,10 @@ define ['utils'], ({ P, compareNumber }) ->
 				d3.select(@).classed "line_"+d.line.data.radical, true)
 				.transition().duration(config.transitionTime)
 				.attr d: (d) -> svgline [ d.source, d.target ]
+			edge.classed("filtered", (d) -> d.style.filtered)
 			node.transition().duration(config.transitionTime)
-				.attr transform: (d) -> "translate(#{d.x} #{d.y})"
+				.attr(transform: (d) -> "translate(#{d.x} #{d.y})")
+			node.classed("filtered", (d) -> d.style.filtered)
 			endnode.transition().duration(config.transitionTime)
 				.attr transform: (d) -> "translate(#{d.x} #{d.y})"
 		
