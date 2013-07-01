@@ -5,13 +5,12 @@ define ["utils", "prepare_data", 'graph'], ({
 
 	class Embedder
 		constructor: ({ @config }) ->
-			@r = 12
 			@graph = {}
 			@radicals = []
 
 		setup: ->
-			{ r, config } = this
-			d = 2*r
+			{ config } = this
+			d = 2 * config.nodeSize
 
 			prepare.setupRadicalJouyous()
 			prepare.setupKanjiGrades()

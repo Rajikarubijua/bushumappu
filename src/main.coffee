@@ -17,6 +17,7 @@ config =
 	timeToOptimize:				3000
 	optimizeMaxLoops:			0
 	optimizeMaxSteps:			0
+	nodeSize:					12
 figue.KMEANS_MAX_ITERATIONS = 1
 
 # the global object where we can put stuff into it
@@ -97,10 +98,10 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 			fillStandardInput('', true)
 
 			# testing
-			fillInputData '#kanjistring',	'日,木,森'
-			fillInputData '#onyomistring',	'ニチ'
-			fillInputData '#kunyomistring', 'ひ,き'
-			fillInputData '#meaningstring', 'day'
+			#fillInputData '#kanjistring',	'日,木,森'
+			#fillInputData '#onyomistring',	'ニチ'
+			#fillInputData '#kunyomistring', 'ひ,き'
+			#fillInputData '#meaningstring', 'day'
 
 		fillSeaFil(graph)
 
@@ -134,76 +135,83 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 			path = "#seafil form #{id}"
 			+d3.select(path).property('value').trim()
 
-		getInputArr = (id) ->
+		getInput = (id) ->
 			path = "#seafil form #{id}"
-			d3.select(path).property('value').trim().split(',')
+			d3.select(path).property('value').trim()
 
 		getInputData = () ->
-			strokeMin 	= getInputInt '#count_min'
-			strokeMax 	= getInputInt '#count_max'
-			frqMin		= getInputInt '#frq_min'
-			frqMax		= getInputInt '#frq_max'
-			gradeMin	= getInputInt '#grade_min'
-			gradeMax	= getInputInt '#grade_max'
-			strKanji 	= getInputArr '#kanjistring'
-			strOn 		= getInputArr '#onyomistring'
-			strKun 		= getInputArr '#kunyomistring'
-			strMean 	= getInputArr '#meaningstring'
-
-			{strokeMin, strokeMax, frqMin, frqMax, gradeMin, gradeMax, strKanji, strOn, strKun, strMean}
+			strokeMin 	: getInputInt '#count_min'
+			strokeMax 	: getInputInt '#count_max'
+			frqMin		: getInputInt '#frq_min'
+			frqMax		: getInputInt '#frq_max'
+			gradeMin	: getInputInt '#grade_min'
+			gradeMax	: getInputInt '#grade_max'
+			inKanji 	: getInput '#kanjistring'
+			inOn 		: getInput '#onyomistring'
+			inKun 		: getInput '#kunyomistring'
+			inMean 		: getInput '#meaningstring'
 
 
-		# check if in kanjidata has at least one item of inputdata
-		check = (kanjidata, inputdata) ->
-			if inputdata.length == 1 and inputdata[0] == ''
+		# check if in kanji valuedata has at least one item of input fielddata
+		check = (arrValueData, arrFieldData) ->
+			# ignore empty fields
+			if arrFieldData == undefined or arrFieldData == ''
 				return true
-			if kanjidata == undefined
+			# exclude unknown kanji
+			if arrValueData == undefined
 				return false
-			for item in inputdata
-				if kanjidata.indexOf(item) != -1 and item != ''
-					return true
+			
+			arrValueData = arrValueData.split ','
+			arrFieldData = arrFieldData.split ','
+
+			for item in arrFieldData
+				for value in arrValueData
+					if value == item and item != ''
+						return true
 			false
 
-		isWithinCriteria = (k) ->
-			{strokeMin, strokeMax, frqMin, frqMax, gradeMin, gradeMax, strKanji, strOn, strKun, strMean} = getInputData()
+		# TODO: BEAUTIFY ALL THE CODE
+		isWithinCriteria = (k, input) ->
+			{strokeMin, strokeMax, frqMin, frqMax, gradeMin, gradeMax, inKanji, inOn, inKun, inMean} = input
 			withinStroke 	= k.stroke_n >= strokeMin and k.stroke_n <= strokeMax
 			withinFrq 		= k.freq <= frqMin and k.freq >= frqMax   #attention: sort upside down
 			withinGrade 	= k.grade >= gradeMin and k.grade <= gradeMax
-			withinStrKanji 	= check k.kanji, strKanji
-			withinStrOn 	= check k.onyomi, strOn
-			withinStrKun	= check k.kunyomi, strKun
-			withinStrMean	= check k.meaning, strMean
+			withinInKanji 	= check k.kanji,   inKanji
+			withinInOn 		= check k.onyomi,  inOn
+			withinInKun		= check k.kunyomi, inKun
+			withinInMean	= check k.meaning, inMean
 
 			# check if every criteria fits
-			withinStroke and withinFrq and withinGrade and withinStrKanji and withinStrOn and withinStrKun and withinStrMean
+			withinStroke and withinFrq and withinGrade and withinInKanji and withinInOn and withinInKun and withinInMean
 			
 
 		filterKanji = ->
 
-			toggleNode = (node, flag) ->
-				flag ?= true
-				node.style.filtered = flag
-				for edge in node.edges
-					edge.style.filtered = flag			
-
+			input = getInputData()
 			for node in graph.nodes
-				toggleNode(node, false)
-
-				if isWithinCriteria(node.data)
-					#P 'not filtered'
-					#P node.data.kanji
+				if isWithinCriteria(node.data, input)
+					node.style.filtered = false
 				else
-					toggleNode(node, true)		
+					node.style.filtered = true
+
+			for edge in graph.edges
+				nearHidden = edge.source.style.filtered or edge.target.style.filtered 
+				if nearHidden 
+					edge.style.filtered = true
 
 			view.update()					
 
 		searchKanji = ->
 			resultString = ''
+			input = getInputData()
 			for node in graph.nodes
-				if isWithinCriteria(node.data)
+				node.style.isSearchresult = false
+				if isWithinCriteria(node.data, input)
+					node.style.isSearchresult = true
 					resultString = "#{resultString} #{node.data.kanji}"
 			
 			d3.select('table #kanjiresult')[0][0].innerHTML = "searchresult: #{resultString}"
+			view.update()
 
 		resetFilter = () ->
 			id = d3.event.srcElement.id

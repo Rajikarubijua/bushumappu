@@ -2,15 +2,14 @@ define ['utils'], ({ P, compareNumber }) ->
 
 	class View
 		constructor: ({ @svg, @graph, @config }) ->
-			@r = 12
 			@g_edges = @svg.append 'g'
 			@g_nodes = @svg.append 'g'
 			@g_endnodes = @svg.append 'g'
 	
 		update: ->
-			{ svg, r, config, g_edges, g_nodes, g_endnodes } = this
+			{ svg, config, g_edges, g_nodes, g_endnodes } = this
 			{ nodes, lines, edges, endnodes } = @graph
-
+			r = config.nodeSize
 			nodes = (node for node in nodes when node not in endnodes)
 
 			# join
@@ -53,6 +52,7 @@ define ['utils'], ({ P, compareNumber }) ->
 			node.transition().duration(config.transitionTime)
 				.attr(transform: (d) -> "translate(#{d.x} #{d.y})")
 			node.classed("filtered", (d) -> d.style.filtered)
+			node.classed("searchresult", (d) -> d.style.isSearchresult)
 			endnode.transition().duration(config.transitionTime)
 				.attr transform: (d) -> "translate(#{d.x} #{d.y})"
 		

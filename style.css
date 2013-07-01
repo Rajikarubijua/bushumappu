@@ -36,6 +36,11 @@ path {
 	opacity: 0.2;
 }
 
+.searchresult rect{
+    stroke: red;
+    stroke-width: 3;
+}
+
 .dragable { cursor: pointer; cursor: hand; }
 .dragging { cursor: move; }
 
