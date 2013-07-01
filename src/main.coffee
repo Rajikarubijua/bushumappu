@@ -15,8 +15,8 @@ config =
 	initialScale:				0.06
 	edgesBeforeSnap:			false
 	timeToOptimize:				3000
-	optimizeMaxLoops:			3
-	optimizeMaxSteps:			1
+	optimizeMaxLoops:			0
+	optimizeMaxSteps:			0
 figue.KMEANS_MAX_ITERATIONS = 1
 
 # the global object where we can put stuff into it
@@ -77,13 +77,24 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 			path = "#seafil form #{id}"
 			d3.select(path).property 'value', value
 
+
+		fillStandardInput = (id, flag) ->
+			flag ?= false
+			if id == 'btn_clear1' or flag
+				fillInputData '#count_min',	1
+				fillInputData '#count_max', getStrokeCountMax(graph)
+			if id == 'btn_clear2' or flag
+				fillInputData '#frq_min',	getFreqMax(graph)
+				fillInputData '#frq_max',	1
+			if id == 'btn_clear3' or flag
+				fillInputData '#grade_min',	1
+				fillInputData '#grade_max',	Object.keys(my.jouyou_grade).length
+
+
+
+
 		fillSeaFil = (graph)->
-			fillInputData '#count_min',	1
-			fillInputData '#count_max', getStrokeCountMax(graph)
-			fillInputData '#frq_min',	getFreqMax(graph)
-			fillInputData '#frq_max',	1
-			fillInputData '#grade_min',	1
-			fillInputData '#grade_max',	Object.keys(my.jouyou_grade).length
+			fillStandardInput('', true)
 
 			# testing
 			fillInputData '#kanjistring',	'日,木,森'
@@ -141,6 +152,7 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 
 			{strokeMin, strokeMax, frqMin, frqMax, gradeMin, gradeMax, strKanji, strOn, strKun, strMean}
 
+
 		# check if in kanjidata has at least one item of inputdata
 		check = (kanjidata, inputdata) ->
 			if inputdata.length == 1 and inputdata[0] == ''
@@ -178,8 +190,8 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 				toggleNode(node, false)
 
 				if isWithinCriteria(node.data)
-					P 'not filtered'
-					P node.data.kanji
+					#P 'not filtered'
+					#P node.data.kanji
 				else
 					toggleNode(node, true)		
 
@@ -191,10 +203,17 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 				if isWithinCriteria(node.data)
 					resultString = "#{resultString} #{node.data.kanji}"
 			
-			d3.select('table #kanjiresult')[0][0].innerHTML = 'searchresult: #{resultString}'
+			d3.select('table #kanjiresult')[0][0].innerHTML = "searchresult: #{resultString}"
+
+		resetFilter = () ->
+			id = d3.event.srcElement.id
+			fillStandardInput(id)
 
 		body.select('#btn_filter').on 'click' , filterKanji
 		body.select('#btn_search').on 'click' , searchKanji
+		body.selectAll('#btn_clear1').on 'click' ,  resetFilter
+		body.selectAll('#btn_clear2').on 'click' ,  resetFilter
+		body.selectAll('#btn_clear3').on 'click' ,  resetFilter
 			
 	showDebugOverlay = (el) ->
 		el.append('pre').attr(id:'my').text somePrettyPrint my
