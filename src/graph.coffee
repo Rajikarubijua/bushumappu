@@ -19,8 +19,11 @@ define ['utils'], (utils) ->
 			throw @radical if @radical
 			@source ?= null
 			@target ?= null
+			@sourcetrans ?= null
+			@targettrans ?= null
 			@line   ?= null
 			@style ?= {}
+			@calc ?= false
 		
 		getVector: ->
 			[ @target.x - @source.x, @target.y - @source.y ]
@@ -33,9 +36,17 @@ define ['utils'], (utils) ->
 			l2 = Math.sqrt( Math.pow( x2, 2 ) + Math.pow( y2, 2) )
 			angle = Math.acos( scalar / (l1 * l2))
 			
+		getEdgeAngle: ->
+			[ x1, y1 ] = [@source.x, @source.y]
+			[ x2, y2 ] = [@target.x, @target.y]
+			x = x2 - x1
+			y = y2 - y1
+			angle = Math.atan2(y,x)
+			
 		lengthSqr: ->
 			[ x, y ] = @getVector()
 			(Math.pow x, 2) + (Math.pow y, 2)
+
 
 	class Line
 		next_id = 0

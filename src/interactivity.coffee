@@ -1,4 +1,4 @@
-define ['utils'], ({ P, compareNumber }) ->
+define ['utils', 'tubeEdges'], ({ P, compareNumber }, {createTubes}) ->
 
 	class View
 		constructor: ({ @svg, @graph, @config }) ->
@@ -67,8 +67,8 @@ define ['utils'], ({ P, compareNumber }) ->
 			edge.each((d) ->
 				d3.select(@).classed "line_"+d.line.data.radical, true)
 				.transition().duration(config.transitionTime)
-				.attr d: (d) -> svgline [ d.source, d.target ]
-
+				.attr d: (d) -> svgline01 createTubes d
+			edge.each((d) -> d3.select(@).style("stroke", "magenta") if d.calc)
 			edge.classed("filtered", (d) -> d.style.filtered)
 			node.classed("filtered", (d) -> d.style.filtered)
 			node.classed("searchresult", (d) -> d.style.isSearchresult)
@@ -100,6 +100,11 @@ define ['utils'], ({ P, compareNumber }) ->
 	svgline = d3.svg.line()
 		.x(({x}) -> x)
 		.y(({y}) -> y)
+		
+	svgline01 = d3.svg.line()
+		.x( (d) -> d[0])
+		.y( (d) -> d[1])
+	
 
 	endnodeSelectLine = (d) ->
 		selector = ".line_"+d.data.radical
@@ -160,4 +165,4 @@ define ['utils'], ({ P, compareNumber }) ->
 		table_td.text((d) -> d)
 		# exit
 		
-	{ View }
+	{ View}
