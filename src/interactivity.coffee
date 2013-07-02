@@ -6,10 +6,15 @@ define ['utils'], ({ P, compareNumber }) ->
 			@g_nodes = @svg.append 'g'
 			@g_endnodes = @svg.append 'g'
 	
-		update: ->
+		update: (graph) ->
+			@graph = graph if graph
 			{ svg, config, g_edges, g_nodes, g_endnodes } = this
-			{ nodes, lines, edges, endnodes } = @graph
+			{ nodes, lines, edges } = @graph
 			r = config.nodeSize
+
+			for node in nodes
+				node.label ?= node.data.kanji or node.data.radical or "?"
+			endnodes = (node for node in nodes when node.data.radical)
 			nodes = (node for node in nodes when node not in endnodes)
 			that = this
 			# join
@@ -49,7 +54,7 @@ define ['utils'], ({ P, compareNumber }) ->
 				.on('click.showLabel', showStationLabel)
 				.on('dblclick.selectNode', (d) -> nodeDoubleClick d)
 			node_g.append('rect').attr x:-r, y:-r, width:2*r, height:2*r
-			node_g.append('text').text (d) -> d.label
+			node_g.append('text')
 
 			endnode_g = endnode.enter()
 				.append('g')
@@ -63,11 +68,15 @@ define ['utils'], ({ P, compareNumber }) ->
 				d3.select(@).classed "line_"+d.line.data.radical, true)
 				.transition().duration(config.transitionTime)
 				.attr d: (d) -> svgline [ d.source, d.target ]
+
 			edge.classed("filtered", (d) -> d.style.filtered)
-			node.transition().duration(config.transitionTime)
-				.attr(transform: (d) -> "translate(#{d.x} #{d.y})")
 			node.classed("filtered", (d) -> d.style.filtered)
 			node.classed("searchresult", (d) -> d.style.isSearchresult)
+			node_t = node.transition().duration(config.transitionTime)
+			node_t.attr(transform: (d) -> "translate(#{d.x} #{d.y})")
+			node_t.style(fill: (d) -> if d.style.hi then "red" else if d.style.lo then "green" else null) # debug @payload
+			node_t.select('text').text (d) -> d.label
+
 			endnode.transition().duration(config.transitionTime)
 				.attr transform: (d) -> "translate(#{d.x} #{d.y})"
 		
@@ -98,8 +107,7 @@ define ['utils'], ({ P, compareNumber }) ->
 			d.highlighted = !d3.select(@).classed 'highlighted'
 		d3.selectAll(".edge").sort (a, b) ->
 				compareNumber a.highlighted or 0, b.highlighted or 0
-				
-	
+					
 	table_data = [[],[],[],[],[]]
 	nodeDoubleClick = (d) ->
 		table = d3.select('table#details tbody')

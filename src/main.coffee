@@ -11,12 +11,13 @@ config =
 	circularLines:				false
 	gridSpacing:				48 # 0 deactivates snapNodes
 	debugOverlay:				false
-	transitionTime:				750*2
-	initialScale:				0.06
+	transitionTime:				2000
+	initialScale:				1
 	edgesBeforeSnap:			false
 	timeToOptimize:				3000
 	optimizeMaxLoops:			0
 	optimizeMaxSteps:			0
+	slideshowSteps:				1
 	nodeSize:					12
 figue.KMEANS_MAX_ITERATIONS = 1
 
@@ -29,10 +30,11 @@ window.my = {
 	jouyou_grade: {}		# +grade: "kanjis"
 	config }
 
-define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
-	'interactivity', 'routing', 'test_routing', 'test_bench', 'tests'], (
+define ['utils', 'load_data', 'central_station',
+	'interactivity', 'routing', 'prepare_data',
+	'test_routing', 'test_bench', 'tests'], (
 	{ P, somePrettyPrint, styleZoom, async, prettyDebug, copyAttrs },
-	loadData, prepare, { Embedder }, { View }, { MetroMapLayout },
+	loadData, { CentralStationEmbedder }, { View }, { MetroMapLayout }, prepare,
 	testRouting, testBench, tests) ->
 
 	main = () ->
@@ -64,22 +66,12 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 		# And we need it to do defered, cause d3 would fail unexpectetly.
 		# This hasn't been reported yet.
 		svg.on('dblclick.zoom', null)
-			 
-		embedder = new Embedder { config }
-		embedder.setup()
-		generateEdges = ->
-			console.info 'generate edges...'
-			embedder.generateEdges()
-			console.info 'generate edges done'
-		generateEdges() if config.edgesBeforeSnap
-		graph = embedder.graph
 
 		fillInputData = (id, value) ->
 			path = "#seafil form #{id}"
 			d3.select(path).property 'value', value
 
-
-		fillStandardInput = (id, flag) ->
+		fillStandardInput = (graph, id, flag) ->
 			flag ?= false
 			if id == 'btn_clear1' or flag
 				fillInputData '#count_min',	1
@@ -91,45 +83,14 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 				fillInputData '#grade_min',	1
 				fillInputData '#grade_max',	Object.keys(my.jouyou_grade).length
 
-
-
-
 		fillSeaFil = (graph)->
-			fillStandardInput('', true)
+			fillStandardInput(graph, '', true)
 
 			# testing
 			#fillInputData '#kanjistring',	'日,木,森'
 			#fillInputData '#onyomistring',	'ニチ'
 			#fillInputData '#kunyomistring', 'ひ,き'
 			#fillInputData '#meaningstring', 'day'
-
-		fillSeaFil(graph)
-
-		view = new View { svg: svg.g, graph, config }
-		layout = new MetroMapLayout { config, graph }
-		view.update()
-		async.seqTimeout config.transitionTime,
-			config.gridSpacing > 0 and ((cb) ->
-				console.info 'snap nodes...'
-				layout.snapNodes()
-				console.info 'snap node done'
-				generateEdges() if not config.edgesBeforeSnap
-				view.update()
-				cb()
-			),((cb) ->
-				optimize_loop cb
-			)
-		optimize_loop = (cb) ->
-			if config.optimizeMaxLoops != -1 and (
-				++optimize_loop.loops >= config.optimizeMaxLoops)
-				return cb()
-			console.info 'optimize...'
-			{ stats } = layout.optimize()
-			console.info 'optimize done', prettyDebug stats
-			view.update()
-			setTimeout (-> optimize_loop cb), config.transitionTime
-		optimize_loop.loops = 0
-
 
 		getInputInt = (id) ->
 			path = "#seafil form #{id}"
@@ -150,7 +111,6 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 			inOn 		: getInput '#onyomistring'
 			inKun 		: getInput '#kunyomistring'
 			inMean 		: getInput '#meaningstring'
-
 
 		# check if in kanji valuedata has at least one item of input fielddata
 		check = (arrValueData, arrFieldData) ->
@@ -184,7 +144,6 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 			# check if every criteria fits
 			withinStroke and withinFrq and withinGrade and withinInKanji and withinInOn and withinInKun and withinInMean
 			
-
 		filterKanji = ->
 
 			input = getInputData()
@@ -222,25 +181,48 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 		body.selectAll('#btn_clear1').on 'click' ,  resetFilter
 		body.selectAll('#btn_clear2').on 'click' ,  resetFilter
 		body.selectAll('#btn_clear3').on 'click' ,  resetFilter
+
+		prepare.setupRadicalJouyous()
+		prepare.setupKanjiGrades()
+		prepare.setupKanjiRadicals(d3.values(my.kanjis), my.radicals)
+		radicals = prepare.getRadicals()
+		kanjis = prepare.getKanjis radicals
+		kanji_i = 0
+		
+		embedder = new CentralStationEmbedder { config }
+		view = new View { svg: svg.g, config }
+		
+		do slideshow = ->
+			slideshow.steps ?= 0
+			return if slideshow.steps++ >= config.slideshowSteps
+			kanji_i = Math.floor Math.random()*kanjis.length
+			kanji = kanjis[kanji_i]
+			console.info (
+				"central station "+kanji.kanji+
+				" with "+kanji.radicals.length+" radicals")
+			graph = embedder.graph kanji, radicals, kanjis
+			fillSeaFil graph
+			view.update graph
+			setTimeout slideshow, config.transitionTime + 2000
 			
 	showDebugOverlay = (el) ->
 		el.append('pre').attr(id:'my').text somePrettyPrint my
 
 	getStrokeCountMax = (graph) ->
 		max = 1
-		for kanji in graph.kanjis
+		for kanji in graph.kanjis()
 			if kanji.stroke_n > max
 				max = kanji.stroke_n
 		max
 
 	getFreqMax = (graph) ->
 		max = 1
-		for kanji in graph.kanjis
+		for kanji in graph.kanjis()
 			if kanji.freq > max
 				max = kanji.freq
 		max	
 	
 	all_tests = copyAttrs {}, testRouting.tests, testBench.tests
-	# tests.run all_tests, []
+	#tests.run all_tests, []
 	console.info 'end of tests'
 	loadData main
