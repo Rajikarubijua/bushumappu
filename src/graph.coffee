@@ -18,8 +18,8 @@ define [], () ->
 			throw @radical if @radical
 			@source ?= null
 			@target ?= null
-			@sourcecoord ?= []
-			@targetcoord ?= []
+			@sourcetrans ?= null
+			@targettrans ?= null
 			@line   ?= null
 			@style ?= {}
 			@calc ?= false
@@ -45,6 +45,7 @@ define [], () ->
 		lengthSqr: ->
 			[ x, y ] = @getVector()
 			(Math.pow x, 2) + (Math.pow y, 2)
+
 
 	class Line
 		next_id = 0

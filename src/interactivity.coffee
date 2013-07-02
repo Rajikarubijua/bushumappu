@@ -49,9 +49,8 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber }, {createTubes}) ->
 			edge.each((d) ->
 				d3.select(@).classed "line_"+d.line.data.radical, true)
 				.transition().duration(config.transitionTime)
-				.attr d: (d) -> 
-					svgline01 createTubes d
-			edge.each((d) -> d3.select(@).style("color", "magenta") if d.calc)
+				.attr d: (d) -> svgline01 createTubes d
+			edge.each((d) -> d3.select(@).style("stroke", "magenta") if d.calc)
 			edge.classed("filtered", (d) -> d.style.filtered)
 			node.transition().duration(config.transitionTime)
 				.attr(transform: (d) -> "translate(#{d.x} #{d.y})")
