@@ -29,6 +29,7 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber }, {createTubes}) ->
 			closeStationLabel = (d) ->
 				# stops showStationLabel to be called right after finishing here
 				d3.event.stopPropagation()
+				this.parentNode.stationLabel = undefined
 				d3.select(this).remove()
 			
 			showStationLabel = (d) ->
@@ -39,10 +40,11 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber }, {createTubes}) ->
 				stationLabel.append('rect')	
 					.attr(x:20, y:-r-3)
 					.attr(width: 8*rectLength, height: 2.5*r)
-				stationLabel.append('text').classed("station-label", true)
+				stationLabel.append('text')
 					.text((d) -> d.data.meaning or '?')
 					.attr(x:23, y:-r/2+4)
-			
+				this.stationLabel = stationLabel
+				
 			edge.enter()
 				.append("path")
 				.classed("edge", true)
