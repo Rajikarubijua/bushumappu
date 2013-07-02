@@ -274,10 +274,23 @@ define ->
 				P sorted, xs
 				throw "not somewhat sortable"
 		sorted
-			
+
+	class Memo
+		memo_id = 0
+		constructor: ->
+			@memo = {}
+			@memoId = "__memo"+(memo_id++)+"__"
+			@funcId = 0
+			@objId = 0
+		onceObj: (func) =>
+			func_id = ""+@funcId++
+			(obj) =>
+				obj_id = obj[@memoId] ?= ""+@objId++
+				memo = @memo[obj_id] ?= {}
+				value = memo[func_id] ?= func obj
 
 	{ copyAttrs, P, PN, PD, W, async, strUnique, expect, somePrettyPrint, length,
 	  sort, styleZoom, sunflower, vecX, vecY, vec, compareNumber, max,
   	  parseMaybeNumber, equidistantSelection, getMinMax, arrayUnique,
   	  distanceSqrXY, nearestXY, nearest01, distanceSqr01, nearest, forall,
-  	  rasterCircle, prettyDebug, sortSomewhat }
+  	  rasterCircle, prettyDebug, sortSomewhat, Memo }
