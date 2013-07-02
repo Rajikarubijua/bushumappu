@@ -144,8 +144,7 @@ define ['utils', 'load_data', 'central_station',
 			# check if every criteria fits
 			withinStroke and withinFrq and withinGrade and withinInKanji and withinInOn and withinInKun and withinInMean
 			
-		filterKanji = ->
-
+		filterKanji = (graph) -> ->
 			input = getInputData()
 			for node in graph.nodes
 				if isWithinCriteria(node.data, input)
@@ -160,7 +159,7 @@ define ['utils', 'load_data', 'central_station',
 
 			view.update()					
 
-		searchKanji = ->
+		searchKanji = (graph) -> ->
 			resultString = ''
 			input = getInputData()
 			for node in graph.nodes
@@ -169,18 +168,20 @@ define ['utils', 'load_data', 'central_station',
 					node.style.isSearchresult = true
 					resultString = "#{resultString} #{node.data.kanji}"
 			
-			d3.select('table #kanjiresult')[0][0].innerHTML = "searchresult: #{resultString}"
+			d3.select('table #kanjiresult')[0][0].innerHTML =
+				"searchresult: #{resultString}"
 			view.update()
 
-		resetFilter = () ->
+		resetFilter = (graph) -> ->
 			id = d3.event.srcElement.id
-			fillStandardInput(id)
+			fillStandardInput(graph, id)
 
-		body.select('#btn_filter').on 'click' , filterKanji
-		body.select('#btn_search').on 'click' , searchKanji
-		body.selectAll('#btn_clear1').on 'click' ,  resetFilter
-		body.selectAll('#btn_clear2').on 'click' ,  resetFilter
-		body.selectAll('#btn_clear3').on 'click' ,  resetFilter
+		setupSeaFillEvents = (graph) ->
+			body.select('#btn_filter').on 'click' , filterKanji graph
+			body.select('#btn_search').on 'click' , searchKanji graph
+			body.selectAll('#btn_clear1').on 'click' ,  resetFilter graph
+			body.selectAll('#btn_clear2').on 'click' ,  resetFilter graph
+			body.selectAll('#btn_clear3').on 'click' ,  resetFilter graph
 
 		prepare.setupRadicalJouyous()
 		prepare.setupKanjiGrades()
@@ -202,6 +203,7 @@ define ['utils', 'load_data', 'central_station',
 				" with "+kanji.radicals.length+" radicals")
 			graph = embedder.graph kanji, radicals, kanjis
 			fillSeaFil graph
+			setupSeaFillEvents graph
 			view.update graph
 			setTimeout slideshow, config.transitionTime + 2000
 			
