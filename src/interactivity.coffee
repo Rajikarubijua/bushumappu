@@ -39,7 +39,7 @@ define ['utils'], ({ P, compareNumber }) ->
 				.on('mousemove', (d) -> nodeMouseMove d)
 				.on('click', (d) -> nodeDoubleClick d)
 			node_g.append('rect').attr x:-r, y:-r, width:2*r, height:2*r
-			node_g.append('text').text (d) -> d.label
+			node_g.append('text')
 
 			endnode_g = endnode.enter()
 				.append('g')
@@ -53,8 +53,10 @@ define ['utils'], ({ P, compareNumber }) ->
 				d3.select(@).classed "line_"+d.line.data.radical, true)
 				.transition().duration(config.transitionTime)
 				.attr d: (d) -> svgline [ d.source, d.target ]
-			node.transition().duration(config.transitionTime)
-				.attr transform: (d) -> "translate(#{d.x} #{d.y})"
+			node_t = node.transition().duration(config.transitionTime)
+			node_t.attr(transform: (d) -> "translate(#{d.x} #{d.y})")
+			node_t.style(fill: (d) -> if d.style.hi then "red" else if d.style.lo then "green" else null)
+			node_t.select('text').text (d) -> d.label
 			endnode.transition().duration(config.transitionTime)
 				.attr transform: (d) -> "translate(#{d.x} #{d.y})"
 		
