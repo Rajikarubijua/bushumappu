@@ -125,8 +125,7 @@ define ['utils'], ({ P, compareNumber }) ->
 			i++
 		
 		radicals = []
-		for r in d3.selectAll(d.data.radicals)[0]
-			radicals.push(r.radical)
+		radicals = (r.radical for r in d.data.radicals)
 		
 		if(!nothingtodo)
 			table_data[0].push d.label
