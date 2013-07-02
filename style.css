@@ -9,7 +9,7 @@ circle, rect {
 	stroke: black;
 }
 
-.node > text{
+.node > text, .endnode > text {
 	alignment-baseline: central;
 	text-anchor: middle;
 }
