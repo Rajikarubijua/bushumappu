@@ -123,11 +123,15 @@ define ['utils'], ({ P, compareNumber }) ->
 				nothingtodo = true;
 				break
 			i++
-			
+		
+		radicals = []
+		for r in d3.selectAll(d.data.radicals)[0]
+			radicals.push(r.radical)
+		
 		if(!nothingtodo)
 			table_data[0].push d.label
 			table_data[1].push d.data.meaning
-			table_data[2].push d.data.radicals
+			table_data[2].push radicals
 			table_data[3].push d.data.onyomi
 			table_data[4].push d.data.kunyomi
 		
