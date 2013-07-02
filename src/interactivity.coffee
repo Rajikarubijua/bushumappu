@@ -7,10 +7,14 @@ define ['utils'], ({ P, compareNumber }) ->
 			@g_nodes = @svg.append 'g'
 			@g_endnodes = @svg.append 'g'
 	
-		update: ->
+		update: (graph) ->
+			@graph = graph if graph
 			{ svg, r, config, g_edges, g_nodes, g_endnodes } = this
-			{ nodes, lines, edges, endnodes } = @graph
+			{ nodes, lines, edges } = @graph
 
+			for node in nodes
+				node.label ?= node.data.kanji or node.data.radical or "?"
+			endnodes = (node for node in nodes when node.data.radical)
 			nodes = (node for node in nodes when node not in endnodes)
 
 			# join
