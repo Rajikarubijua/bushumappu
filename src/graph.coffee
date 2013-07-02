@@ -1,4 +1,5 @@
-define [], () ->
+define ['utils'], (utils) ->
+	{ P } = utils
 
 	class Node
 		next_id = 0
@@ -52,9 +53,11 @@ define [], () ->
 			for line_nodes in lines
 				for node in line_nodes
 					nodes.push node if node not in nodes
-			@nodes = (new Node node for node in nodes)
+			@nodes = for node in nodes
+				k = 0
+				if node instanceof Node then node else new Node node
 			@lines = for orig_line_nodes in lines
-				line = new Line
+				line = new Line orig_line_nodes.obj
 				line.nodes = for node in orig_line_nodes
 					node = @nodes[nodes.indexOf node]
 					node.lines.push line

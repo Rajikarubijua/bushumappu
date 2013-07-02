@@ -91,7 +91,6 @@ define ['utils'], ({ P, compareNumber }) ->
 	tooltip = d3.select('div')
 		.attr('class', 'tooltip')
 		.style('opacity', 0)
-	console.log(tooltip)
 	
 	nodeMouseOver = (d) ->
 		tooltip.transition().duration(500)

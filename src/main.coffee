@@ -11,12 +11,13 @@ config =
 	circularLines:				false
 	gridSpacing:				48 # 0 deactivates snapNodes
 	debugOverlay:				false
-	transitionTime:				100
-	initialScale:				0.06
+	transitionTime:				2000
+	initialScale:				1
 	edgesBeforeSnap:			false
 	timeToOptimize:				0
 	optimizeMaxLoops:			0
 	optimizeMaxSteps:			0
+	slideshowSteps:				1
 figue.KMEANS_MAX_ITERATIONS = 1
 
 # the global object where we can put stuff into it
@@ -28,10 +29,11 @@ window.my = {
 	jouyou_grade: {}		# +grade: "kanjis"
 	config }
 
-define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
-	'interactivity', 'routing', 'test_routing', 'test_bench', 'tests'], (
+define ['utils', 'load_data', 'central_station',
+	'interactivity', 'routing', 'prepare_data',
+	'test_routing', 'test_bench', 'tests'], (
 	{ P, somePrettyPrint, styleZoom, async, prettyDebug, copyAttrs },
-	loadData, prepare, { Embedder }, { View }, { MetroMapLayout },
+	loadData, { CentralStationEmbedder }, { View }, { MetroMapLayout }, prepare,
 	testRouting, testBench, tests) ->
 
 	main = () ->
@@ -64,43 +66,32 @@ define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
 		# This hasn't been reported yet.
 		svg.on('dblclick.zoom', null)
 			 
-		embedder = new Embedder { config }
-		embedder.setup()
-		generateEdges = ->
-			console.info 'generate edges...'
-			embedder.generateEdges()
-			console.info 'generate edges done'
-		generateEdges() if config.edgesBeforeSnap
-		graph = embedder.graph
-		view = new View { svg: svg.g, graph, config }
-		layout = new MetroMapLayout { config, graph }
-		view.update()
-		async.seqTimeout config.transitionTime,
-			config.gridSpacing > 0 and ((cb) ->
-				console.info 'snap nodes...'
-				layout.snapNodes()
-				console.info 'snap node done'
-				generateEdges() if not config.edgesBeforeSnap
-				view.update()
-				cb()
-			),((cb) ->
-				optimize_loop cb
-			)
-		optimize_loop = (cb) ->
-			if config.optimizeMaxLoops != -1 and (
-				++optimize_loop.loops >= config.optimizeMaxLoops)
-				return cb()
-			console.info 'optimize...'
-			{ stats } = layout.optimize()
-			console.info 'optimize done', prettyDebug stats
-			view.update()
-			setTimeout (-> optimize_loop cb), config.transitionTime
-		optimize_loop.loops = 0
+		prepare.setupRadicalJouyous()
+		prepare.setupKanjiGrades()
+		prepare.setupKanjiRadicals(d3.values(my.kanjis), my.radicals)
+		radicals = prepare.getRadicals()
+		kanjis = prepare.getKanjis radicals
+		kanji_i = 0
+		
+		embedder = new CentralStationEmbedder { config }
+		view = new View { svg: svg.g, config }
+		
+		do slideshow = ->
+			slideshow.steps ?= 0
+			return if slideshow.steps++ >= config.slideshowSteps
+			kanji_i = Math.floor Math.random()*kanjis.length
+			kanji = kanjis[kanji_i]
+			console.info (
+				"central station "+kanji.kanji+
+				" with "+kanji.radicals.length+" radicals")
+			graph = embedder.graph kanji, radicals, kanjis
+			view.update graph
+			setTimeout slideshow, config.transitionTime + 2000
 			
 	showDebugOverlay = (el) ->
 		el.append('pre').attr(id:'my').text somePrettyPrint my
 	
 	all_tests = copyAttrs {}, testRouting.tests, testBench.tests
-	tests.run all_tests, []
+	#tests.run all_tests, []
 	console.info 'end of tests'
 	loadData main
