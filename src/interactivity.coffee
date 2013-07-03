@@ -1,4 +1,5 @@
-define ['utils', 'tubeEdges'], ({ P, compareNumber }, {createTubes}) ->
+define ['utils', 'tubeEdges'], (utils, {createTubes}) ->
+	{ P, compareNumber } = utils
 
 	class View
 		constructor: ({ @svg, @graph, @config }) ->
@@ -60,7 +61,7 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber }, {createTubes}) ->
 				.append("path")
 				.classed("edge", true)
 				# for transitions; nodes start at 0,0. so should edges
-				.attr d: (d) -> svgline [ {x:0,y:0}, {x:0,y:0} ]
+				.attr(d: "M0,0")
 			node_g = node.enter()
 				.append('g')
 				.classed("node", true)
@@ -84,7 +85,9 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber }, {createTubes}) ->
 			edge.each((d) ->
 				d3.select(@).classed "line_"+d.line.data.radical, true)
 				.transition().duration(config.transitionTime)
-				.attr d: (d) -> svgline01 createTubes d
+				.attr d: (d) ->
+					utils.svgline [d.source, d.target]
+					#utils.svgline01 createTubes d
 			edge.each((d) -> d3.select(@).style("stroke", "magenta") if d.calc)
 			edge.classed("filtered", (d) -> d.style.filtered)
 			node.classed("filtered", (d) -> d.style.filtered)
@@ -112,16 +115,7 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber }, {createTubes}) ->
 					.gravity(0.001)
 					.start()
 					.on 'tick', -> updatePositions()
-				node.call force.drag
-			
-	svgline = d3.svg.line()
-		.x(({x}) -> x)
-		.y(({y}) -> y)
-		
-	svgline01 = d3.svg.line()
-		.x( (d) -> d[0])
-		.y( (d) -> d[1])
-	
+				node.call force.drag	
 
 	endnodeSelectLine = (d) ->
 		selector = ".line_"+d.data.radical
