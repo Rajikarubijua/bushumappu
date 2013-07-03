@@ -34,6 +34,16 @@ define ['utils'], ({P}) ->
 		resetFilter: (id) -> 
 			@inHandler.fillStandardInput(id)
 
+		resetAll: () ->
+			for node in @graph.nodes
+				node.style.isSearchresult = false
+				node.style.filtered = false
+			for edge in @graph.edges
+				edge.style.isSearchresult = false
+				edge.style.filtered = false
+			@inHandler.clearInput()
+			@view.update()
+
 		isWithinCriteria: (kanji, criteria) ->
 			{strokeMin, strokeMax, frqMin, frqMax, gradeMin, gradeMax, inKanji, inOn, inKun, inMean} = criteria
 			withinStroke 	= kanji.stroke_n >= strokeMin and kanji.stroke_n <= strokeMax
@@ -56,8 +66,18 @@ define ['utils'], ({P}) ->
 			if arrValueData == undefined
 				return false
 			
-			arrValueData = arrValueData.split ','
-			arrFieldData = arrFieldData.split ','
+			token_jp = '、'
+			token_dt = ','
+
+			if arrValueData.indexOf(token_jp) == -1
+				arrValueData = arrValueData.split token_dt
+			else
+				arrValueData = arrValueData.split token_jp
+
+			if arrFieldData.indexOf(token_jp) == -1
+				arrFieldData = arrFieldData.split token_dt
+			else
+				arrFieldData = arrFieldData.split token_jp
 
 			for item in arrFieldData
 				for value in arrValueData
@@ -77,6 +97,9 @@ define ['utils'], ({P}) ->
 			for node in result
 				resultString = "#{resultString} #{node.data.kanji}"
 			
+			if resultString == ''
+				resultString = 'nothing found in current view'
+
 			d3.select('table #kanjiresult')[0][0].innerHTML =
 				"searchresult: #{resultString}"
 
@@ -102,6 +125,13 @@ define ['utils'], ({P}) ->
 			@fillInputData '#onyomistring',	'ニチ'
 			@fillInputData '#kunyomistring', 'ひ,き'
 			@fillInputData '#meaningstring', 'day'
+
+		clearInput: () ->
+			@fillStandardInput('', true)
+			@fillInputData '#kanjistring',	''
+			@fillInputData '#onyomistring',	''
+			@fillInputData '#kunyomistring', ''
+			@fillInputData '#meaningstring', ''
 
 		fillInputData: (id, value) ->
 			path = "#seafil form #{id}"

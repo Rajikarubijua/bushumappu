@@ -27,7 +27,7 @@ var require = {
 				<table>
 					<tr>
 						<td>Kanji</td>
-						<td><input id="kanjistring"></td>
+						<td><input type="text" id="kanjistring" class="long"></td>
 						<td>Strokecount</td>
 						<td class="no-wrap">
 							<input class="half" id="count_min"> - <input type="text" class="half" id="count_max">
@@ -36,7 +36,7 @@ var require = {
 					</tr>
 					<tr>
 						<td>Onyomi</td>
-						<td><input type="text" id="onyomistring"></td>
+						<td><input type="text" id="onyomistring" class="long"></td>
 						<td>Frequency</td>
 						<td class="no-wrap">
 							<input type="text" class="half" id="frq_min"> - <input type="text" class="half" id="frq_max">
@@ -45,7 +45,7 @@ var require = {
 					</tr>
 					<tr>
 						<td>Kunyomi</td>
-						<td><input type="text" id="kunyomistring"></td>
+						<td><input type="text" id="kunyomistring" class="long"></td>
 						<td>Schoolgrade</td>
 						<td class="no-wrap">
 							<input type="text" class="half" id="grade_min"> - <input type="text" class="half" id="grade_max">
@@ -54,7 +54,7 @@ var require = {
 					</tr>
 					<tr>
 						<td>Meaning</td>
-						<td><input type="text" id="meaningstring"></td>
+						<td><input type="text" id="meaningstring" class="long"></td>
 						<td colspan="2"> </td>
 						<!--
 						<td>JLPT Level</td>
@@ -65,8 +65,11 @@ var require = {
 					</tr>
 					<tr>
 						<td colspan="2"></td>
-						<td> <input type="button" value="filter" id="btn_filter"> </td>
-						<td> <input type="button" value="search" id="btn_search"> </td>
+						<td colspan="2" class="no-wrap actionButtons"> 
+							<input type="button" value="reset" id="btn_reset">
+							<input type="button" value="search" id="btn_search"> 
+							<input type="button" value="filter" id="btn_filter"> 
+						</td>
 					</tr>
 					<tr>
 						<td colspan="2"></td>

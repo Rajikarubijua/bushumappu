@@ -108,8 +108,12 @@ define ['utils', 'load_data', 'central_station',
 		resetFilter = () ->
 			target.resetFilter(d3.event.srcElement.id)
 
+		resetAll = () ->
+			target.resetAll()
+
 		d3.select('#btn_filter').on 'click' , filter
 		d3.select('#btn_search').on 'click' , search
+		d3.select('#btn_reset').on 'click' ,  resetAll
 		d3.selectAll('#btn_clear1').on 'click' ,  resetFilter
 		d3.selectAll('#btn_clear2').on 'click' ,  resetFilter
 		d3.selectAll('#btn_clear3').on 'click' ,  resetFilter
