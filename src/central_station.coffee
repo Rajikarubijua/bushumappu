@@ -78,7 +78,7 @@ define ['utils', 'graph'], (utils, { Graph, Node }) ->
 				line.other = hi_nodes[hi..]
 				hi_nodes[...hi] = []
 		
-			node_r = 64
+			node_r = my.config.gridSpacing * 4
 			kanji_offset = 5
 			central_node = kanjiNode central_kanji
 			n = central_kanji.radicals.length
