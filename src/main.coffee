@@ -32,10 +32,11 @@ window.my = {
 
 define ['utils', 'load_data', 'central_station',
 	'interactivity', 'routing', 'prepare_data',
-	'test_routing', 'test_bench', 'tests'], (
+	'test_routing', 'test_bench', 'tests', 'filtersearch'], (
 	{ P, somePrettyPrint, styleZoom, async, prettyDebug, copyAttrs },
 	loadData, { CentralStationEmbedder }, { View }, { MetroMapLayout }, prepare,
-	testRouting, testBench, tests) ->
+	testRouting, testBench, tests, { FilterSearch }
+	) ->
 
 	main = () ->
 		body = my.body = d3.select 'body'
@@ -67,122 +68,6 @@ define ['utils', 'load_data', 'central_station',
 		# This hasn't been reported yet.
 		svg.on('dblclick.zoom', null)
 
-		fillInputData = (id, value) ->
-			path = "#seafil form #{id}"
-			d3.select(path).property 'value', value
-
-		fillStandardInput = (graph, id, flag) ->
-			flag ?= false
-			if id == 'btn_clear1' or flag
-				fillInputData '#count_min',	1
-				fillInputData '#count_max', getStrokeCountMax(graph)
-			if id == 'btn_clear2' or flag
-				fillInputData '#frq_min',	getFreqMax(graph)
-				fillInputData '#frq_max',	1
-			if id == 'btn_clear3' or flag
-				fillInputData '#grade_min',	1
-				fillInputData '#grade_max',	Object.keys(my.jouyou_grade).length
-
-		fillSeaFil = (graph)->
-			fillStandardInput(graph, '', true)
-
-			# testing
-			#fillInputData '#kanjistring',	'日,木,森'
-			#fillInputData '#onyomistring',	'ニチ'
-			#fillInputData '#kunyomistring', 'ひ,き'
-			#fillInputData '#meaningstring', 'day'
-
-		getInputInt = (id) ->
-			path = "#seafil form #{id}"
-			+d3.select(path).property('value').trim()
-
-		getInput = (id) ->
-			path = "#seafil form #{id}"
-			d3.select(path).property('value').trim()
-
-		getInputData = () ->
-			strokeMin 	: getInputInt '#count_min'
-			strokeMax 	: getInputInt '#count_max'
-			frqMin		: getInputInt '#frq_min'
-			frqMax		: getInputInt '#frq_max'
-			gradeMin	: getInputInt '#grade_min'
-			gradeMax	: getInputInt '#grade_max'
-			inKanji 	: getInput '#kanjistring'
-			inOn 		: getInput '#onyomistring'
-			inKun 		: getInput '#kunyomistring'
-			inMean 		: getInput '#meaningstring'
-
-		# check if in kanji valuedata has at least one item of input fielddata
-		check = (arrValueData, arrFieldData) ->
-			# ignore empty fields
-			if arrFieldData == undefined or arrFieldData == ''
-				return true
-			# exclude unknown kanji
-			if arrValueData == undefined
-				return false
-			
-			arrValueData = arrValueData.split ','
-			arrFieldData = arrFieldData.split ','
-
-			for item in arrFieldData
-				for value in arrValueData
-					if value == item and item != ''
-						return true
-			false
-
-		# TODO: BEAUTIFY ALL THE CODE
-		isWithinCriteria = (k, input) ->
-			{strokeMin, strokeMax, frqMin, frqMax, gradeMin, gradeMax, inKanji, inOn, inKun, inMean} = input
-			withinStroke 	= k.stroke_n >= strokeMin and k.stroke_n <= strokeMax
-			withinFrq 		= k.freq <= frqMin and k.freq >= frqMax   #attention: sort upside down
-			withinGrade 	= k.grade >= gradeMin and k.grade <= gradeMax
-			withinInKanji 	= check k.kanji,   inKanji
-			withinInOn 		= check k.onyomi,  inOn
-			withinInKun		= check k.kunyomi, inKun
-			withinInMean	= check k.meaning, inMean
-
-			# check if every criteria fits
-			withinStroke and withinFrq and withinGrade and withinInKanji and withinInOn and withinInKun and withinInMean
-			
-		filterKanji = (graph) -> ->
-			input = getInputData()
-			for node in graph.nodes
-				if isWithinCriteria(node.data, input)
-					node.style.filtered = false
-				else
-					node.style.filtered = true
-
-			for edge in graph.edges
-				nearHidden = edge.source.style.filtered or edge.target.style.filtered 
-				if nearHidden 
-					edge.style.filtered = true
-
-			view.update()					
-
-		searchKanji = (graph) -> ->
-			resultString = ''
-			input = getInputData()
-			for node in graph.nodes
-				node.style.isSearchresult = false
-				if isWithinCriteria(node.data, input)
-					node.style.isSearchresult = true
-					resultString = "#{resultString} #{node.data.kanji}"
-			
-			d3.select('table #kanjiresult')[0][0].innerHTML =
-				"searchresult: #{resultString}"
-			view.update()
-
-		resetFilter = (graph) -> ->
-			id = d3.event.srcElement.id
-			fillStandardInput(graph, id)
-
-		setupSeaFillEvents = (graph) ->
-			body.select('#btn_filter').on 'click' , filterKanji graph
-			body.select('#btn_search').on 'click' , searchKanji graph
-			body.selectAll('#btn_clear1').on 'click' ,  resetFilter graph
-			body.selectAll('#btn_clear2').on 'click' ,  resetFilter graph
-			body.selectAll('#btn_clear3').on 'click' ,  resetFilter graph
-
 		prepare.setupRadicalJouyous()
 		prepare.setupKanjiGrades()
 		prepare.setupKanjiRadicals(d3.values(my.kanjis), my.radicals)
@@ -202,28 +87,37 @@ define ['utils', 'load_data', 'central_station',
 				"central station "+kanji.kanji+
 				" with "+kanji.radicals.length+" radicals")
 			graph = embedder.graph kanji, radicals, kanjis
-			fillSeaFil graph
-			setupSeaFillEvents graph
+			seaFill = new FilterSearch { graph, view }
+			setupFilterSearchEvents seaFill
+			seaFill.setup()
 			view.update graph
 			setTimeout slideshow, config.transitionTime + 2000
 			
 	showDebugOverlay = (el) ->
 		el.append('pre').attr(id:'my').text somePrettyPrint my
 
-	getStrokeCountMax = (graph) ->
-		max = 1
-		for kanji in graph.kanjis()
-			if kanji.stroke_n > max
-				max = kanji.stroke_n
-		max
+	setupFilterSearchEvents = (target) ->
 
-	getFreqMax = (graph) ->
-		max = 1
-		for kanji in graph.kanjis()
-			if kanji.freq > max
-				max = kanji.freq
-		max	
-	
+		filter = () ->
+			target.filter()
+
+		search = () ->
+			result = target.search()
+			target.inHandler.displayResult(result)
+
+		resetFilter = () ->
+			target.resetFilter(d3.event.srcElement.id)
+
+		resetAll = () ->
+			target.resetAll()
+
+		d3.select('#btn_filter').on 'click' , filter
+		d3.select('#btn_search').on 'click' , search
+		d3.select('#btn_reset').on 'click' ,  resetAll
+		d3.selectAll('#btn_clear1').on 'click' ,  resetFilter
+		d3.selectAll('#btn_clear2').on 'click' ,  resetFilter
+		d3.selectAll('#btn_clear3').on 'click' ,  resetFilter
+
 	all_tests = copyAttrs {}, testRouting.tests, testBench.tests
 	#tests.run all_tests, []
 	console.info 'end of tests'

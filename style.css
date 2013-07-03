@@ -89,7 +89,7 @@ svg > g * {
 	padding-bottom: 5px;
 	padding-left: 5px;
 }
-#seafil form input{
+#seafil form .long{
 	width: 10em;
 }
 #seafil form .half{
@@ -108,3 +108,4 @@ svg > g * {
 .no-wrap{
 	white-space: nowrap;
 }
+
