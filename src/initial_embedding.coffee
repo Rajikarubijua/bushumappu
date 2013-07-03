@@ -5,23 +5,18 @@ define ["utils", "prepare_data", 'graph'], ({
 
 	class Embedder
 		constructor: ({ @config }) ->
-			@r = 12
 			@graph = {}
 			@radicals = []
 
 		setup: ->
-			{ r, config } = this
-			d = 2*r
+			{ config } = this
+			d = 2 * config.nodeSize
 
 			prepare.setupRadicalJouyous()
 			prepare.setupKanjiGrades()
-
-			radicals = (my.radicals[radical] for radical of my.jouyou_radicals)
-			radicals = config.filterRadicals radicals
-			radicals.sort (x) -> x.radical
+			radicals = prepare.getRadicals()
 			radicals_n = length radicals
-		
-			kanjis = getKanjis radicals
+			kanjis = prepare.getKanjis radicals
 		
 			nodes = for data in [ kanjis..., radicals... ]
 				node = new Node { data }
@@ -50,7 +45,7 @@ define ["utils", "prepare_data", 'graph'], ({
 			lines = []
 			endnodes = nodes_radicals
 			@radicals = radicals
-			@graph = { nodes: nodes_kanjis, endnodes, edges, lines }
+			@graph = { nodes: nodes_kanjis, endnodes, edges, lines , kanjis}
 		
 		generateEdges: ->
 			{ radicals, graph, config } = this
@@ -114,12 +109,6 @@ define ["utils", "prepare_data", 'graph'], ({
 		else switch kmeansClustersN
 			when -1 then Math.floor vectors[0].length
 			when 0  then Math.floor Math.sqrt vectors.length/2
-
-	getKanjis = (radicals) ->
-		kanjis = []
-		for radical in radicals
-			arrayUnique radical.jouyou, kanjis
-		kanjis.sort (x) -> x.kanji
 
 	getKanjisForRadicalInCluster = (radical, cluster) ->
 		kanjis = (node.data for node in cluster.nodes when \

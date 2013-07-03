@@ -1,18 +1,25 @@
-define ['utils'], ({ P, compareNumber }) ->
+define ['utils', 'tubeEdges'], (utils, {createTubes}) ->
+	{ P, compareNumber } = utils
 
 	class View
 		constructor: ({ @svg, @graph, @config }) ->
-			@r = 12
 			@g_edges = @svg.append 'g'
 			@g_nodes = @svg.append 'g'
 			@g_endnodes = @svg.append 'g'
 	
-		update: ->
-			{ svg, r, config, g_edges, g_nodes, g_endnodes } = this
-			{ nodes, lines, edges, endnodes } = @graph
-
+		update: (graph) ->
+			@graph = graph if graph
+			{ svg, config, g_edges, g_nodes, g_endnodes } = this
+			{ nodes, lines, edges } = @graph
+			r = config.nodeSize
+			
+			that = this
+			
+			for node in nodes
+				node.label ?= node.data.kanji or node.data.radical or "?"
+			endnodes = (node for node in nodes when node.data.radical)
 			nodes = (node for node in nodes when node not in endnodes)
-
+			
 			# join
 			edge = g_edges.selectAll(".edge")
 				.data(edges)
@@ -22,20 +29,51 @@ define ['utils'], ({ P, compareNumber }) ->
 				.data(endnodes)
 			
 			# enter
+			closeStationLabel = (d) ->
+				# stops showStationLabel to be called right after finishing here
+				d3.event.stopPropagation()
+				this.parentNode.stationLabel = undefined
+				d3.select(this).remove()
+			
+			showStationLabel = (d) ->
+				return if this.stationLabel
+				stationLabel = d3.select(this).append('g').classed("station-label", true)
+					.on('click.closeLabel', closeStationLabel)
+				rectLength = d.data.meaning.length + 2
+				stationLabel.append('rect')	
+					.attr(x:20, y:-r-3)
+					.attr(width: 8*rectLength, height: 2.5*r)
+				stationLabel.append('text')
+					.text((d) -> d.data.meaning or '?')
+					.attr(x:23, y:-r/2+4)
+				this.stationLabel = stationLabel
+				
+			delayDblClick = (ms, func) ->
+				if that.timer 
+					clearTimeout(that.timer)
+					that.timer = null
+				else 
+					that.timer = setTimeout(((d)-> 
+						that.timer = null
+						func d), ms)
+			
 			edge.enter()
 				.append("path")
 				.classed("edge", true)
 				# for transitions; nodes start at 0,0. so should edges
-				.attr d: (d) -> svgline [ {x:0,y:0}, {x:0,y:0} ]
+				.attr(d: "M0,0")
 			node_g = node.enter()
 				.append('g')
 				.classed("node", true)
-				.on('mouseover', (d) -> nodeMouseOver d)
-				.on('mouseout', (d) -> nodeMouseOut d)
-				.on('mousemove', (d) -> nodeMouseMove d, node)
+				.on('click.showLabel', (d) ->
+					that = this
+					delayDblClick(550, -> showStationLabel.call(that, d))
+				)
+				.on('dblclick.selectNode', (d) -> nodeDoubleClick d)
 			node_g.append('rect').attr x:-r, y:-r, width:2*r, height:2*r
-			node_g.append('text').text (d) -> d.label
-
+			node_g.append('text')
+			
+			
 			endnode_g = endnode.enter()
 				.append('g')
 				.classed("endnode", true)
@@ -47,9 +85,18 @@ define ['utils'], ({ P, compareNumber }) ->
 			edge.each((d) ->
 				d3.select(@).classed "line_"+d.line.data.radical, true)
 				.transition().duration(config.transitionTime)
-				.attr d: (d) -> svgline [ d.source, d.target ]
-			node.transition().duration(config.transitionTime)
-				.attr transform: (d) -> "translate(#{d.x} #{d.y})"
+				.attr d: (d) ->
+					utils.svgline [d.source, d.target]
+					#utils.svgline01 createTubes d
+			edge.each((d) -> d3.select(@).style("stroke", "magenta") if d.calc)
+			edge.classed("filtered", (d) -> d.style.filtered)
+			node.classed("filtered", (d) -> d.style.filtered)
+			node.classed("searchresult", (d) -> d.style.isSearchresult)
+			node_t = node.transition().duration(config.transitionTime)
+			node_t.attr(transform: (d) -> "translate(#{d.x} #{d.y})")
+			node_t.style(fill: (d) -> if d.style.hi then "red" else if d.style.lo then "green" else null) # debug @payload
+			node_t.select('text').text (d) -> d.label
+
 			endnode.transition().duration(config.transitionTime)
 				.attr transform: (d) -> "translate(#{d.x} #{d.y})"
 		
@@ -68,11 +115,7 @@ define ['utils'], ({ P, compareNumber }) ->
 					.gravity(0.001)
 					.start()
 					.on 'tick', -> updatePositions()
-				node.call force.drag
-			
-	svgline = d3.svg.line()
-		.x(({x}) -> x)
-		.y(({y}) -> y)
+				node.call force.drag	
 
 	endnodeSelectLine = (d) ->
 		selector = ".line_"+d.data.radical
@@ -80,35 +123,57 @@ define ['utils'], ({ P, compareNumber }) ->
 			d.highlighted = !d3.select(@).classed 'highlighted'
 		d3.selectAll(".edge").sort (a, b) ->
 				compareNumber a.highlighted or 0, b.highlighted or 0
-				
-	tooltip = d3.select('body').append('div')
-		.attr('class', 'tooltip')
-		.style('opacity', 0)
-
-	nodeMouseOver = (d) ->
-		tooltip.transition().duration(500)
-			.style('opacity', 1)
-			.style('left', (d3.event.pageX) + 'px')
-			.style('top', (d3.event.pageY - 28) + 'px')
-    
-	nodeMouseOut = (d) ->
-		tooltip.transition().duration(500)
-			.style('opacity', 0)
-			.style('left', (d3.event.pageX) + 'px')
-			.style('top', (d3.event.pageY - 28) + 'px')
-  
-	nodeMouseMove = (d, node) ->
-		d.data.onyomi ?= ' - ' 
-		d.data.kunyomi ?= ' - '
-		d.data.grade ?= ' - '
-		tooltip.html(d.label + '<br/>' + 
-			d.data.meaning + '<br/>' + 
-			'strokes: ' + d.data.stroke_n + '<br/>' + 
-			'ON: ' + d.data.onyomi + '<br/>' + 
-			'KUN: '+ d.data.kunyomi + '<br/>' + 
-			'school year: ' + d.data.grade)
-			.style('opacity', 1)
-			.style("left", (d3.event.pageX) + "px")
-			.style("top", (d3.event.pageY - 28) + "px")
-
-	{ View }
+					
+	table_data = [[],[],[],[],[]]
+	nodeDoubleClick = (d) ->
+		table = d3.select('table#details tbody')
+		tablehead = d3.select('thead').selectAll('tr')
+		
+		i = 1
+		nothingtodo = false
+		for k in table.selectAll('tr').selectAll('td')
+			item = table.selectAll('tr').selectAll('td')[0][i]
+			if item == undefined
+				break
+			if(item.textContent == d.label)
+				nothingtodo = true;
+				break
+			i++
+		
+		radicals = []
+		radicals = (r.radical for r in d.data.radicals)
+		
+		if(!nothingtodo)
+			table_data[0].push d.label
+			table_data[1].push d.data.meaning
+			table_data[2].push radicals
+			table_data[3].push d.data.onyomi
+			table_data[4].push d.data.kunyomi
+		
+		# join
+		table_tr = table.selectAll('tr')
+			.data(table_data)
+		
+		# enter
+		table_td = table_tr.selectAll('td.content')
+			.data((d) -> d)
+			
+		if(!nothingtodo)
+			table_tr.enter()
+				.append('tr')
+			
+			table_td.enter()
+				.append('td')
+				.classed("content", true)
+		
+		tablecontentcols = table.select('tr').selectAll('td')[0].length
+		tableheadcols = tablehead.selectAll('th')[0].length
+		
+		if tableheadcols < tablecontentcols
+			tablehead.append('th')
+		
+		# update	
+		table_td.text((d) -> d)
+		# exit
+		
+	{ View}

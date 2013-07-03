@@ -1,5 +1,5 @@
 define ['utils', 'routing', 'graph', 'tests'], ({ P, PD }, routing,
-	{ Node, Edge, Line }, T) ->
+	{ Node, Edge, Line, Graph }, T) ->
 
 	tests =
 		testSnapNodes: ->
@@ -58,18 +58,18 @@ define ['utils', 'routing', 'graph', 'tests'], ({ P, PD }, routing,
 			config = testConfig
 			config.gridSpacing = 1
 			
+			{ lineStraightness } = routing.optimizeCriterias
 			test = (name, graph, criteria) ->
 				console.info "     "+name
 				graphA = createGraph graph
 				graphB = createGraph graph
 				layout = new routing.MetroMapLayout { config, graph: graphB }
-				graphCriteria = layout.lineStraightness
-				{ stats } = layout.optimize 100
+				{ stats } = layout.optimize criterias: { lineStraightness }
 				critsBefore = for node in graphA.nodes
-					(graphCriteria node).value
+					(lineStraightness node).value
 				critsAfter = for node in graphB.nodes
-					(graphCriteria node).value
-				value = { graphA, graphB, criteria: graphCriteria, stats,
+					(lineStraightness node).value
+				value = { graphA, graphB, criteria: lineStraightness, stats,
 					critsBefore, critsAfter }
 				T.assert name, value, config, criteria
 				graphB
@@ -81,7 +81,7 @@ define ['utils', 'routing', 'graph', 'tests'], ({ P, PD }, routing,
 				[[a,b,c]], { noMovement, optimal, noOverlap }
 			
 			b = { x:  0, y:  1, id: 'b' }
-			debug -> test "single line, single error",
+			test "single line, single error",
 				[[a,b,c]], { movement, optimal, noOverlap }
 			
 			b = { x:  0, y:  0, id: 'b' }
@@ -106,11 +106,12 @@ define ['utils', 'routing', 'graph', 'tests'], ({ P, PD }, routing,
 		testLineStraightness: ->
 			config = testConfig
 			
+			{ lineStraightness } = routing.optimizeCriterias
 			test = (name, graph, result) ->
 				graph = createGraph graph
 				layout = new routing.MetroMapLayout { config, graph }
 				values = for node in graph.nodes
-					(layout.lineStraightness node).value
+					(lineStraightness node).value
 				T.assert name, null, null, correct: ->
 					correct = for v, i in values
 						r = result[i]
@@ -163,33 +164,7 @@ define ['utils', 'routing', 'graph', 'tests'], ({ P, PD }, routing,
 		func()
 		my.debug = false
 
-	createGraph = (lines) ->
-		graph =
-			nodes: []
-			edges: []
-			lines: []
-		nodes = []
-		for line_nodes in lines
-			for node in line_nodes
-				nodes.push node if node not in nodes
-		graph.nodes = (new Node node for node in nodes)
-		graph.lines = for orig_line_nodes in lines
-			line = new Line
-			line.nodes = for node in orig_line_nodes
-				node = graph.nodes[nodes.indexOf node]
-				node.lines.push line
-				node
-			line
-		for line in graph.lines
-			source = line.nodes[0]
-			for target in line.nodes[1..]
-				edge = new Edge { source, target, line }
-				source.edges.push edge
-				target.edges.push edge
-				graph.edges.push edge
-				line.edges.push edge
-				source = target
-		graph
+	createGraph = (lines) -> new Graph lines
 			
 	noOverlap = ({ graphB }) ->
 		for a in graphB.nodes
@@ -280,6 +255,4 @@ define ['utils', 'routing', 'graph', 'tests'], ({ P, PD }, routing,
 		gridSpacing:		3
 		optimizeMaxSteps:	1
 			
-	runTests = (which)-> T.run tests, which
-			
-	{ runTests }
+	{ tests }

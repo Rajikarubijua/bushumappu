@@ -1,4 +1,4 @@
-define ['utils'], ({ P }) ->
+define ['utils'], (utils) ->
 		
 	setupRadicalJouyous= ->
 		jouyou_kanjis = []
@@ -47,6 +47,23 @@ define ['utils'], ({ P }) ->
 			node.cluster = cluster
 			cluster.nodes.push node
 		clusters
+		
+	setupKanjiRadicals = (kanjis, radicals) ->
+		for kanji in kanjis
+			kanji.radicals = (radicals[radical] for radical in kanji.radicals)
+		
+	getRadicals = ->
+		radicals = (my.radicals[radical] for radical of my.jouyou_radicals)
+		radicals = my.config.filterRadicals radicals
+		radicals.sort (x) -> x.radical
+		radicals
+		
+	getKanjis = (radicals) ->
+		kanjis = []
+		for radical in radicals
+			utils.arrayUnique radical.jouyou, kanjis
+		kanjis.sort (x) -> x.kanji
 
 	{ setupRadicalJouyous, setupKanjiGrades,
-	  setupKanjiVectors, setupClusterAssignment, getRadicalVector }
+	  setupKanjiVectors, setupClusterAssignment, getRadicalVector,
+	  getRadicals, getKanjis, setupKanjiRadicals }

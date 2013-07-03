@@ -1,6 +1,9 @@
 define ->
 	# copies every attribute of a object 'b' to object 'a'
-	copyAttrs = (a, b) -> a[k] = v for k, v of b; a
+	copyAttrs = (a, bs...) ->
+		for b in bs
+			a[k] = v for k, v of b
+		a
 
 	# shorthand for console.log, also returns the last argument
 	# usage:
@@ -21,7 +24,7 @@ define ->
 		else if typeof x is 'string'
 			if depth <= 1 then x else '"'+x+'"'
 		else if typeof x is 'number'
-			x = 0.01*Math.round x*100
+			x = ""+(0.01*Math.round x*100)
 		else if typeof x is 'function'
 			(""+x).split('{')[0]
 		else if Array.isArray x
@@ -82,9 +85,8 @@ define ->
 			funcs = (func for func in funcs when func)
 			i = 0
 			iter = -> setTimeout (->
-				funcs[i++]()
-				iter() if i < funcs.length),
-				timeout
+				funcs[i++] (-> iter() if i < funcs.length)
+				), timeout
 			iter()
 
 	strUnique = (str, base) ->
@@ -272,10 +274,31 @@ define ->
 				P sorted, xs
 				throw "not somewhat sortable"
 		sorted
-			
+
+	class Memo
+		memo_id = 0
+		constructor: ->
+			@memo = {}
+			@memoId = "__memo"+(memo_id++)+"__"
+			@funcId = 0
+			@objId = 0
+		onceObj: (func) =>
+			func_id = ""+@funcId++
+			(obj) =>
+				obj_id = obj[@memoId] ?= ""+@objId++
+				memo = @memo[obj_id] ?= {}
+				value = memo[func_id] ?= func obj
+
+	svgline = d3.svg.line()
+		.x(({x}) -> x)
+		.y(({y}) -> y)
+		
+	svgline01 = d3.svg.line()
+		.x( (d) -> d[0])
+		.y( (d) -> d[1])
 
 	{ copyAttrs, P, PN, PD, W, async, strUnique, expect, somePrettyPrint, length,
 	  sort, styleZoom, sunflower, vecX, vecY, vec, compareNumber, max,
   	  parseMaybeNumber, equidistantSelection, getMinMax, arrayUnique,
   	  distanceSqrXY, nearestXY, nearest01, distanceSqr01, nearest, forall,
-  	  rasterCircle, prettyDebug, sortSomewhat }
+  	  rasterCircle, prettyDebug, sortSomewhat, Memo, svgline, svgline01 }
