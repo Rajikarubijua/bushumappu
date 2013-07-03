@@ -11,12 +11,14 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber }, {createTubes}) ->
 			{ svg, config, g_edges, g_nodes, g_endnodes } = this
 			{ nodes, lines, edges } = @graph
 			r = config.nodeSize
-
+			
+			that = this
+			
 			for node in nodes
 				node.label ?= node.data.kanji or node.data.radical or "?"
 			endnodes = (node for node in nodes when node.data.radical)
 			nodes = (node for node in nodes when node not in endnodes)
-			that = this
+			
 			# join
 			edge = g_edges.selectAll(".edge")
 				.data(edges)
@@ -45,6 +47,15 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber }, {createTubes}) ->
 					.attr(x:23, y:-r/2+4)
 				this.stationLabel = stationLabel
 				
+			delayDblClick = (ms, func) ->
+				if that.timer 
+					clearTimeout(that.timer)
+					that.timer = null
+				else 
+					that.timer = setTimeout(((d)-> 
+						that.timer = null
+						func d), ms)
+			
 			edge.enter()
 				.append("path")
 				.classed("edge", true)
@@ -53,11 +64,15 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber }, {createTubes}) ->
 			node_g = node.enter()
 				.append('g')
 				.classed("node", true)
-				.on('click.showLabel', showStationLabel)
+				.on('click.showLabel', (d) ->
+					that = this
+					delayDblClick(550, -> showStationLabel.call(that, d))
+				)
 				.on('dblclick.selectNode', (d) -> nodeDoubleClick d)
 			node_g.append('rect').attr x:-r, y:-r, width:2*r, height:2*r
 			node_g.append('text')
-
+			
+			
 			endnode_g = endnode.enter()
 				.append('g')
 				.classed("endnode", true)
