@@ -4,10 +4,10 @@
     __slice = [].slice;
 
   define(['utils', 'routing', 'graph', 'tests'], function(_arg, routing, _arg1, T) {
-    var Edge, Line, Node, P, PD, allAreSnapped, angleIsRight, coordIsRight1, coordIsRight2, createGraph, criteriaIsNull, criteriaIsRight, debug, movement, noMovement, noOverlap, oneIsAtZero, optimal, runTests, testConfig, tests;
+    var Edge, Graph, Line, Node, P, PD, allAreSnapped, angleIsRight, coordIsRight1, coordIsRight2, createGraph, criteriaIsNull, criteriaIsRight, debug, movement, noMovement, noOverlap, oneIsAtZero, optimal, testConfig, tests;
 
     P = _arg.P, PD = _arg.PD;
-    Node = _arg1.Node, Edge = _arg1.Edge, Line = _arg1.Line;
+    Node = _arg1.Node, Edge = _arg1.Edge, Line = _arg1.Line, Graph = _arg1.Graph;
     tests = {
       testSnapNodes: function() {
         var config, g, test;
@@ -151,12 +151,13 @@
         });
       },
       testOptimizeLineStraightness: function() {
-        var a, b, c, config, d, e, test;
+        var a, b, c, config, d, e, lineStraightness, test;
 
         config = testConfig;
         config.gridSpacing = 1;
+        lineStraightness = routing.optimizeCriterias.lineStraightness;
         test = function(name, graph, criteria) {
-          var critsAfter, critsBefore, graphA, graphB, graphCriteria, layout, node, stats, value;
+          var critsAfter, critsBefore, graphA, graphB, layout, node, stats, value;
 
           console.info("     " + name);
           graphA = createGraph(graph);
@@ -165,8 +166,11 @@
             config: config,
             graph: graphB
           });
-          graphCriteria = layout.lineStraightness;
-          stats = layout.optimize(100).stats;
+          stats = layout.optimize({
+            criterias: {
+              lineStraightness: lineStraightness
+            }
+          }).stats;
           critsBefore = (function() {
             var _i, _len, _ref, _results;
 
@@ -174,7 +178,7 @@
             _results = [];
             for (_i = 0, _len = _ref.length; _i < _len; _i++) {
               node = _ref[_i];
-              _results.push((graphCriteria(node)).value);
+              _results.push((lineStraightness(node)).value);
             }
             return _results;
           })();
@@ -185,14 +189,14 @@
             _results = [];
             for (_i = 0, _len = _ref.length; _i < _len; _i++) {
               node = _ref[_i];
-              _results.push((graphCriteria(node)).value);
+              _results.push((lineStraightness(node)).value);
             }
             return _results;
           })();
           value = {
             graphA: graphA,
             graphB: graphB,
-            criteria: graphCriteria,
+            criteria: lineStraightness,
             stats: stats,
             critsBefore: critsBefore,
             critsAfter: critsAfter
@@ -225,12 +229,10 @@
           y: 1,
           id: 'b'
         };
-        debug(function() {
-          return test("single line, single error", [[a, b, c]], {
-            movement: movement,
-            optimal: optimal,
-            noOverlap: noOverlap
-          });
+        test("single line, single error", [[a, b, c]], {
+          movement: movement,
+          optimal: optimal,
+          noOverlap: noOverlap
         });
         b = {
           x: 0,
@@ -291,9 +293,10 @@
         return config.optimizeMaxSteps = 1;
       },
       testLineStraightness: function() {
-        var a, b, c, config, d, result, test;
+        var a, b, c, config, d, lineStraightness, result, test;
 
         config = testConfig;
+        lineStraightness = routing.optimizeCriterias.lineStraightness;
         test = function(name, graph, result) {
           var layout, node, values;
 
@@ -309,7 +312,7 @@
             _results = [];
             for (_i = 0, _len = _ref.length; _i < _len; _i++) {
               node = _ref[_i];
-              _results.push((layout.lineStraightness(node)).value);
+              _results.push((lineStraightness(node)).value);
             }
             return _results;
           })();
@@ -457,76 +460,7 @@
       return my.debug = false;
     };
     createGraph = function(lines) {
-      var edge, graph, line, line_nodes, node, nodes, orig_line_nodes, source, target, _i, _j, _k, _l, _len, _len1, _len2, _len3, _ref, _ref1;
-
-      graph = {
-        nodes: [],
-        edges: [],
-        lines: []
-      };
-      nodes = [];
-      for (_i = 0, _len = lines.length; _i < _len; _i++) {
-        line_nodes = lines[_i];
-        for (_j = 0, _len1 = line_nodes.length; _j < _len1; _j++) {
-          node = line_nodes[_j];
-          if (__indexOf.call(nodes, node) < 0) {
-            nodes.push(node);
-          }
-        }
-      }
-      graph.nodes = (function() {
-        var _k, _len2, _results;
-
-        _results = [];
-        for (_k = 0, _len2 = nodes.length; _k < _len2; _k++) {
-          node = nodes[_k];
-          _results.push(new Node(node));
-        }
-        return _results;
-      })();
-      graph.lines = (function() {
-        var _k, _len2, _results;
-
-        _results = [];
-        for (_k = 0, _len2 = lines.length; _k < _len2; _k++) {
-          orig_line_nodes = lines[_k];
-          line = new Line;
-          line.nodes = (function() {
-            var _l, _len3, _results1;
-
-            _results1 = [];
-            for (_l = 0, _len3 = orig_line_nodes.length; _l < _len3; _l++) {
-              node = orig_line_nodes[_l];
-              node = graph.nodes[nodes.indexOf(node)];
-              node.lines.push(line);
-              _results1.push(node);
-            }
-            return _results1;
-          })();
-          _results.push(line);
-        }
-        return _results;
-      })();
-      _ref = graph.lines;
-      for (_k = 0, _len2 = _ref.length; _k < _len2; _k++) {
-        line = _ref[_k];
-        source = line.nodes[0];
-        _ref1 = line.nodes.slice(1);
-        for (_l = 0, _len3 = _ref1.length; _l < _len3; _l++) {
-          target = _ref1[_l];
-          edge = new Edge({
-            source: source,
-            target: target,
-            line: line
-          });
-          source.edges.push(edge);
-          target.edges.push(edge);
-          graph.edges.push(edge);
-          line.edges.push(edge);
-          source = target;
-        }
-      }
-      return graph;
+      return new Graph(lines);
     };
     noOverlap = function(_arg2) {
       var a, b, graphB, _i, _j, _len, _len1, _ref, _ref1;
@@ -696,11 +630,8 @@
       gridSpacing: 3,
       optimizeMaxSteps: 1
     };
-    runTests = function(which) {
-      return T.run(tests, which);
-    };
     return {
-      runTests: runTests
+      tests: tests
     };
   });
 

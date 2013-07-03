@@ -17,14 +17,16 @@
     kmeansClustersN: -1,
     forceGraph: false,
     circularLines: false,
-    gridSpacing: 48,
+    gridSpacing: 12,
     debugOverlay: false,
-    transitionTime: 750 * 2,
-    initialScale: 0.06,
+    transitionTime: 2000,
+    initialScale: 1,
     edgesBeforeSnap: false,
     timeToOptimize: 3000,
-    optimizeMaxLoops: 3,
-    optimizeMaxSteps: 1
+    optimizeMaxLoops: 0,
+    optimizeMaxSteps: 0,
+    slideshowSteps: 1,
+    nodeSize: 12
   };
 
   figue.KMEANS_MAX_ITERATIONS = 1;
@@ -38,21 +40,22 @@
     config: config
   };
 
-  define(['utils', 'load_data', 'prepare_data', 'initial_embedding', 'interactivity', 'routing', 'test_routing'], function(_arg, loadData, prepare, _arg1, _arg2, _arg3, testRouting) {
-    var Embedder, MetroMapLayout, P, View, async, main, prettyDebug, showDebugOverlay, somePrettyPrint, styleZoom;
+  define(['utils', 'load_data', 'central_station', 'interactivity', 'routing', 'prepare_data', 'test_routing', 'test_bench', 'tests', 'filtersearch'], function(_arg, loadData, _arg1, _arg2, _arg3, prepare, testRouting, testBench, tests, _arg4) {
+    var CentralStationEmbedder, FilterSearch, MetroMapLayout, P, View, all_tests, async, copyAttrs, main, prettyDebug, setupFilterSearchEvents, showDebugOverlay, somePrettyPrint, styleZoom;
 
-    P = _arg.P, somePrettyPrint = _arg.somePrettyPrint, styleZoom = _arg.styleZoom, async = _arg.async, prettyDebug = _arg.prettyDebug;
-    Embedder = _arg1.Embedder;
+    P = _arg.P, somePrettyPrint = _arg.somePrettyPrint, styleZoom = _arg.styleZoom, async = _arg.async, prettyDebug = _arg.prettyDebug, copyAttrs = _arg.copyAttrs;
+    CentralStationEmbedder = _arg1.CentralStationEmbedder;
     View = _arg2.View;
     MetroMapLayout = _arg3.MetroMapLayout;
+    FilterSearch = _arg4.FilterSearch;
     main = function() {
-      var body, draggingEnd, draggingStart, embedder, generateEdges, graph, h, layout, optimize_loop, svg, view, w, zoom;
+      var body, embedder, h, kanji_i, kanjis, radicals, slideshow, svg, view, w, zoom;
 
       body = my.body = d3.select('body');
       if (config.debugOverlay) {
         showDebugOverlay(body);
       }
-      svg = my.svg = body.append('svg');
+      svg = my.svg = body.select('svg#graph');
       svg.g = svg.append('g');
       w = new Signal;
       h = new Signal;
@@ -65,76 +68,81 @@
         var attrs;
 
         attrs = {
-          width: w(),
-          height: h()
+          width: 0.95 * w(),
+          height: 0.66 * h()
         };
         svg.attr(attrs);
         return svg.style(attrs);
       });
       svg.call((zoom = d3.behavior.zoom()).translate([w() / 2, h() / 2]).scale(config.initialScale).on('zoom', styleZoom(svg.g, zoom)));
-      draggingStart = function() {
-        return svg.classed('dragging', true);
-      };
-      draggingEnd = function() {
-        return svg.classed('dragging', false);
-      };
-      svg.on('mousedown.cursor', draggingStart);
-      svg.on('mouseup.cursor', draggingEnd);
-      svg.on('touchstart.cursor', draggingStart);
-      svg.on('touchend.cursor', draggingEnd);
-      embedder = new Embedder({
+      svg.on('dblclick.zoom', null);
+      prepare.setupRadicalJouyous();
+      prepare.setupKanjiGrades();
+      prepare.setupKanjiRadicals(d3.values(my.kanjis), my.radicals);
+      radicals = prepare.getRadicals();
+      kanjis = prepare.getKanjis(radicals);
+      kanji_i = 0;
+      embedder = new CentralStationEmbedder({
         config: config
       });
-      embedder.setup();
-      generateEdges = function() {
-        console.info('generate edges...');
-        embedder.generateEdges();
-        return console.info('generate edges done');
-      };
-      if (config.edgesBeforeSnap) {
-        generateEdges();
-      }
-      graph = embedder.graph;
       view = new View({
         svg: svg.g,
-        graph: graph,
         config: config
       });
-      layout = new MetroMapLayout({
-        config: config,
-        graph: graph
-      });
-      view.update();
-      async.seqTimeout(config.transitionTime, config.gridSpacing > 0 && (function() {
-        console.info('snap nodes...');
-        layout.snapNodes();
-        console.info('snap node done');
-        if (!config.edgesBeforeSnap) {
-          generateEdges();
-        }
-        return view.update();
-      }), (function() {
-        return optimize_loop();
-      }));
-      optimize_loop = function() {
-        var stats;
+      return (slideshow = function() {
+        var graph, kanji, seaFill, _ref;
 
-        console.info('optimize...');
-        stats = layout.optimize().stats;
-        console.info('optimize done', prettyDebug(stats));
-        view.update();
-        if ((config.optimizeMaxLoops === -1) || (++optimize_loop.loops < config.optimizeMaxLoops)) {
-          return setTimeout(optimize_loop, config.transitionTime);
+        if ((_ref = slideshow.steps) == null) {
+          slideshow.steps = 0;
         }
-      };
-      return optimize_loop.loops = 0;
+        if (slideshow.steps++ >= config.slideshowSteps) {
+          return;
+        }
+        kanji_i = Math.floor(Math.random() * kanjis.length);
+        kanji = kanjis[kanji_i];
+        console.info("central station " + kanji.kanji + " with " + kanji.radicals.length + " radicals");
+        graph = embedder.graph(kanji, radicals, kanjis);
+        seaFill = new FilterSearch({
+          graph: graph,
+          view: view
+        });
+        setupFilterSearchEvents(seaFill);
+        seaFill.setup();
+        view.update(graph);
+        return setTimeout(slideshow, config.transitionTime + 2000);
+      })();
     };
     showDebugOverlay = function(el) {
       return el.append('pre').attr({
         id: 'my'
       }).text(somePrettyPrint(my));
     };
-    testRouting.runTests([]);
+    setupFilterSearchEvents = function(target) {
+      var filter, resetAll, resetFilter, search;
+
+      filter = function() {
+        return target.filter();
+      };
+      search = function() {
+        var result;
+
+        result = target.search();
+        return target.inHandler.displayResult(result);
+      };
+      resetFilter = function() {
+        return target.resetFilter(d3.event.srcElement.id);
+      };
+      resetAll = function() {
+        return target.resetAll();
+      };
+      d3.select('#btn_filter').on('click', filter);
+      d3.select('#btn_search').on('click', search);
+      d3.select('#btn_reset').on('click', resetAll);
+      d3.selectAll('#btn_clear1').on('click', resetFilter);
+      d3.selectAll('#btn_clear2').on('click', resetFilter);
+      return d3.selectAll('#btn_clear3').on('click', resetFilter);
+    };
+    all_tests = copyAttrs({}, testRouting.tests, testBench.tests);
     console.info('end of tests');
     return loadData(main);
   });

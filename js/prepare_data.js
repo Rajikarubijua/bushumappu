@@ -2,10 +2,9 @@
 (function() {
   var __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-  define(['utils'], function(_arg) {
-    var P, getRadicalVector, setupClusterAssignment, setupKanjiGrades, setupKanjiVectors, setupRadicalJouyous;
+  define(['utils'], function(utils) {
+    var getKanjis, getRadicalVector, getRadicals, setupClusterAssignment, setupKanjiGrades, setupKanjiRadicals, setupKanjiVectors, setupRadicalJouyous;
 
-    P = _arg.P;
     setupRadicalJouyous = function() {
       var jouyou_kanjis, k, kanjis, radical, _i, _len, _ref;
 
@@ -142,12 +141,65 @@
       }
       return clusters;
     };
+    setupKanjiRadicals = function(kanjis, radicals) {
+      var kanji, radical, _i, _len, _results;
+
+      _results = [];
+      for (_i = 0, _len = kanjis.length; _i < _len; _i++) {
+        kanji = kanjis[_i];
+        _results.push(kanji.radicals = (function() {
+          var _j, _len1, _ref, _results1;
+
+          _ref = kanji.radicals;
+          _results1 = [];
+          for (_j = 0, _len1 = _ref.length; _j < _len1; _j++) {
+            radical = _ref[_j];
+            _results1.push(radicals[radical]);
+          }
+          return _results1;
+        })());
+      }
+      return _results;
+    };
+    getRadicals = function() {
+      var radical, radicals;
+
+      radicals = (function() {
+        var _results;
+
+        _results = [];
+        for (radical in my.jouyou_radicals) {
+          _results.push(my.radicals[radical]);
+        }
+        return _results;
+      })();
+      radicals = my.config.filterRadicals(radicals);
+      radicals.sort(function(x) {
+        return x.radical;
+      });
+      return radicals;
+    };
+    getKanjis = function(radicals) {
+      var kanjis, radical, _i, _len;
+
+      kanjis = [];
+      for (_i = 0, _len = radicals.length; _i < _len; _i++) {
+        radical = radicals[_i];
+        utils.arrayUnique(radical.jouyou, kanjis);
+      }
+      return kanjis.sort(function(x) {
+        return x.kanji;
+      });
+    };
     return {
       setupRadicalJouyous: setupRadicalJouyous,
       setupKanjiGrades: setupKanjiGrades,
       setupKanjiVectors: setupKanjiVectors,
       setupClusterAssignment: setupClusterAssignment,
-      getRadicalVector: getRadicalVector
+      getRadicalVector: getRadicalVector,
+      getRadicals: getRadicals,
+      getKanjis: getKanjis,
+      setupKanjiRadicals: setupKanjiRadicals
     };
   });
 

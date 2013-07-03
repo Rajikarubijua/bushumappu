@@ -4,40 +4,27 @@
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   define(["utils", "prepare_data", 'graph'], function(_arg, prepare, _arg1) {
-    var Edge, Embedder, Line, Node, P, arrayUnique, equidistantSelection, getClusterN, getEdges, getKanjis, getKanjisForRadicalInCluster, getMinMax, getNodePosition, length, max, nearestXY, setupClusterPosition, setupClustersForRadicals, setupPositions, sunflower;
+    var Edge, Embedder, Line, Node, P, arrayUnique, equidistantSelection, getClusterN, getEdges, getKanjisForRadicalInCluster, getMinMax, getNodePosition, length, max, nearestXY, setupClusterPosition, setupClustersForRadicals, setupPositions, sunflower;
 
     P = _arg.P, length = _arg.length, arrayUnique = _arg.arrayUnique, equidistantSelection = _arg.equidistantSelection, max = _arg.max, sunflower = _arg.sunflower, getMinMax = _arg.getMinMax, nearestXY = _arg.nearestXY;
     Node = _arg1.Node, Edge = _arg1.Edge, Line = _arg1.Line;
     Embedder = (function() {
       function Embedder(_arg2) {
         this.config = _arg2.config;
-        this.r = 12;
         this.graph = {};
         this.radicals = [];
       }
 
       Embedder.prototype.setup = function() {
-        var clusters, clusters_n, config, d, data, edges, endnodes, initial_vectors, k, kanjis, lines, n, node, nodes, nodes_kanjis, nodes_radicals, r, radical, radicals, radicals_n, vectors;
+        var clusters, clusters_n, config, d, data, edges, endnodes, initial_vectors, k, kanjis, lines, n, node, nodes, nodes_kanjis, nodes_radicals, r, radicals, radicals_n, vectors;
 
-        r = this.r, config = this.config;
-        d = 2 * r;
+        config = this.config;
+        d = 2 * config.nodeSize;
         prepare.setupRadicalJouyous();
         prepare.setupKanjiGrades();
-        radicals = (function() {
-          var _results;
-
-          _results = [];
-          for (radical in my.jouyou_radicals) {
-            _results.push(my.radicals[radical]);
-          }
-          return _results;
-        })();
-        radicals = config.filterRadicals(radicals);
-        radicals.sort(function(x) {
-          return x.radical;
-        });
+        radicals = prepare.getRadicals();
         radicals_n = length(radicals);
-        kanjis = getKanjis(radicals);
+        kanjis = prepare.getKanjis(radicals);
         nodes = (function() {
           var _i, _len, _ref, _results;
 
@@ -104,7 +91,8 @@
           nodes: nodes_kanjis,
           endnodes: endnodes,
           edges: edges,
-          lines: lines
+          lines: lines,
+          kanjis: kanjis
         };
       };
 
@@ -232,18 +220,6 @@
           }
         }
       })());
-    };
-    getKanjis = function(radicals) {
-      var kanjis, radical, _i, _len;
-
-      kanjis = [];
-      for (_i = 0, _len = radicals.length; _i < _len; _i++) {
-        radical = radicals[_i];
-        arrayUnique(radical.jouyou, kanjis);
-      }
-      return kanjis.sort(function(x) {
-        return x.kanji;
-      });
     };
     getKanjisForRadicalInCluster = function(radical, cluster) {
       var kanjis, node;
