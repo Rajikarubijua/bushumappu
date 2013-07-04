@@ -101,9 +101,14 @@ define ['utils', 'load_data', 'central_station',
 		filter = () ->
 			target.filter()
 
+		autoFocus = () ->
+			kanji = d3.event.srcElement.innerHTML
+			target.autoFocus(kanji)
+
 		search = () ->
 			result = target.search()
 			target.inHandler.displayResult(result)
+			d3.selectAll('#kanjiresult .searchKanji').on 'click' ,  autoFocus
 
 		resetFilter = () ->
 			target.resetFilter(d3.event.srcElement.id)
@@ -117,6 +122,7 @@ define ['utils', 'load_data', 'central_station',
 		d3.selectAll('#btn_clear1').on 'click' ,  resetFilter
 		d3.selectAll('#btn_clear2').on 'click' ,  resetFilter
 		d3.selectAll('#btn_clear3').on 'click' ,  resetFilter
+
 
 	all_tests = copyAttrs {}, testRouting.tests, testBench.tests
 	#tests.run all_tests, []
