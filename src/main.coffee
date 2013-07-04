@@ -77,6 +77,7 @@ define ['utils', 'load_data', 'central_station',
 		
 		embedder = new CentralStationEmbedder { config }
 		view = new View { svg: svg.g, config }
+		layout = new MetroMapLayout { config }
 		
 		do slideshow = ->
 			slideshow.steps ?= 0
@@ -87,11 +88,32 @@ define ['utils', 'load_data', 'central_station',
 				"central station "+kanji.kanji+
 				" with "+kanji.radicals.length+" radicals")
 			graph = embedder.graph kanji, radicals, kanjis
+			layout.snapNodes graph
 			seaFill = new FilterSearch { graph, view }
 			setupFilterSearchEvents seaFill
 			seaFill.setup()
 			view.update graph
+			optimize = new Optimize { graph }
+			optimize.afterNode = (node) -> view.update graph
 			setTimeout slideshow, config.transitionTime + 2000
+			
+	class Optimize
+		constructor: ({ @graph }) ->
+			@worker = new Worker "js/optimize.js"
+			@worker.onmessage = (ev) => @[ev.data.type] ev.data
+		postMessage: (msg) -> @worker.postMessage msg
+		start: 	->
+			@postMessage type: 'graph', graph: @graph.toPlainLines()
+		log:	({ log }) -> console.log log
+		node:	({ node }) ->
+			other = @graph.nodesById[node.id]
+			other.x = node.x
+			other.y = node.y
+			if not @raf
+				@raf = true
+				requestAnimationFrame =>
+					@raf = false
+					@afterNode? other
 			
 	showDebugOverlay = (el) ->
 		el.append('pre').attr(id:'my').text somePrettyPrint my

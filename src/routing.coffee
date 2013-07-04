@@ -35,10 +35,14 @@ define ['utils', 'grid', 'criteria'], (utils, { Grid, GridCoordGenerator },
 				gridSpacing: 1
 				optimizeMaxSteps: 1
 			@grid = new Grid
+		
+		setGraph: (graph) ->
+			@graph = graph if graph
 			for node in @graph.nodes or []
 				@grid.set node, node
 		
-		snapNodes: ->
+		snapNodes: (graph) ->
+			@setGraph graph
 			grid = @grid
 			nodes = @graph.nodes[..]
 			old_length = nodes.length

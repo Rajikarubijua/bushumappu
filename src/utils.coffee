@@ -289,16 +289,8 @@ define ->
 				memo = @memo[obj_id] ?= {}
 				value = memo[func_id] ?= func obj
 
-	svgline = d3.svg.line()
-		.x(({x}) -> x)
-		.y(({y}) -> y)
-		
-	svgline01 = d3.svg.line()
-		.x( (d) -> d[0])
-		.y( (d) -> d[1])
-
 	{ copyAttrs, P, PN, PD, W, async, strUnique, expect, somePrettyPrint, length,
 	  sort, styleZoom, sunflower, vecX, vecY, vec, compareNumber, max,
-  	  parseMaybeNumber, equidistantSelection, getMinMax, arrayUnique,
-  	  distanceSqrXY, nearestXY, nearest01, distanceSqr01, nearest, forall,
-  	  rasterCircle, prettyDebug, sortSomewhat, Memo, svgline, svgline01 }
+	  parseMaybeNumber, equidistantSelection, getMinMax, arrayUnique,
+	  distanceSqrXY, nearestXY, nearest01, distanceSqr01, nearest, forall,
+	  rasterCircle, prettyDebug, sortSomewhat, Memo }

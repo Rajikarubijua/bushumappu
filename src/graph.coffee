@@ -15,7 +15,7 @@ define ['utils'], (utils) ->
 		coord: -> @x+"x"+@y
 	
 	class Edge
-		constructor: ({ @source, @target, @line, @radical }={}) ->
+		constructor: ({ @source, @target, @line }={}) ->
 			throw @radical if @radical
 			@source ?= null
 			@target ?= null
@@ -61,6 +61,7 @@ define ['utils'], (utils) ->
 			@nodes = []
 			@edges = []
 			@lines = []
+			@nodesById = {}
 			nodes = []
 			for line_nodes in lines
 				for node in line_nodes
@@ -84,8 +85,18 @@ define ['utils'], (utils) ->
 					@edges.push edge
 					line.edges.push edge
 					source = target
+			for node in @nodes
+				@nodesById[node.id] = node
 					
 		kanjis: ->
 			node.data for node in @nodes when node.data.kanji
+			
+		toPlainLines: ->
+			nodes = {}
+			for node in @nodes
+				nodes[node.id] = x: node.x, y: node.y, data: node.data, id: node.id
+			lines = for line in @lines
+				for node in line.nodes
+					nodes[node.id]
 
 	my.graph = { Node, Edge, Line, Graph }

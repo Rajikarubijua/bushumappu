@@ -84,20 +84,20 @@ define ['utils', 'tubeEdges'], (utils, {createTubes}) ->
 			# update
 			edge.each((d) ->
 				d3.select(@).classed "line_"+d.line.data.radical, true)
-				.transition().duration(config.transitionTime)
+				#.transition().duration(config.transitionTime)
 				.attr d: (d) ->
-					utils.svgline [d.source, d.target]
-					#utils.svgline01 createTubes d
+					svgline [d.source, d.target]
+					#svgline01 createTubes d
 			edge.each((d) -> d3.select(@).style("stroke", "magenta") if d.calc)
 			edge.classed("filtered", (d) -> d.style.filtered)
 			node.classed("filtered", (d) -> d.style.filtered)
 			node.classed("searchresult", (d) -> d.style.isSearchresult)
-			node_t = node.transition().duration(config.transitionTime)
+			node_t = node#node.transition().duration(config.transitionTime)
 			node_t.attr(transform: (d) -> "translate(#{d.x} #{d.y})")
 			node_t.style(fill: (d) -> if d.style.hi then "red" else if d.style.lo then "green" else null) # debug @payload
 			node_t.select('text').text (d) -> d.label
 
-			endnode.transition().duration(config.transitionTime)
+			endnode#.transition().duration(config.transitionTime)
 				.attr transform: (d) -> "translate(#{d.x} #{d.y})"
 		
 			# exit
@@ -175,5 +175,13 @@ define ['utils', 'tubeEdges'], (utils, {createTubes}) ->
 		# update	
 		table_td.text((d) -> d)
 		# exit
+		
+	svgline = d3.svg.line()
+		.x(({x}) -> x)
+		.y(({y}) -> y)
+		
+	svgline01 = d3.svg.line()
+		.x( (d) -> d[0])
+		.y( (d) -> d[1])
 		
 	{ View}
