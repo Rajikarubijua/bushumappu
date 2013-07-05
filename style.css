@@ -109,10 +109,19 @@ svg > g * {
 	white-space: nowrap;
 }
 
-.searchKanji{
+.searchKanji, .hisKanji {
 	cursor: pointer;
 	padding: 3px;
 	margin: 3px;
 	border: 1px solid black;
+	float: left;
+}
+
+.firsthisKanji{
+	cursor: pointer;
+	padding: 6px;
+	margin: 6px;
+	border: 2px solid black;
+	font-size: 1.5em;
 	float: left;
 }
