@@ -32,10 +32,10 @@ window.my = {
 
 define ['utils', 'load_data', 'central_station',
 	'interactivity', 'routing', 'prepare_data',
-	'test_routing', 'test_bench', 'tests', 'filtersearch'], (
+	'test_routing', 'test_bench', 'tests', 'filtersearch', 'history'], (
 	{ P, somePrettyPrint, styleZoom, async, prettyDebug, copyAttrs },
 	loadData, { CentralStationEmbedder }, { View }, { MetroMapLayout }, prepare,
-	testRouting, testBench, tests, { FilterSearch }
+	testRouting, testBench, tests, { FilterSearch }, { History }
 	) ->
 
 	main = () ->
@@ -77,6 +77,7 @@ define ['utils', 'load_data', 'central_station',
 		
 		embedder = new CentralStationEmbedder { config }
 		view = new View { svg: svg.g, config }
+		history = new History {}
 		
 		do slideshow = ->
 			slideshow.steps ?= 0
@@ -90,6 +91,7 @@ define ['utils', 'load_data', 'central_station',
 			seaFill = new FilterSearch { graph, view }
 			setupFilterSearchEvents seaFill
 			seaFill.setup()
+			history.addCentral( graph.nodes[0] )
 			view.update graph
 			setTimeout slideshow, config.transitionTime + 2000
 			

@@ -15,13 +15,10 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber }, {createTubes}) ->
 			if focus == {} or kanji == undefined
 				P 'nothing to focus here'
 				return
-
-			P kanji
-			P focus
 			viewport = d3.select('#graph')[0][0]
 			transX = (viewport.attributes[1].value / 2) - focus.x
 			transY = (viewport.attributes[2].value / 2) - focus.y
-			P transform = "-webkit-transform: translate(#{transX}px, #{transY}px) scale(1)"
+			transform = "-webkit-transform: translate(#{transX}px, #{transY}px) scale(1)"
 
 			d3.select('#graph g').transition().attr('style', transform)
 			
