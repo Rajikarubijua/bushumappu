@@ -31,27 +31,88 @@
 \tableofcontents 
 \newpage
 
-\section{Einführung}
-\subsection{Kanji Schriftsystem}
-\subsection{Tube Maps}
 
-\subsubsection{Eigeschaften}
-\subsubsection{Weitere Verwendungszwecke}
+% ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+% Einführung
+% - Kanji Schriftsystem
+% - Tube Maps
+% - - Eigenschaften
+% - - Weitere Verwendungszwecke
+% W-Fragen
+% - Warum Kanji?
+% - Warum Tube Maps?
+% - Wer soll es verwenden?
+% Designprozess
+% - Auswahl eines passenden Datensatzes
+% - - Webseiten
+% - - Farben
+% - - Parallele Handlungsstränge
+% - Überlegungen zum Ablauf im Programm
+% - - Ugly Wool Spider
+% - - Central Station
+% - Codierung visueller Variablen
+% - Shneiderman Mantra
+% - - Overview, .....
+% Herausfoderungen
+% - Lösungsvorschläge
+% Algorithmen
+% Framworks
+% Offene Tickets
+%
+
+% ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
 
-\subsection{W-Fragen}
-\paragraph{Warum überhaupt Kanji?}
+\chapter{Einführung}
+\section{Kanji Schriftsystem}
+Die japanische Schrift besteht aus drei Alphabeten, wobei eines aus Logogrammen - sogenannten Kanji - besteht und die anderen beiden Silbenalphabete sind. Kanji stammen aus der chinesischen Sprache und wurden von den Japanern übernommen und haben sich seitdem sozusagen parallel weiter entwickelt. In einem Satz werden Kanji Zeichen unter Anderem für den Wortstamm und die Silbenalphabete für das "`Auffüllen"' (beispielsweise Negation oder Zeitformen) verwendet. Hiragana und Katakana, also die Silbenalphabete, können aber als Ersatz für ein Kanji verwendet werden, indem sie die Aussprache (die Lesung) des Kanji beschreiben. \\
+Kanji bestehen aus einzelnen Elementen, sogenannten Radikalen, die nach gewissen Regeln miteinander kombiniert werden können. Manche der Radikale sind bereits bedeutungstragend, wie beispielsweise das Radikal \emph{Wasserradikal}, welches für Kontext "`Wasser"' steht. Somit ist es beispielsweise in den Wörtern für "`Flut"' oder auch "`Meer"' enthalten. 
+%Bitte Radikal noch einfügen
+
+\section{Tube Maps}
+Tube Maps oder Transit Maps sind eine Form der Visualisierung, die ursprünglich für U-Bahnstationen und U-Bahnlinien verwendet wurde. 
+% was unterscheidet tube maps von graphen?!
+\subsection{Eigeschaften}
+\subsection{Weitere Verwendungszwecke}
+% siehe zb. entsprechendes kapitel in der dissertation 
+
+\chapter{W-Fragen}
+% bitte besseren namen einfallen lassen!!!
+\section{Warum überhaupt Kanji?}
 Die japanische Schrift ist streng hierarchisch und modular aufgebaut. Der Datensatz ist begrenzt, da keine neuen Kanji "`erfunden"' werden, und er lässt sich reduzieren auf sogenannte \emph{Jouyou} Kanji. Jouyou sind Zeichen, die besonders häufig im Alltagsleben verwendet werden, und die somit ein Großteil der Japaner beherrscht. Im Vergleich zur Gesamtzahl aller Kanji beschränken sich die Jouyou auf knapp 2000 Zeichen, was eine große Reduzierung des Datensatzes ermöglicht.
 Diese Reduzierung ist nicht nur von praktischer Bedeutung, es ist außerdem für Interessierte, die die Sprache lernen wollen, ein guter Startpunkt. 
 
-\paragraph{Warum Tube Map für Kanji?}
+\section{Warum Tube Map für Kanji?}
 \begin{itemize}
 \item klare "`Anfangsstation"' durch Radikale
 \item Exploration ("`welche Radikale sollte ich zuerst lernen?"')
 \item Bessere Übersicht über Verlauf als bei einer Darstellung in einem Graphen
 \end{itemize}
 
-\section{Probleme und Herausfoderungen}
+\section{Wer soll es am Ende verwenden?}
+% lernende
+
+\chapter{Designprozess}
+\section{Auswahl eines passenden Datensatzes}
+\subsubsection{Webseiten}
+\subsubsection{Farben}
+\subsubsection{Parallele Handlungsstränge}
+
+\section{Überlegungen zum Ablauf im Programm}
+\subsection{Ugly Wool Spider}
+alle kanji zeigen
+
+\subsection{Central Station}
+central station ansicht, finales design
+wie kamen wir drauf? durch erfahrungen und eigene paper
+
+\section{Codierung visueller Variablen}
+DURCH VORLESUNG → CODIERUNG VON DATEN BELEGEN!!!!
+
+\section{shneiderman mantra}
+\subsubsection{Overview}
+%etcetcetc...
+\chapter{Herausfoderungen}
 Bei normaler Tube Map:
 \begin{itemize}
 \item Anzahl Stationen relativ überschaubar
@@ -59,10 +120,10 @@ Bei normaler Tube Map:
 \item Überschneiden von Linien eher selten (nicht in dem Sinne vorhanden bei U-Bahnen)
 \end{itemize}
 
-\subsection{Lösungsvorschlänge}
+\section{Lösungsvorschlänge}
 Im Folgenden werden Radikale als \emph{Endstationen} und Kanji als \emph{Stationen} bezeichnet, um den Vergleich zu einer üblichen Tube Map leichter zu machen. Dementsprechend verbindet eine Linie eine Endstation mit allen zugehörigen Stationen.
 
-\subsubsection{Lineare Anordnung von Radikalen}
+\subsection{Lineare Anordnung von Radikalen}
 Bei der Linearen Anordnung werden Endstationen auf einer x-Achse (wie beim kartesischen Koordinatensystem) angeordnet und über ihnen alle Stationen. Diese können nach Kriterien wie Strichanzahl, Schuljahr, JPLT Level oder Häufigkeit auf der y-Achse sortiert werden. Weiterhin sollten diese grob in Cluster aufgeteilt werden, um sie nahe an den Endstationen zu halten, aus denen sie bestehen bzw. zu denen sie gehören. Dies bedeutet, dass die Stationen je nach Menge gleicher gemeinsamer Endstationen einem Cluster zuogeordnet werden.
 
 Hierbei sollte zwischen jeder Station ausreichend Platz gelassen werden, um im Zweifelsfall alle 237 Linien zwischen zwei Stationen hindurch zu führen. Ist das Routing zwischen allen Stationen beendet, so können einige dieser Lücken wieder verkleinert werden, vorausgesetzt, dass sich dadurch nicht (noch mehr) Linien kreuzen. 
@@ -75,7 +136,7 @@ Hierbei sollte zwischen jeder Station ausreichend Platz gelassen werden, um im Z
 \item sehr großer Platzbedarf
 \end{itemize}
 
-\subsubsection{Radiale Anordnung von Radikalen}
+\subsection{Radiale Anordnung von Radikalen}
 
 \paragraph{Vorteile}
 ???
@@ -83,10 +144,15 @@ Hierbei sollte zwischen jeder Station ausreichend Platz gelassen werden, um im Z
 \paragraph{Nachteile}
 ???
 
+\chapter{Algorithmen}
 
-\section{Algorithmen}
+\chapter{Frameworks}
+warum web?
+warum d3, coffeescript?
 
-\section{Offene Tickets}
+\chapter{Offene Tickets}
+
+% Literatur, Quellen
 
 % Sollten wir auch ein Glossar einfügen, nur um sicher zu gehen?
 \end{document}
