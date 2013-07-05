@@ -38,6 +38,7 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber }, {createTubes}) ->
 				node.label ?= node.data.kanji or node.data.radical or "?"
 			endnodes = (node for node in nodes when node.data.radical)
 			nodes = (node for node in nodes when node not in endnodes)
+
 			
 			# join
 			edge = g_edges.selectAll(".edge")
@@ -101,11 +102,10 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber }, {createTubes}) ->
 			endnode_g.append("text").text (d) -> d.label
 		
 			# update
-			edge.each((d) ->
-				d3.select(@).classed "line_"+d.line.data.radical, true)
-				.transition().duration(config.transitionTime)
+			edge.each (d) ->
+				d3.select(@).classed "line_"+d.line.data.radical, true
+			edge.transition().duration(config.transitionTime)
 				.attr d: (d) -> svgline01 createTubes d
-			edge.each((d) -> d3.select(@).style("stroke", "magenta") if d.calc)
 			edge.classed("filtered", (d) -> d.style.filtered)
 			node.classed("filtered", (d) -> d.style.filtered)
 			node.classed("searchresult", (d) -> d.style.isSearchresult)

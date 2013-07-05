@@ -1,6 +1,6 @@
 define ['utils', 'graph'], ({P, length}, {Graph, Edge, Node, Line}) ->
 
-	cptplaceholder = 5
+	cptplaceholder = 2
 
 	class Tube
 		constructor: ({ @radicals, @width, @angle, @x, @y, @edges}={}) ->
@@ -11,11 +11,11 @@ define ['utils', 'graph'], ({P, length}, {Graph, Edge, Node, Line}) ->
 			@y ?= 0
 			@edges ?= []
 
-	createTubes = (edge) ->
-		return [edge.sourcecoord, edge.targetcoord] if edge.calc
-		edge.sourcecoord = [edge.source.x, edge.source.y]
-		edge.targetcoord = [edge.target.x, edge.target.y]
-		node = edge.source
+	createTubes = (sourceedge) ->
+		return [sourceedge.sourcecoord, sourceedge.targetcoord] if sourceedge.calc
+		sourceedge.sourcecoord = [sourceedge.source.x, sourceedge.source.y]
+		sourceedge.targetcoord = [sourceedge.target.x, sourceedge.target.y]
+		node = sourceedge.source
 		edges = []
 		for edge in node.edges
 			if edge.source is node and edge.calc is false
@@ -34,22 +34,22 @@ define ['utils', 'graph'], ({P, length}, {Graph, Edge, Node, Line}) ->
 					tube.edges.push edge
 					tube.radicals.push edge.line.data.radical
 			i = 0
-			for edge in tube.edges
+			for ed in tube.edges
 				selector = ".line_"+ edge.line.data.radical
+				strokewidth = parseInt d3.selectAll(selector).style("stroke-width")
+				P strokewidth
 				if i is 0
-					tube.width += (parseInt d3.selectAll(selector).style("stroke-width")) / 2
-					tube.width += cptplaceholder
+					tube.width += strokewidth / 2 + cptplaceholder
 					tube.angle = edge.getEdgeAngle() + Math.PI/2
 					tube.width = 0 if tube.edges.length is 1
 				else
 					if i is (tube.edges.length - 1)
-						tube.width += (parseInt d3.selectAll(selector).style("stroke-width")) / 2
+						tube.width += strokewidth / 2
 					else
-						tube.width += parseInt d3.selectAll(selector).style("stroke-width")
-						tube.width += cptplaceholder
+						tube.width += strokewidth + cptplaceholder
 				i++
 			layoutTube tube
-		return [edge.sourcecoord, edge.targetcoord]
+		return [sourceedge.sourcecoord, sourceedge.targetcoord]
 					
 	
 	layoutTube = (tube) ->
@@ -62,15 +62,14 @@ define ['utils', 'graph'], ({P, length}, {Graph, Edge, Node, Line}) ->
 		nexty = 0
 		i = 0
 		for edge in tube.edges
-			[vecx, vecy] = edge.getVector()
+			#[vecx, vecy] = edge.getVector()
 			edge.sourcecoord = [edge.source.x + drawx - nextx, edge.source.y + drawy - nexty]
 			edge.targetcoord = [edge.target.x + drawx - nextx, edge.target.y + drawy - nexty]
-			edge.calc = true if tube.edges.length > 1
 			selector = ".line_"+ edge.line.data.radical
 			placeholder = (parseInt d3.selectAll(selector).style("stroke-width")) + cptplaceholder
 			nextx += (placeholder) * cosAngle
 			nexty += (placeholder) * sinAngle
+			edge.calc = true
 			i++
 			
-
 	{createTubes, layoutTube}
