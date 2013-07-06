@@ -6,7 +6,7 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber }, {createTubes}) ->
 			@g_nodes = @svg.append 'g'
 			@g_endnodes = @svg.append 'g'
 	
-		colors = ["red", "blue", "green", "purple", "brown", "orange", "teal", "yellow", "pink"]
+		colors = ["#E53517", "#008BD0", "#97BE0D", "#641F80", "#290E03", "#F07C0D", "#2FA199", "#FFCC00", "#E2007A"]
 
 		autoFocus: (kanji) ->
 			focus = {}
