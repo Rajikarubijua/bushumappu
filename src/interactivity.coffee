@@ -105,13 +105,11 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber }, {createTubes}) ->
 			# update
 			edge.each (d) ->
 				d3.select(@).classed "line_"+d.line.data.radical, true
-			edge.transition().duration(config.transitionTime)
-				.attr d: (d) -> svgline01 createTubes d	
-			
 			for rad in radicals
 				selector = ".line_" + rad
 				d3.selectAll(selector).style("stroke", colors[radicals.indexOf(rad)-1])
-				
+			edge.transition().duration(config.transitionTime)
+				.attr d: (d) -> svgline01 createTubes d	
 			edge.classed("filtered", (d) -> d.style.filtered)
 			node.classed("filtered", (d) -> d.style.filtered)
 			node.classed("searchresult", (d) -> d.style.isSearchresult)

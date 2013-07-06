@@ -1,6 +1,6 @@
 define ['utils', 'graph'], ({P, length}, {Graph, Edge, Node, Line}) ->
 
-	cptplaceholder = 2
+	cptplaceholder = 3
 
 	class Tube
 		constructor: ({ @radicals, @width, @angle, @x, @y, @edges}={}) ->
