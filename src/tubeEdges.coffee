@@ -37,7 +37,6 @@ define ['utils', 'graph'], ({P, length}, {Graph, Edge, Node, Line}) ->
 			for ed in tube.edges
 				selector = ".line_"+ edge.line.data.radical
 				strokewidth = parseInt d3.selectAll(selector).style("stroke-width")
-				P strokewidth
 				if i is 0
 					tube.width += strokewidth / 2 + cptplaceholder
 					tube.angle = edge.getEdgeAngle() + Math.PI/2

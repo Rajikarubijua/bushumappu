@@ -25,15 +25,24 @@ path {
 	stroke-width: 3;
 }
 
-/* Output colors
+/*Output colors
     [229,  53,  23, 1, "red"    ]
     [151, 190,  13, 1, "green"  ]
     [  0, 139, 208, 1, "blue"   ]
     [255, 204,   0, 1, "yellow" ]
     [226,   0, 122, 1, "pink"   ]
     [100,  31, 128, 1, "purple" ]
-    [ 41,  14,   3, 1, "brown"  ]
-*/
+    [ 41,  14,   3, 1, "brown"  ]*/
+
+alias red #E53517
+alias green #97BE0D
+alias blue #008BD0
+alias yellow #FFCC00
+alias pink #E2007A
+alias purple #641F80
+alias brown #290E03
+alias orange #F07C0D
+alias teal #2FA199
 
 .highlighted {
 	stroke-width: 10;
@@ -44,7 +53,7 @@ path {
 }
 
 .searchresult rect{
-    stroke: red;
+    stroke: black;
     stroke-width: 3;
 }
 

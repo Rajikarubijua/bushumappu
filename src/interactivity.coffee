@@ -5,6 +5,8 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber }, {createTubes}) ->
 			@g_edges = @svg.append 'g'
 			@g_nodes = @svg.append 'g'
 			@g_endnodes = @svg.append 'g'
+	
+		colors = ["red", "blue", "green", "purple", "brown", "orange", "teal", "yellow", "pink"]
 
 		autoFocus: (kanji) ->
 			focus = {}
@@ -30,13 +32,14 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber }, {createTubes}) ->
 			r = config.nodeSize
 			
 			that = this
-			
+
+			radicals = []			
 			for node in nodes
 				node.label ?= node.data.kanji or node.data.radical or "?"
+				radicals.push node.data.radical if node.data.radical not in radicals
 			endnodes = (node for node in nodes when node.data.radical)
 			nodes = (node for node in nodes when node not in endnodes)
 
-			
 			# join
 			edge = g_edges.selectAll(".edge")
 				.data(edges)
@@ -91,6 +94,7 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber }, {createTubes}) ->
 			node_g.append('text')
 			
 			
+
 			endnode_g = endnode.enter()
 				.append('g')
 				.classed("endnode", true)
@@ -102,7 +106,12 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber }, {createTubes}) ->
 			edge.each (d) ->
 				d3.select(@).classed "line_"+d.line.data.radical, true
 			edge.transition().duration(config.transitionTime)
-				.attr d: (d) -> svgline01 createTubes d
+				.attr d: (d) -> svgline01 createTubes d	
+			
+			for rad in radicals
+				selector = ".line_" + rad
+				d3.selectAll(selector).style("stroke", colors[radicals.indexOf(rad)-1])
+				
 			edge.classed("filtered", (d) -> d.style.filtered)
 			node.classed("filtered", (d) -> d.style.filtered)
 			node.classed("searchresult", (d) -> d.style.isSearchresult)
