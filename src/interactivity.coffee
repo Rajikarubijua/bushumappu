@@ -53,9 +53,9 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber }, {createTubes}) ->
 				d3.select(this).remove()
 			
 			showStationLabel = (d) ->
-				console.log('showing stationlabel')
+				console.log('>>>> drawing label' )
 				return if this.stationLabel
-				stationLabel = d3.select(this).append('g').classed("station-label", true)
+				stationLabel = d3.select(this.parentNode).append('g').classed("station-label", true)
 					.on('click.closeLabel', closeStationLabel)
 				rectLength = d.data.meaning.length + 2
 				stationLabel.append('rect')	
@@ -66,15 +66,31 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber }, {createTubes}) ->
 					.attr(x:23, y:-r/2+4)
 				this.stationLabel = stationLabel
 				
-			# this function delays a double click event and takes the function to be
-			# called after the timeout as a parameter
+			
+			# this function sets a timer for the stationlabel to be displayed
+			# this means that after a certain time after the mouse entered the node
+			# the label will be displayed, not right away
+			setHoverTimer = (ms, func) ->
+				console.log('setting timer')
+				that.hoverTimer = setTimeout(((d) ->
+					#that.hoverTimer = null
+					func d), ms)
+				
+			
+			clearHoverTimer = (ms) ->	
+				clearTimeout(that.hoverTimer)
+				console.info('clearing timer', that.hoverTimer)
+				that.hoverTimer = null
+			
+			# this function delays a double click event and takes the delay in ms as 
+			# well as the function to be called after the timeout as a parameter
 			delayDblClick = (ms, func) ->
-				if that.timer 
-					clearTimeout(that.timer)
-					that.timer = null
+				if that.clickTimer 
+					clearTimeout(that.clickTimer)
+					that.clickTimer = null
 				else 
-					that.timer = setTimeout(((d)-> 
-						that.timer = null
+					that.clickTimer = setTimeout(((d)-> 
+						that.clickTimer = null
 						func d), ms)
 			
 			edge.enter()
@@ -85,18 +101,23 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber }, {createTubes}) ->
 			node_g = node.enter()
 				.append('g')
 				.classed("node", true)
-				#.on('mouseenter.showLabel', (d) ->  
-					#console.log('hover')
-					#that = this
-					#delayDblClick(800, -> showStationLabel.call(this, d))
-				#)
+			stationKanji = node_g.append('g')
+				.classed("station-kanji", true)
+				.on('mouseenter.showLabel', (d) ->  
+					that = this
+					setHoverTimer(800, -> showStationLabel.call(that, d))
+				)
+				.on('mouseleave.resetHoverTimer', (d) ->
+					clearHoverTimer(800)
+				)
 				.on('click.displayDetailsOfNode', (d) ->
 					that = this
 					delayDblClick(550, -> nodeDoubleClick.call(that, d))
 					)
 				.on('dblclick.selectnewCentral', (d) ->  P 'new central station') # make this node the new central station @Riin
-			node_g.append('rect').attr x:-r, y:-r, width:2*r, height:2*r
-			node_g.append('text')
+			stationKanji.append('rect').attr x:-r, y:-r, width:2*r, height:2*r
+			stationKanji.append('text')
+			
 			
 			
 			endnode_g = endnode.enter()

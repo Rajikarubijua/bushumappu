@@ -19,6 +19,11 @@ circle, rect {
 	text-anchor: start;
 }
 
+.station-kanji > text {
+	alignment-baseline: central;
+	text-anchor: middle;
+}
+
 path {
 	fill: none;
 	stroke: black;
