@@ -47,13 +47,10 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber }, {createTubes}) ->
 			
 			# enter
 			closeStationLabel = (d) ->
-				# stops showStationLabel to be called right after finishing here
-				d3.event.stopPropagation()
 				this.parentNode.stationLabel = undefined
 				d3.select(this).remove()
 			
 			showStationLabel = (d) ->
-				console.log('>>>> drawing label' )
 				return if this.stationLabel
 				stationLabel = d3.select(this.parentNode).append('g').classed("station-label", true)
 					.on('click.closeLabel', closeStationLabel)
@@ -64,14 +61,13 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber }, {createTubes}) ->
 				stationLabel.append('text')
 					.text((d) -> d.data.meaning or '?')
 					.attr(x:23, y:-r/2+4)
-				this.stationLabel = stationLabel
+				this.parentNode.stationLabel = stationLabel
 				
 			
 			# this function sets a timer for the stationlabel to be displayed
 			# this means that after a certain time after the mouse entered the node
 			# the label will be displayed, not right away
 			setHoverTimer = (ms, func) ->
-				console.log('setting timer')
 				that.hoverTimer = setTimeout(((d) ->
 					#that.hoverTimer = null
 					func d), ms)
@@ -79,7 +75,6 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber }, {createTubes}) ->
 			
 			clearHoverTimer = (ms) ->	
 				clearTimeout(that.hoverTimer)
-				console.info('clearing timer', that.hoverTimer)
 				that.hoverTimer = null
 			
 			# this function delays a double click event and takes the delay in ms as 
