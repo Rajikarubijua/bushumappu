@@ -53,6 +53,7 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber }, {createTubes}) ->
 				d3.select(this).remove()
 			
 			showStationLabel = (d) ->
+				console.log('showing stationlabel')
 				return if this.stationLabel
 				stationLabel = d3.select(this).append('g').classed("station-label", true)
 					.on('click.closeLabel', closeStationLabel)
@@ -65,6 +66,8 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber }, {createTubes}) ->
 					.attr(x:23, y:-r/2+4)
 				this.stationLabel = stationLabel
 				
+			# this function delays a double click event and takes the function to be
+			# called after the timeout as a parameter
 			delayDblClick = (ms, func) ->
 				if that.timer 
 					clearTimeout(that.timer)
@@ -82,11 +85,16 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber }, {createTubes}) ->
 			node_g = node.enter()
 				.append('g')
 				.classed("node", true)
-				.on('click.showLabel', (d) ->
+				#.on('mouseenter.showLabel', (d) ->  
+					#console.log('hover')
+					#that = this
+					#delayDblClick(800, -> showStationLabel.call(this, d))
+				#)
+				.on('click.displayDetailsOfNode', (d) ->
 					that = this
-					delayDblClick(550, -> showStationLabel.call(that, d))
-				)
-				.on('dblclick.selectNode', (d) -> nodeDoubleClick d)
+					delayDblClick(550, -> nodeDoubleClick.call(that, d))
+					)
+				.on('dblclick.selectnewCentral', (d) ->  P 'new central station') # make this node the new central station @Riin
 			node_g.append('rect').attr x:-r, y:-r, width:2*r, height:2*r
 			node_g.append('text')
 			
