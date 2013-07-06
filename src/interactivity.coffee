@@ -7,6 +7,25 @@ define ['utils', 'tubeEdges'], (utils, {createTubes}) ->
 			@g_nodes = @svg.append 'g'
 			@g_endnodes = @svg.append 'g'
 	
+		colors = ["#E53517", "#008BD0", "#97BE0D", "#641F80", "#290E03", "#F07C0D", "#2FA199", "#FFCC00", "#E2007A"]
+
+		autoFocus: (kanji) ->
+			focus = {}
+			for node in @graph.nodes
+				if node.data.kanji == kanji
+					focus = node
+
+			if focus == {} or kanji == undefined
+				P 'nothing to focus here'
+				return
+			viewport = d3.select('#graph')[0][0]
+			transX = (viewport.attributes[1].value / 2) - focus.x
+			transY = (viewport.attributes[2].value / 2) - focus.y
+			transform = "-webkit-transform: translate(#{transX}px, #{transY}px) scale(1)"
+
+			d3.select('#graph g').transition().attr('style', transform)
+			
+	
 		update: (graph) ->
 			@graph = graph if graph
 			{ svg, config, g_edges, g_nodes, g_endnodes } = this
@@ -14,12 +33,14 @@ define ['utils', 'tubeEdges'], (utils, {createTubes}) ->
 			r = config.nodeSize
 			
 			that = this
-			
+
+			radicals = []			
 			for node in nodes
 				node.label ?= node.data.kanji or node.data.radical or "?"
+				radicals.push node.data.radical if node.data.radical not in radicals
 			endnodes = (node for node in nodes when node.data.radical)
 			nodes = (node for node in nodes when node not in endnodes)
-			
+
 			# join
 			edge = g_edges.selectAll(".edge")
 				.data(edges)
@@ -74,6 +95,7 @@ define ['utils', 'tubeEdges'], (utils, {createTubes}) ->
 			node_g.append('text')
 			
 			
+
 			endnode_g = endnode.enter()
 				.append('g')
 				.classed("endnode", true)
@@ -82,13 +104,13 @@ define ['utils', 'tubeEdges'], (utils, {createTubes}) ->
 			endnode_g.append("text").text (d) -> d.label
 		
 			# update
-			edge.each((d) ->
-				d3.select(@).classed "line_"+d.line.data.radical, true)
-				#.transition().duration(config.transitionTime)
-				.attr d: (d) ->
-					svgline [d.source, d.target]
-					#svgline01 createTubes d
-			edge.each((d) -> d3.select(@).style("stroke", "magenta") if d.calc)
+			edge.each (d) ->
+				d3.select(@).classed "line_"+d.line.data.radical, true
+			for rad in radicals
+				selector = ".line_" + rad
+				d3.selectAll(selector).style("stroke", colors[radicals.indexOf(rad)-1])
+			edge#.transition().duration(config.transitionTime)
+				.attr d: (d) -> svgline01 createTubes d	
 			edge.classed("filtered", (d) -> d.style.filtered)
 			node.classed("filtered", (d) -> d.style.filtered)
 			node.classed("searchresult", (d) -> d.style.isSearchresult)

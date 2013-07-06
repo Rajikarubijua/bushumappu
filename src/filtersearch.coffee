@@ -44,6 +44,9 @@ define ['utils'], ({P}) ->
 			@inHandler.clearInput()
 			@view.update()
 
+		autoFocus: (kanji) ->
+			@view.autoFocus(kanji)
+
 		isWithinCriteria: (kanji, criteria) ->
 			{strokeMin, strokeMax, frqMin, frqMax, gradeMin, gradeMax, inKanji, inOn, inKun, inMean} = criteria
 			withinStroke 	= kanji.stroke_n >= strokeMin and kanji.stroke_n <= strokeMax
@@ -95,13 +98,13 @@ define ['utils'], ({P}) ->
 		displayResult: ( result ) ->
 			resultString = ''
 			for node in result
-				resultString = "#{resultString} #{node.data.kanji}"
+				resultString = "#{resultString} <div class='searchKanji'>#{node.data.kanji}</div>"
 			
 			if resultString == ''
 				resultString = 'nothing found in current view'
 
 			d3.select('table #kanjiresult')[0][0].innerHTML =
-				"searchresult: #{resultString}"
+				"#{resultString}"
 
 		# if flag then fill force
 		fillStandardInput: (id, flag) ->

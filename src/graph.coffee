@@ -19,8 +19,8 @@ define ['utils'], (utils) ->
 			throw @radical if @radical
 			@source ?= null
 			@target ?= null
-			@sourcetrans ?= null
-			@targettrans ?= null
+			@sourcecoord ?= []
+			@targetcoord ?= []
 			@line   ?= null
 			@style ?= {}
 			@calc ?= false
