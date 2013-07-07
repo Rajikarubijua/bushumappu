@@ -46,27 +46,6 @@ define ['utils', 'load_data', 'central_station',
 		
 		svg   = my.svg = body.select 'svg#graph'
 		svg.g = svg.append 'g'
-		
-		w = new Signal
-		h = new Signal
-		window.onresize = ->
-			w window.innerWidth
-			h window.innerHeight
-		window.onresize()
-		new Observer ->
-			attrs = width : 0.95*w(), height: 0.66*h()
-			svg.attr attrs
-			svg.style attrs
-				
-		svg.call (zoom = d3.behavior.zoom())
-			.translate([w()/2, h()/2])
-			.scale(config.initialScale)
-			.on('zoom', styleZoom svg.g, zoom)
-		# Deactivates zoom on dblclick. According to d3 source code
-		# d3.behavior.zoom registers dblclick.zoom. So we can deactivate it.
-		# And we need it to do defered, cause d3 would fail unexpectetly.
-		# This hasn't been reported yet.
-		svg.on('dblclick.zoom', null)
 
 		prepare.setupRadicalJouyous()
 		prepare.setupKanjiGrades()
@@ -76,7 +55,7 @@ define ['utils', 'load_data', 'central_station',
 		kanji_i = 0
 		
 		embedder = new CentralStationEmbedder { config }
-		view = new View { svg: svg.g, config }
+		view = new View { svg: svg, config }
 		history = new History {}
 		
 		do slideshow = ->

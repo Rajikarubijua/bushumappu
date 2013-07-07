@@ -1,10 +1,35 @@
-define ['utils', 'tubeEdges'], ({ P, compareNumber }, {createTubes}) ->
+define ['utils', 'tubeEdges'], ({ P, compareNumber, styleZoom }, {createTubes}) ->
 
 	class View
-		constructor: ({ @svg, @graph, @config }) ->
+		constructor: ({ svg, @graph, @config }) ->
+			@svg = svg.g
+			@parent = svg
 			@g_edges = @svg.append 'g'
 			@g_nodes = @svg.append 'g'
 			@g_endnodes = @svg.append 'g'
+			@zoom = d3.behavior.zoom()
+
+			#setup zoom
+			w = new Signal
+			h = new Signal
+			window.onresize = ->
+				w window.innerWidth
+				h window.innerHeight
+			window.onresize()
+			new Observer ->
+				attrs = width : 0.95*w(), height: 0.66*h()
+				svg.attr attrs
+				svg.style attrs
+					
+			svg.call (@zoom)
+				.translate([w()/2, h()/2])
+				.scale(@config.initialScale)
+				.on('zoom', styleZoom svg.g, @zoom)
+			# Deactivates zoom on dblclick. According to d3 source code
+			# d3.behavior.zoom registers dblclick.zoom. So we can deactivate it.
+			# And we need it to do defered, cause d3 would fail unexpectetly.
+			# This hasn't been reported yet.
+			svg.on('dblclick.zoom', null)
 	
 		colors = ["#E53517", "#008BD0", "#97BE0D", "#641F80", "#290E03", "#F07C0D", "#2FA199", "#FFCC00", "#E2007A"]
 
@@ -17,12 +42,25 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber }, {createTubes}) ->
 			if focus == {} or kanji == undefined
 				P 'nothing to focus here'
 				return
-			viewport = d3.select('#graph')[0][0]
-			transX = (viewport.attributes[1].value / 2) - focus.x
-			transY = (viewport.attributes[2].value / 2) - focus.y
-			transform = "-webkit-transform: translate(#{transX}px, #{transY}px) scale(1)"
 
-			d3.select('#graph g').transition().attr('style', transform)
+			P @zoom.scale()	
+			viewport = d3.select('#graph')[0][0]
+			transX =  (viewport.attributes[1].value / 2) - focus.x * @zoom.scale()
+			transY =  (viewport.attributes[2].value / 2) - focus.y * @zoom.scale()
+			transform = "-webkit-transform: translate(#{transX}px, #{transY}px) scale(#{@config.initialScale})"
+
+			@parent.call (@zoom)
+				.translate([transX, transY])
+				.on('zoom', styleZoom @svg, @zoom)
+			@parent.on('dblclick.zoom', null)
+
+			#t = @zoom.translate()
+			#el.style "-webkit-transform": "
+			#	translate(#{t[0]}px, #{t[1]}px)
+			#	scale(#{zoom.scale()})"
+			#d3.select('#graph g').transition().attr('style', transform)
+			#d3.select('#graph g').translate([transX, transY])
+			#d3.select('#graph g').scale(@config.initialScale)
 			
 	
 		update: (graph) ->
