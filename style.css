@@ -24,6 +24,22 @@ circle, rect {
 	text-anchor: middle;
 }
 
+.remove-col-btn > text {
+	alignment-baseline: central;
+	text-anchor: middle;
+	padding-left: 7px;
+}
+
+#details .remove-col-btn{
+	cursor: pointer;
+	width: 20px;
+	height: 20px;
+	margin-left: 10px;
+	border-radius: 3px;
+	position: absolute;
+	background-color: rgb(220,220,220);
+}
+
 path {
 	fill: none;
 	stroke: black;
@@ -91,8 +107,8 @@ svg > g * {
 	-webkit-align-items: center;
 }
 #details {
-	min-width: 30%;
-	max-width: 45%;
+	/* min-width: 30%;
+	max-width: 45%; */
 	height: 202px;
 }
 
