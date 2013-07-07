@@ -61,6 +61,7 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber }, {createTubes}) ->
 			
 			showStationLabel = (d) ->
 				return if this.stationLabel
+				#console.info(this.stationLabel ,' vs ', stationLabel)
 				stationLabel = d3.select(this.parentNode).append('g').classed("station-label", true)
 					.on('click.closeLabel', closeStationLabel)
 				rectLength = d.data.meaning.length + 2
@@ -78,11 +79,10 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber }, {createTubes}) ->
 			# the label will be displayed, not right away
 			setHoverTimer = (ms, func) ->
 				that.hoverTimer = setTimeout(((d) ->
-					#that.hoverTimer = null
 					func d), ms)
 				
 			
-			clearHoverTimer = (ms) ->	
+			clearHoverTimer = (d) ->	
 				clearTimeout(that.hoverTimer)
 				that.hoverTimer = null
 			
@@ -145,13 +145,16 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber }, {createTubes}) ->
 						that = this
 						setHoverTimer(1000, -> displayDeleteTableCol.call(that, d))
 						)
+					.on('mouseleave.removeHoverLabel', (d) -> 
+						clearHoverTimer()
+						that = this
+						removeDeleteTableCol.call(that, d))
 			
 			removeKanjiDetail = (d) ->
 				index = 0
 				for label in table_data[0]
 					item = table_data[0][index]
 					if item == d
-						console.log('curr: ', item, ' index ', index)
 						break
 					else
 						index++
@@ -164,11 +167,9 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber }, {createTubes}) ->
 					i++
 				if tablehead.selectAll('th')[0][index+1]
 					tablehead.selectAll('th')[0][index+1].remove()
-				console.info(table_data)
 				table_td = table_tr.selectAll('td.content')
 					.text((d) -> d)
 				
-					
 			displayDeleteTableCol = (d) ->
 				# do not display this for the very first column 
 				# that contains description text
@@ -177,9 +178,11 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber }, {createTubes}) ->
 				return if d3.select(this).selectAll('g')[0].length != 0
 				removeBtn = d3.select(this).append('g').classed('remove-col-btn', true)
 				removeBtn.append('text').text('x')
-				removeBtn.on('click.removeTableCol', (d) -> 
-						removeKanjiDetail(d)
-				 )
+				removeBtn.on('click.removeTableCol', (d) -> removeKanjiDetail(d))
+				this.removeBtn = removeBtn
+			
+			removeDeleteTableCol = (d) ->
+				this.removeBtn.remove()
 			
 			
 			edge.enter()
@@ -193,11 +196,12 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber }, {createTubes}) ->
 			stationKanji = node_g.append('g')
 				.classed("station-kanji", true)
 				.on('mouseenter.showLabel', (d) ->  
+					#console.info('hover: ', d)
 					that = this
 					setHoverTimer(800, -> showStationLabel.call(that, d))
 				)
 				.on('mouseleave.resetHoverTimer', (d) ->
-					clearHoverTimer(800)
+					clearHoverTimer()
 				)
 				.on('click.displayDetailsOfNode', (d) ->
 					that = this
