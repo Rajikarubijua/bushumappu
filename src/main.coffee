@@ -17,7 +17,7 @@ config =
 	timeToOptimize:				3000
 	optimizeMaxLoops:			0
 	optimizeMaxSteps:			0
-	slideshowSteps:				3
+	slideshowSteps:				1
 	nodeSize:					12
 figue.KMEANS_MAX_ITERATIONS = 1
 

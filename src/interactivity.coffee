@@ -123,11 +123,11 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 					.on('click.closeLabel', closeStationLabel)
 				rectLength = d.data.meaning.length + 2
 				stationLabel.append('rect')	
-					.attr(x:20, y:-r-3)
-					.attr(width: 8*rectLength, height: 2.5*r)
+					.attr(x:20, y:-config.nodeSize-3)
+					.attr(width: 8*rectLength, height: 2.5*config.nodeSize)
 				stationLabel.append('text')
 					.text((d) -> d.data.meaning or '?')
-					.attr(x:23, y:-r/2+4)
+					.attr(x:23, y:-config.nodeSize/2+4)
 				this.parentNode.stationLabel = stationLabel
 				
 			
@@ -235,9 +235,13 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				return if d3.select(this).selectAll('g')[0].length != 0
 				removeBtn = d3.select(this).append('g').classed('remove-col-btn', true)
 				removeBtn.append('text').text('x')
-				removeBtn.on('click.removeTableCol', (d) -> 
-						removeKanjiDetail(d)
-				 )
+				removeBtn.on('click.removeTableCol', (d) -> removeKanjiDetail(d))
+				this.removeBtn = removeBtn
+			
+			removeDeleteTableCol = (d) ->
+				return if not this.removeBtn
+				this.removeBtn.remove()
+
 
 			hisView = this
 
@@ -263,18 +267,15 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 					delayDblClick(550, -> selectKanjiDetail.call(that, d))
 					)
 				.on('dblclick.selectnewCentral', (d) ->  hisView.changeToCentral d.data) # make this node the new central station @Riin
-			stationKanji.append('rect').attr x:-r, y:-r, width:2*r, height:2*r
+			stationKanji.append('rect').attr x:-config.nodeSize, y:-config.nodeSize, width:2*config.nodeSize, height:2*config.nodeSize
 			stationKanji.append('text')
-
-			
-			
-			
+	
 
 			endnode_g = endnode.enter()
 				.append('g')
 				.classed("endnode", true)
 				.on('click.selectLine', (d) -> endnodeSelectLine d)
-			endnode_g.append("circle").attr {r}
+			endnode_g.append("circle").attr {r : config.nodeSize}
 			endnode_g.append("text").text (d) -> d.label
 		
 			# update
@@ -290,7 +291,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			node.classed("searchresult", (d) -> d.style.isSearchresult)
 			node_t = node.transition().duration(config.transitionTime)
 			node_t.attr(transform: (d) -> "translate(#{d.x} #{d.y})")
-			node_t.style(fill: (d) -> if d.style.hi then "red" else if d.style.lo then "green" else null) # debug @payload
+			#node_t.style(fill: (d) -> if d.style.hi then "red" else if d.style.lo then "green" else null) # debug @payload
 			node_t.select('text').text (d) -> d.label
 
 			endnode.transition().duration(config.transitionTime)
