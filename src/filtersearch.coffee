@@ -90,6 +90,7 @@ define ['utils'], ({P}) ->
 
 		setup: () ->
 			@inHandler.fillStandardInput('', true)
+			@inHandler.setupFilterSearchEvents(this)
 
 
 	class InputHandler
@@ -174,5 +175,31 @@ define ['utils'], ({P}) ->
 					max = kanji.freq
 			max	
 
+		setupFilterSearchEvents: (target) ->
+
+			filter = () ->
+				target.filter()
+
+			autoFocus = () ->
+				kanji = d3.event.srcElement.innerHTML
+				target.autoFocus(kanji)
+
+			search = () ->
+				result = target.search()
+				target.inHandler.displayResult(result)
+				d3.selectAll('#kanjiresult .searchKanji').on 'click' ,  autoFocus
+
+			resetFilter = () ->
+				target.resetFilter(d3.event.srcElement.id)
+
+			resetAll = () ->
+				target.resetAll()
+
+			d3.select('#btn_filter').on 'click' , filter
+			d3.select('#btn_search').on 'click' , search
+			d3.select('#btn_reset').on 'click' ,  resetAll
+			d3.selectAll('#btn_clear1').on 'click' ,  resetFilter
+			d3.selectAll('#btn_clear2').on 'click' ,  resetFilter
+			d3.selectAll('#btn_clear3').on 'click' ,  resetFilter
 
 	{FilterSearch}

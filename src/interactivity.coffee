@@ -1,13 +1,15 @@
-define ['utils', 'tubeEdges'], ({ P, compareNumber, styleZoom }, {createTubes}) ->
+define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'], 
+({ P, compareNumber, styleZoom }, {createTubes}, {FilterSearch}, {History}, {CentralStationEmbedder}) ->
 
 	class View
-		constructor: ({ svg, @graph, @config }) ->
+		constructor: ({ svg, @graph, @config, @kanjis, @radicals }) ->
 			@svg = svg.g
 			@parent = svg
 			@g_edges = @svg.append 'g'
 			@g_nodes = @svg.append 'g'
 			@g_endnodes = @svg.append 'g'
 			@zoom = d3.behavior.zoom()
+			@history = new History {}
 
 			#setup zoom
 			w = new Signal
@@ -43,25 +45,43 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber, styleZoom }, {createTubes}) 
 				P 'nothing to focus here'
 				return
 
-			P @zoom.scale()	
 			viewport = d3.select('#graph')[0][0]
 			transX =  (viewport.attributes[1].value / 2) - focus.x * @zoom.scale()
 			transY =  (viewport.attributes[2].value / 2) - focus.y * @zoom.scale()
-			transform = "-webkit-transform: translate(#{transX}px, #{transY}px) scale(#{@config.initialScale})"
+			transform = "-webkit-transform: translate(#{transX}px, #{transY}px) scale(#{@zoom.scale()})"
 
+			# apply nice transition
+			d3.select('#graph g').transition().attr('style', transform)
+			
+			# manipulate zoom object for consistency
 			@parent.call (@zoom)
 				.translate([transX, transY])
-				.on('zoom', styleZoom @svg, @zoom)
+				.on('zoom', styleZoom @svg, @zoom, true)
 			@parent.on('dblclick.zoom', null)
-
-			#t = @zoom.translate()
-			#el.style "-webkit-transform": "
-			#	translate(#{t[0]}px, #{t[1]}px)
-			#	scale(#{zoom.scale()})"
-			#d3.select('#graph g').transition().attr('style', transform)
-			#d3.select('#graph g').translate([transX, transY])
-			#d3.select('#graph g').scale(@config.initialScale)
 			
+
+		changeToCentral: (kanji) ->
+			me = this
+			@history.addCentral kanji.kanji	
+
+			embedder = new CentralStationEmbedder { @config }
+			graph = embedder.graph kanji, @radicals, @kanjis
+			seaFill = new FilterSearch { graph, me }
+			seaFill.setup()
+			@update graph
+
+		doSlideshow: () ->
+			me = this
+			i = 0
+			embedder = new CentralStationEmbedder { @config }
+			do slideshow = ->
+				slideshow.steps ?= 0
+				return if slideshow.steps++ >= me.config.slideshowSteps
+
+				i = Math.floor Math.random()*me.kanjis.length
+				kanji = me.kanjis[i]
+				me.changeToCentral kanji
+				setTimeout slideshow, me.config.transitionTime + 2000
 	
 		update: (graph) ->
 			@graph = graph if graph
@@ -99,7 +119,6 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber, styleZoom }, {createTubes}) 
 			
 			showStationLabel = (d) ->
 				return if this.stationLabel
-				#console.info(this.stationLabel ,' vs ', stationLabel)
 				stationLabel = d3.select(this.parentNode).append('g').classed("station-label", true)
 					.on('click.closeLabel', closeStationLabel)
 				rectLength = d.data.meaning.length + 2
@@ -117,10 +136,11 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber, styleZoom }, {createTubes}) 
 			# the label will be displayed, not right away
 			setHoverTimer = (ms, func) ->
 				that.hoverTimer = setTimeout(((d) ->
+					#that.hoverTimer = null
 					func d), ms)
 				
 			
-			clearHoverTimer = (d) ->	
+			clearHoverTimer = (ms) ->	
 				clearTimeout(that.hoverTimer)
 				that.hoverTimer = null
 			
@@ -183,16 +203,13 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber, styleZoom }, {createTubes}) 
 						that = this
 						setHoverTimer(1000, -> displayDeleteTableCol.call(that, d))
 						)
-					.on('mouseleave.removeHoverLabel', (d) -> 
-						clearHoverTimer()
-						that = this
-						removeDeleteTableCol.call(that, d))
 			
 			removeKanjiDetail = (d) ->
 				index = 0
 				for label in table_data[0]
 					item = table_data[0][index]
 					if item == d
+						console.log('curr: ', item, ' index ', index)
 						break
 					else
 						index++
@@ -205,9 +222,11 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber, styleZoom }, {createTubes}) 
 					i++
 				if tablehead.selectAll('th')[0][index+1]
 					tablehead.selectAll('th')[0][index+1].remove()
+				console.info(table_data)
 				table_td = table_tr.selectAll('td.content')
 					.text((d) -> d)
 				
+					
 			displayDeleteTableCol = (d) ->
 				# do not display this for the very first column 
 				# that contains description text
@@ -216,13 +235,12 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber, styleZoom }, {createTubes}) 
 				return if d3.select(this).selectAll('g')[0].length != 0
 				removeBtn = d3.select(this).append('g').classed('remove-col-btn', true)
 				removeBtn.append('text').text('x')
-				removeBtn.on('click.removeTableCol', (d) -> removeKanjiDetail(d))
-				this.removeBtn = removeBtn
-			
-			removeDeleteTableCol = (d) ->
-				this.removeBtn.remove()
-			
-			
+				removeBtn.on('click.removeTableCol', (d) -> 
+						removeKanjiDetail(d)
+				 )
+
+			hisView = this
+
 			edge.enter()
 				.append("path")
 				.classed("edge", true)
@@ -234,20 +252,20 @@ define ['utils', 'tubeEdges'], ({ P, compareNumber, styleZoom }, {createTubes}) 
 			stationKanji = node_g.append('g')
 				.classed("station-kanji", true)
 				.on('mouseenter.showLabel', (d) ->  
-					#console.info('hover: ', d)
 					that = this
 					setHoverTimer(800, -> showStationLabel.call(that, d))
 				)
 				.on('mouseleave.resetHoverTimer', (d) ->
-					clearHoverTimer()
+					clearHoverTimer(800)
 				)
 				.on('click.displayDetailsOfNode', (d) ->
 					that = this
 					delayDblClick(550, -> selectKanjiDetail.call(that, d))
 					)
-				.on('dblclick.selectnewCentral', (d) ->  P 'new central station') # make this node the new central station @Riin
+				.on('dblclick.selectnewCentral', (d) ->  hisView.changeToCentral d.data) # make this node the new central station @Riin
 			stationKanji.append('rect').attr x:-r, y:-r, width:2*r, height:2*r
 			stationKanji.append('text')
+
 			
 			
 			

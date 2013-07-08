@@ -1,26 +1,28 @@
-define ['utils'], ({P}) ->
+define ['utils'], ({P, arrayUnique}) ->
 	class History
 		constructor: () ->
 			@history = []
 
+		# add a string
 		addCentral: (central) ->
-			# duplicate input?
 			@history.unshift central
+			@history = arrayUnique @history
 			@render()
 
 		render: () ->
-			list = ''
+			list = '<ul class=historylist>'
 			max_size = 10
 			size = 0
-			for node in @history
+			for kanji in @history
 				if size == max_size
 					break
 				if size == 0					
-					list = "#{list} <div class=firsthisKanji> #{node.data.kanji} </div> <br>"
+					list = "#{list} <li class=firsthisKanji> #{kanji} </li>"
 				else
-					list = "#{list} <div class=hisKanji> #{node.data.kanji} </div>"
+					list = "#{list} <li class=hisKanji> #{kanji} </li>"
 				size = size + +'1'	# i also like to live dangerously
 
+			list = "#{list} </ul>"
 			d3.select('#history')[0][0].innerHTML = list
 
 	{ History }

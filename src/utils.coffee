@@ -145,9 +145,10 @@ define ->
 	styleZoom = (el, zoom, dontCall) ->
 		func = ->
 			t = zoom.translate()
-			el.style "-webkit-transform": "
+			z = zoom.scale()
+			el.attr('style', "-webkit-transform:
 				translate(#{t[0]}px, #{t[1]}px)
-				scale(#{zoom.scale()})"
+				scale(#{z})")
 		func() if not dontCall
 		func
 
