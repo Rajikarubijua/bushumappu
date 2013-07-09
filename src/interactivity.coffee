@@ -293,7 +293,14 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 
 			endnode.transition().duration(config.transitionTime)
 				.attr transform: (d) -> "translate(#{d.x} #{d.y})"
-		
+				
+			toggleBtn = d3.select('#toggle-bottom-bar')
+				.on('mouseenter.bottomBarToggle', (d) ->
+					if d3.select('#bottomBar')[0][0].clientHeight > 11
+						d3.select('#bottomBar').style('max-height', '10px')
+					else
+						d3.select('#bottomBar').style('max-height', '200px')
+					)
 			# exit
 			edge.exit().remove()
 			node.exit().remove()
