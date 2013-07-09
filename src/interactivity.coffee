@@ -1,5 +1,5 @@
 define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'], 
-({ P, compareNumber, styleZoom }, {createTubes}, {FilterSearch}, {History}, {CentralStationEmbedder}) ->
+({ P, compareNumber, styleZoom }, {Tube, createTubes}, {FilterSearch}, {History}, {CentralStationEmbedder}) ->
 
 	class View
 		constructor: ({ svg, @graph, @config, @kanjis, @radicals }) ->
@@ -283,6 +283,28 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				d3.selectAll(selector).style("stroke", colors[radicals.indexOf(rad)-1])
 			edge.transition().duration(config.transitionTime)
 				.attr d: (d) -> svgline01 createTubes d	
+			edge.each (d) ->
+				if d.tube.minilabel is false
+					[vecx, vecy] = d.getVector()
+					placeholder = 3
+					ortho = d.tube.angle + Math.PI / 2
+					anglegrad = ortho * Math.PI / 180
+					labelsize = 10
+					placecos = placeholder * Math.cos(ortho)
+					placesin = placeholder * Math.sin(ortho)
+					vecx = vecx / 2 + (placeholder + d.tube.width * 0.5) * Math.cos(d.tube.angle) + placecos * d.tube.radicals.length * 0.5
+					vecy = vecy / 2 + (placeholder + d.tube.width * 0.5) * Math.sin(d.tube.angle) + placesin * d.tube.radicals.length * 0.5
+					thisedge = d3.select(@)
+						.append('g').classed("mini-label", true)
+					for rad in d.tube.radicals
+						selector = ".line_" + rad
+						color = d3.selectAll(selector).style("stroke")
+						posx = vecx + d.tube.radicals.indexOf(rad) * placecos
+						posy = vecy + d.tube.radicals.indexOf(rad) * placesin
+						thisedge.append("text")
+							.text(rad)
+							.attr(x: posx, y: posy)
+							.attr(transform: "rotate(#{anglegrad}, #{posx}, #{posy})")
 			edge.classed("filtered", (d) -> d.style.filtered)
 			node.classed("filtered", (d) -> d.style.filtered)
 			node.classed("searchresult", (d) -> d.style.isSearchresult)
@@ -326,8 +348,6 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			d.highlighted = !d3.select(@).classed 'highlighted'
 		d3.selectAll(".edge").sort (a, b) ->
 				compareNumber a.highlighted or 0, b.highlighted or 0
-					
-	
-	
-		
+
+
 	{ View}
