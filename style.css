@@ -33,7 +33,7 @@ circle, rect {
 .mini-label > text{
 	alignment-baseline: central;
 	text-anchor: middle;
-	font-size: 0.5em;
+	font-size: 0.005em;
 }
 
 #details .remove-col-btn{

@@ -293,8 +293,8 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 					labelsize = 10
 					placecos = placeholder * Math.cos(ortho)
 					placesin = placeholder * Math.sin(ortho)
-					vecx = d.tube.x + vecx / 2 + (placeholder + d.tube.width * 0.5) * Math.cos(d.tube.angle) + placecos * d.tube.radicals.length * 0.5
-					vecy = d.tube.y + vecy / 2 + (placeholder + d.tube.width * 0.5) * Math.sin(d.tube.angle) + placesin * d.tube.radicals.length * 0.5
+					vecx = d.tube.x + vecx / 2 + (placeholder + d.tube.width * 0.5) * Math.cos(d.tube.angle) - placecos * (d.tube.radicals.length - 1) * 0.5
+					vecy = d.tube.y + vecy / 2 + (placeholder + d.tube.width * 0.5) * Math.sin(d.tube.angle) - placesin * (d.tube.radicals.length - 1) * 0.5
 					thisedge = d3.select(@.parentNode)
 					for rad in d.tube.radicals
 						selector = ".line_" + rad
@@ -305,6 +305,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 						thisedge.append("text").classed("mini-label", true)
 							.text(rad)
 							.attr(x: posx, y: posy)
+							.attr(style: "font-size: 8px")
 							.attr(transform: "rotate(#{anglegrad}, #{posx}, #{posy})")
 							.attr(fill: "#{color}")
 			edge.classed("filtered", (d) -> d.style.filtered)
