@@ -21,6 +21,7 @@ define ['utils'], (utils) ->
 			@target ?= null
 			@sourcecoord ?= []
 			@targetcoord ?= []
+			@tube ?= null
 			@line   ?= null
 			@style ?= {}
 			@calc ?= false

@@ -10,6 +10,7 @@ define ['utils', 'graph'], ({P, length}, {Graph, Edge, Node, Line}) ->
 			@x ?= 0
 			@y ?= 0
 			@edges ?= []
+			@minilabel ?= false
 
 	createTubes = (sourceedge) ->
 		return [sourceedge.sourcecoord, sourceedge.targetcoord] if sourceedge.calc
@@ -62,6 +63,7 @@ define ['utils', 'graph'], ({P, length}, {Graph, Edge, Node, Line}) ->
 		i = 0
 		for edge in tube.edges
 			#[vecx, vecy] = edge.getVector()
+			edge.tube = tube
 			edge.sourcecoord = [edge.source.x + drawx - nextx, edge.source.y + drawy - nexty]
 			edge.targetcoord = [edge.target.x + drawx - nextx, edge.target.y + drawy - nexty]
 			selector = ".line_"+ edge.line.data.radical
@@ -71,4 +73,4 @@ define ['utils', 'graph'], ({P, length}, {Graph, Edge, Node, Line}) ->
 			edge.calc = true
 			i++
 			
-	{createTubes, layoutTube}
+	{Tube, createTubes, layoutTube}
