@@ -135,12 +135,10 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			# this means that after a certain time after the mouse entered the node
 			# the label will be displayed, not right away
 			setHoverTimer = (ms, func) ->
-				that.hoverTimer = setTimeout(((d) ->
-					#that.hoverTimer = null
-					func d), ms)
+				that.hoverTimer = setTimeout(((d) -> func d), ms)
 				
 			
-			clearHoverTimer = (ms) ->	
+			clearHoverTimer = (d) ->	
 				clearTimeout(that.hoverTimer)
 				that.hoverTimer = null
 			
@@ -201,15 +199,17 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				colLabels = d3.select('table#details tbody').select('tr').selectAll('td')
 					.on('mouseenter.hoverLabel', (d) -> 
 						that = this
-						setHoverTimer(1000, -> displayDeleteTableCol.call(that, d))
-						)
+						setHoverTimer(1000, -> displayDeleteTableCol.call(that, d)))
+					.on('mouseleave.resetHoverLabel', (d) ->
+						clearHoverTimer()
+						d3.select(d3.event.srcElement.childNodes[1]).remove()
+				)
 			
 			removeKanjiDetail = (d) ->
 				index = 0
 				for label in table_data[0]
 					item = table_data[0][index]
 					if item == d
-						console.log('curr: ', item, ' index ', index)
 						break
 					else
 						index++
@@ -222,7 +222,6 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 					i++
 				if tablehead.selectAll('th')[0][index+1]
 					tablehead.selectAll('th')[0][index+1].remove()
-				console.info(table_data)
 				table_td = table_tr.selectAll('td.content')
 					.text((d) -> d)
 				
@@ -257,11 +256,9 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				.classed("station-kanji", true)
 				.on('mouseenter.showLabel', (d) ->  
 					that = this
-					setHoverTimer(800, -> showStationLabel.call(that, d))
-				)
+					setHoverTimer(800, -> showStationLabel.call(that, d)))
 				.on('mouseleave.resetHoverTimer', (d) ->
-					clearHoverTimer(800)
-				)
+					clearHoverTimer())
 				.on('click.displayDetailsOfNode', (d) ->
 					that = this
 					delayDblClick(550, -> selectKanjiDetail.call(that, d))
