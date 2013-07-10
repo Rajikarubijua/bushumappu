@@ -53,7 +53,7 @@ define ['utils', 'load_data',
 		radicals = prepare.getRadicals()
 		kanjis = prepare.getKanjis radicals
 
-		view = new View { svg: svg, config, kanjis, radicals }
+		view = new View { svg, config, kanjis, radicals }
 		view.doSlideshow()
 			
 	showDebugOverlay = (el) ->
