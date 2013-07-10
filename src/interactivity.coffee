@@ -170,6 +170,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 						that.clickTimer = null
 						func d), ms)
 			
+			thisView = this
 			selectKanjiDetail = (d) ->
 				i = 1
 				nothingtodo = false
@@ -207,7 +208,6 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				
 				tablecontentcols = table.select('tr').selectAll('td')[0].length
 				tableheadcols = tablehead.selectAll('th')[0].length
-				
 				if tableheadcols < tablecontentcols
 					tablehead.append('th')
 				
@@ -219,8 +219,11 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 						setHoverTimer(1000, -> displayDeleteTableCol.call(that, d)))
 					.on('mouseleave.resetHoverLabel', (d) ->
 						clearHoverTimer()
-						d3.select(d3.event.srcElement.childNodes[1]).remove()
-				)
+						d3.select(d3.event.srcElement.childNodes[1]).remove())
+					.on('click.hightlightSelected', (d) ->
+						#that = this
+						#d3.select(d).classed('.tableFocusKanji', true)
+						thisView.autoFocus d)
 			
 			removeKanjiDetail = (d) ->
 				index = 0
