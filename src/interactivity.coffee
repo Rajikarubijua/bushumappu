@@ -289,7 +289,10 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 					[vecx, vecy] = d.getVector()
 					placeholder = 10
 					ortho = d.tube.angle + Math.PI / 2
-					anglegrad = ortho * Math.PI / 180
+					anglegrad = ortho * 180 / Math.PI
+					anglegrad -= 90 if 100  > anglegrad > 80
+					anglegrad -= 270 if 280  > anglegrad > 260
+					anglegrad += 180 if 260 >= anglegrad > 100
 					labelsize = 10
 					placecos = placeholder * Math.cos(ortho)
 					placesin = placeholder * Math.sin(ortho)
