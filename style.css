@@ -2,7 +2,10 @@
 
 @import url('stroke_colors.css')
 
-body { margin: 0; }
+body { 
+	overflow-y:hidden; 
+	margin: 0px; 
+}
 
 circle, rect {
 	fill: white;
