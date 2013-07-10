@@ -22,7 +22,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				h window.innerHeight
 			window.onresize()
 			new Observer ->
-				attrs = width : 0.95*w(), height: 0.66*h()
+				attrs = width : 0.95*w(), height: 0.98*h()
 				svg.attr attrs
 				svg.style attrs
 					
@@ -97,7 +97,8 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				return if slideshow.steps++ >= me.config.slideshowSteps
 				i = Math.floor Math.random()*me.kanjis.length
 				kanji = me.kanjis[i]
-				kanji = my.kanjis['緒'] # debug @payload
+				if slideshow.steps == 1
+					kanji = my.kanjis['緒'] # for debug
 				me.changeToCentral kanji
 				setTimeout slideshow, me.config.transitionTime + 2000
 	
@@ -136,7 +137,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				d3.select(this).remove()
 			
 			showStationLabel = (d) ->
-				return if this.stationLabel
+				return if this.parentNode.stationLabel
 				stationLabel = d3.select(this.parentNode).append('g').classed("station-label", true)
 					.on('click.closeLabel', closeStationLabel)
 				rectLength = d.data.meaning.length + 2
@@ -146,8 +147,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				stationLabel.append('text')
 					.text((d) -> d.data.meaning or '?')
 					.attr(x:23, y:-config.nodeSize/2+4)
-				this.parentNode.stationLabel = stationLabel
-				
+				this.parentNode.stationLabel = stationLabel				
 			
 			# this function sets a timer for the stationlabel to be displayed
 			# this means that after a certain time after the mouse entered the node
@@ -155,7 +155,6 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			setHoverTimer = (ms, func) ->
 				that.hoverTimer = setTimeout(((d) -> func d), ms)
 				
-			
 			clearHoverTimer = (d) ->	
 				clearTimeout(that.hoverTimer)
 				that.hoverTimer = null
@@ -285,6 +284,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			stationKanji.append('rect').attr x:-config.nodeSize, y:-config.nodeSize, width:2*config.nodeSize, height:2*config.nodeSize
 			stationKanji.append('text')
 
+
 			endnode_g = endnode.enter()
 				.append('g')
 				.classed("endnode", true)
@@ -308,7 +308,10 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 					[vecx, vecy] = d.getVector()
 					placeholder = 10
 					ortho = d.tube.angle + Math.PI / 2
-					anglegrad = ortho * Math.PI / 180
+					anglegrad = ortho * 180 / Math.PI
+					anglegrad -= 90 if 100  > anglegrad > 80
+					anglegrad -= 270 if 280  > anglegrad > 260
+					anglegrad += 180 if 260 >= anglegrad > 100
 					labelsize = 10
 					placecos = placeholder * Math.cos(ortho)
 					placesin = placeholder * Math.sin(ortho)
@@ -327,7 +330,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 							.attr(style: "font-size: 8px")
 							.attr(transform: "rotate(#{anglegrad}, #{posx}, #{posy})")
 							.attr(fill: "#{color}")
-							
+
 			edge.classed("filtered", (d) -> d.style.filtered)
 			node.classed("filtered", (d) -> d.style.filtered)
 			node.classed("searchresult", (d) -> d.style.isSearchresult)

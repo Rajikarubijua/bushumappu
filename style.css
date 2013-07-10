@@ -2,7 +2,10 @@
 
 @import url('stroke_colors.css')
 
-body { margin: 0; }
+body { 
+	overflow-y:hidden; 
+	margin: 0px; 
+}
 
 circle, rect {
 	fill: white;
@@ -81,19 +84,17 @@ svg > g * {
 }
 
 #bottomBar {
-	display: -webkit-flex;
 	border: 1px solid silver;
-	max-height: 200px;
+	background: white; 
 	bottom: 0px;
 	transition: 1s;
 	position: absolute;
-	overflow: hidden;
 }
 
 #bottomBar #toggle-bottom-bar{
 	cursor: pointer;
 	background: rgb(220, 220, 220);
-	overflow: hidden;
+	float: left;
 }
 
 #bottomBar > * {
@@ -107,15 +108,17 @@ svg > g * {
 	-webkit-justify-content: center;
 	-webkit-align-items: center;
 }
-#details {
-	width: 30%;
-	overflow: hidden;
+#details td {
+	white-space:nowrap;
+}
+
+.tablewrapper {
+	overflow-x: scroll;
+	overflow-y: hidden;
 }
 
 #seafil {
-	width: 33%;
-	display: -webkit-flex;
-	overflow: hidden;
+	float: left;
 }
 #seafil table td{
 	padding-bottom: 5px;
@@ -128,9 +131,9 @@ svg > g * {
 	width: 3em;
 }
 #history {
-	width: 10%;
 	margin-top: 10px;
-	overflow: hidden;
+	margin-right: 10px;
+	float: left;
 	
 }
 #seafil .btn_clear{
