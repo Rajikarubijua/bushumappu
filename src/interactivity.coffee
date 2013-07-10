@@ -334,28 +334,16 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			edge.classed("filtered", (d) -> d.style.filtered)
 			node.classed("filtered", (d) -> d.style.filtered)
 			node.classed("searchresult", (d) -> d.style.isSearchresult)
-			node_t = node#node.transition().duration(config.transitionTime)
+			node_t = node.transition().duration(config.transitionTime)
 			node_t.attr(transform: (d) -> "translate(#{d.x} #{d.y})")
-			#node_t.style(fill: (d) -> if d.style.hi then "red" else if d.style.lo then "green" else null) # debug @payload
 			node_t.select('text').text (d) -> d.label
 			
 			critMax = 1
-			#node.each (d) -> critMax += d.critValue() or 0
 			node.select('rect').each (d) ->
 				dom = d3.select(@)
 				dom.style fill: d.style.debug_fill
-				###
-				v = (d.critValue() or 0) / critMax
-				v = Math.pow 1 - v, 10
-				r = 255
-				g = Math.floor 255*v
-				b = Math.floor 255*v
-				value = "rgb("+[r,g,b].join(',')+")"
-				if value != dom.style 'fill'
-					dom.style fill: value
-				###
 
-			endnode#.transition().duration(config.transitionTime)
+			endnode.transition().duration(config.transitionTime)
 				.attr transform: (d) -> "translate(#{d.x} #{d.y})"
 				
 			toggleBtn = d3.select('#toggle-bottom-bar')
