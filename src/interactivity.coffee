@@ -10,7 +10,9 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			@g_endnodes = @svg.append 'g'
 			@zoom = d3.behavior.zoom()
 			@history = new History {}
+			@history.setup this
 			@graph = {}
+			@embedder = new CentralStationEmbedder { @config }
 
 			#setup zoom
 			w = new Signal
@@ -59,19 +61,34 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				.translate([transX, transY])
 				.on('zoom', styleZoom @svg, @zoom, true)
 			@parent.on('dblclick.zoom', null)
-			
 
 		changeToCentral: (kanji) ->
 			P "changeToCentral #{kanji.kanji}"
 			@history.addCentral kanji.kanji	
-
-			embedder = new CentralStationEmbedder { @config }
-			graph = embedder.graph kanji, @radicals, @kanjis
+			graph = @embedder.graph kanji, @radicals, @kanjis
 
 			seaFill = new FilterSearch { graph }
 			seaFill.setup this
 
 			@update graph
+			
+		changeToCentralFromNode: (node) ->	
+			@changeToCentral node.data
+
+		changeToCentralFromStr: (strKanji) ->
+			strKanji = strKanji.trim()
+			central = {}
+			for k in @kanjis
+				if k.kanji == strKanji
+					central = k
+
+			if central.kanji == undefined or strKanji == ''
+				P "cannot set central (#{strKanji}) that is not in kanjis"
+				P @kanjis
+				return
+
+			@history.addCentral central.kanji	
+			@changeToCentral central
 
 		doSlideshow: () ->
 			me = this
@@ -263,7 +280,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 					that = this
 					delayDblClick(550, -> selectKanjiDetail.call(that, d))
 					)
-				.on('dblclick.selectnewCentral', (d) -> thisView.changeToCentral(d.data) )
+				.on('dblclick.selectnewCentral', (d) -> thisView.changeToCentralFromNode d )
 			stationKanji.append('rect').attr x:-config.nodeSize, y:-config.nodeSize, width:2*config.nodeSize, height:2*config.nodeSize
 			stationKanji.append('text')
 	
