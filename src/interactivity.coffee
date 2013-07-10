@@ -2,7 +2,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 ({ P, compareNumber, styleZoom }, {Tube, createTubes}, {FilterSearch}, {History}, {CentralStationEmbedder}) ->
 
 	class View
-		constructor: ({ svg, @graph, @config, @kanjis, @radicals }) ->
+		constructor: ({ svg, @config, @kanjis, @radicals }) ->
 			@svg = svg.g
 			@parent = svg
 			@g_edges = @svg.append 'g'
@@ -10,6 +10,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			@g_endnodes = @svg.append 'g'
 			@zoom = d3.behavior.zoom()
 			@history = new History {}
+			@graph = {}
 
 			#setup zoom
 			w = new Signal
@@ -61,23 +62,22 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			
 
 		changeToCentral: (kanji) ->
-			me = this
+			P "changeToCentral #{kanji.kanji}"
 			@history.addCentral kanji.kanji	
 
 			embedder = new CentralStationEmbedder { @config }
 			graph = embedder.graph kanji, @radicals, @kanjis
-			seaFill = new FilterSearch { graph, me }
-			seaFill.setup()
+
+			seaFill = new FilterSearch { graph }
+			seaFill.setup this
+
 			@update graph
 
 		doSlideshow: () ->
 			me = this
-			i = 0
-			embedder = new CentralStationEmbedder { @config }
 			do slideshow = ->
 				slideshow.steps ?= 0
 				return if slideshow.steps++ >= me.config.slideshowSteps
-
 				i = Math.floor Math.random()*me.kanjis.length
 				kanji = me.kanjis[i]
 				me.changeToCentral kanji
@@ -241,8 +241,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				return if not this.removeBtn
 				this.removeBtn.remove()
 
-
-			hisView = this
+			thisView = this
 
 			edge.enter()
 				#.append("g")
@@ -264,7 +263,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 					that = this
 					delayDblClick(550, -> selectKanjiDetail.call(that, d))
 					)
-				.on('dblclick.selectnewCentral', (d) ->  hisView.changeToCentral d.data) # make this node the new central station @Riin
+				.on('dblclick.selectnewCentral', (d) -> thisView.changeToCentral(d.data) )
 			stationKanji.append('rect').attr x:-config.nodeSize, y:-config.nodeSize, width:2*config.nodeSize, height:2*config.nodeSize
 			stationKanji.append('text')
 	

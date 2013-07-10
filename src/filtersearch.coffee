@@ -1,7 +1,7 @@
 define ['utils'], ({P}) ->
 
 	class FilterSearch
-		constructor: ({@graph, @view})->
+		constructor: ({@graph})->
 			@inHandler = new InputHandler {@graph}
 
 		filter: () ->
@@ -42,6 +42,7 @@ define ['utils'], ({P}) ->
 				edge.style.isSearchresult = false
 				edge.style.filtered = false
 			@inHandler.clearInput()
+			@inHandler.clearSearchResult()
 			@view.update()
 
 		autoFocus: (kanji) ->
@@ -88,7 +89,8 @@ define ['utils'], ({P}) ->
 						return true
 			false
 
-		setup: () ->
+		setup: (view) ->
+			@view = view
 			@inHandler.fillStandardInput('', true)
 			@inHandler.setupFilterSearchEvents(this)
 
@@ -136,6 +138,9 @@ define ['utils'], ({P}) ->
 			@fillInputData '#onyomistring',	''
 			@fillInputData '#kunyomistring', ''
 			@fillInputData '#meaningstring', ''
+
+		clearSearchResult: () ->
+			d3.select('table #kanjiresult')[0][0].innerHTML = ''
 
 		fillInputData: (id, value) ->
 			path = "#seafil form #{id}"
