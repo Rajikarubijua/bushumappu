@@ -135,7 +135,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				d3.select(this).remove()
 			
 			showStationLabel = (d) ->
-				return if this.stationLabel
+				return if this.parentNode.stationLabel
 				stationLabel = d3.select(this.parentNode).append('g').classed("station-label", true)
 					.on('click.closeLabel', closeStationLabel)
 				rectLength = d.data.meaning.length + 2
