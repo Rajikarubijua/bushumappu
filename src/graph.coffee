@@ -1,18 +1,71 @@
-define ['utils'], (utils) ->
+define ['utils', 'criteria'], (utils, criteria) ->
 	{ P } = utils
+	{ otherNode, otherEdge } = criteria
 
 	class Node
 		next_id = 0
-		constructor: ({ @x, @y, @lines, @edges, @data, @style, @id }={}) ->
+		constructor: ({ @x, @y, @lines, @edges, @data, @style, @id, @cool, @fixed }={}) ->
 			@x     ?= 0
 			@y     ?= 0
 			@lines ?= []
 			@edges ?= []
 			@data  ?= {}
 			@style ?= {}
+			@crit  ?= null
 			@id    ?= next_id++
+			@cool  ?= 1
+			@fixed ?= false
 		
 		coord: -> @x+"x"+@y
+		
+		deps: (n=0) ->
+			if not n and @_deps?
+				return @_deps
+			deps = @nextNodes()[..]
+			if n == 1
+				deps
+			else
+				for node in @nextNodes()
+					for o in node.deps n+1
+						deps.push o if o not in deps
+				@_deps = deps
+			
+		nextNodes: ->
+			@_nextNodes ?= utils.arrayUnique(
+				otherNode this, edge for edge in @edges
+			)
+			
+		critValue: ->
+			@_critValue ?= @cool * d3.sum @critValues()
+			
+		critValues: -> @_critValues = [
+			10 * criteria.lineStraightness this
+			1 * criteria.edgeLength this
+			#1 * criteria.nearNodes this
+		]
+		
+		invalidateValues: ->
+			@_critValue = @_critValues = undefined
+			
+		move: (@x, @y) ->
+			@invalidateValues()
+			node.invalidateValues() for node in @deps()
+			
+		moveBy: (x, y) -> @move @x+x, @y+y
+	
+	class Cluster
+		constructor: (@nodes) ->
+			@copies = ([n.x,n.y] for n in @nodes)
+		critValue: ->
+			@_critValue ?= d3.sum (n.critValue() for n in @nodes)
+		moveBy: (x, y) ->
+			@_critValue = undefined
+			n.moveBy x, y for n in @nodes
+		resetPosition: ->
+			@_critValue = undefined
+			for n, i in @nodes
+				[x,y] = @copies[i]
+				n.move x,y
 	
 	class Edge
 		constructor: ({ @source, @target, @line }={}) ->
@@ -21,6 +74,7 @@ define ['utils'], (utils) ->
 			@target ?= null
 			@sourcecoord ?= []
 			@targetcoord ?= []
+			@tube ?= null
 			@line   ?= null
 			@style ?= {}
 			@calc ?= false
@@ -32,9 +86,9 @@ define ['utils'], (utils) ->
 			[ x1, y1 ] = @getVector()
 			[ x2, y2 ] = edge.getVector()
 			scalar = x1 * x2 + y1 * y2 
-			l1 = Math.sqrt( Math.pow( x1, 2 ) + Math.pow( y1, 2) )
-			l2 = Math.sqrt( Math.pow( x2, 2 ) + Math.pow( y2, 2) )
-			angle = Math.acos( scalar / (l1 * l2))
+			l1 = @length()
+			l2 = edge.length()
+			angle = Math.acos scalar / (l1 * l2)
 			
 		getEdgeAngle: ->
 			[ x1, y1 ] = [@source.x, @source.y]
@@ -46,6 +100,8 @@ define ['utils'], (utils) ->
 		lengthSqr: ->
 			[ x, y ] = @getVector()
 			(Math.pow x, 2) + (Math.pow y, 2)
+			
+		length: -> Math.sqrt @lengthSqr()
 
 
 	class Line
@@ -67,13 +123,12 @@ define ['utils'], (utils) ->
 				for node in line_nodes
 					nodes.push node if node not in nodes
 			@nodes = for node in nodes
-				k = 0
 				if node instanceof Node then node else new Node node
 			@lines = for orig_line_nodes in lines
 				line = new Line orig_line_nodes.obj
 				line.nodes = for node in orig_line_nodes
 					node = @nodes[nodes.indexOf node]
-					node.lines.push line
+					node.lines.push line if line not in node.lines
 					node
 				line
 			for line in @lines
@@ -87,6 +142,8 @@ define ['utils'], (utils) ->
 					source = target
 			for node in @nodes
 				@nodesById[node.id] = node
+				if node.edges.length > 10
+					P "node with many edges", node
 					
 		kanjis: ->
 			node.data for node in @nodes when node.data.kanji
@@ -94,9 +151,9 @@ define ['utils'], (utils) ->
 		toPlainLines: ->
 			nodes = {}
 			for node in @nodes
-				nodes[node.id] = x: node.x, y: node.y, data: node.data, id: node.id
+				nodes[node.id] = x: node.x, y: node.y, data: node.data, id: node.id, fixed: node.fixed
 			lines = for line in @lines
 				for node in line.nodes
 					nodes[node.id]
 
-	my.graph = { Node, Edge, Line, Graph }
+	my.graph = { Node, Edge, Line, Graph, Cluster }

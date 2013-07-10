@@ -19,10 +19,6 @@ define ['utils', 'graph'], (utils, { Graph, Node }) ->
 		###
 		constructor: (@config) ->
 		graph: (central_kanji, all_radicals, all_kanjis) ->
-			lines = {}
-			for radical in central_kanji.radicals
-				lines[radical.radical] = { radical, hi: 0, lo: [], other: null }
-			
 			related_kanjis =
 				utils.arrayUnique d3.merge (
 					radical.jouyou for radical in central_kanji.radicals)
@@ -35,67 +31,53 @@ define ['utils', 'graph'], (utils, { Graph, Node }) ->
 				kanji in related_kanjis
 				
 			kanjiRelevantRadicals = memo.onceObj (kanji) ->
-				radical for radical in kanji.radicals when \
-					radical in central_kanji.radicals
+				kanji.relevantRadicals = (radical for radical in kanji.radicals when \
+					radical in central_kanji.radicals)
 					
 			kanjiDegree = memo.onceObj (kanji) ->
 				kanjiRelevantRadicals(kanji).length
 				
 			kanjiNode = memo.onceObj (kanji) ->
 				new Node data: kanji
-			
-			# deciding if node is lo or some hi node
-			hi_nodes = []
+					
+			bins = {}
 			for kanji in related_kanjis
 				node = kanjiNode kanji
-				if kanjiDegree(kanji) == 1
-					node.style.lo = true
-					radical = kanjiRelevantRadicals(kanji)[0]
-					lines[radical.radical].lo.push node
-				else
-					node.style.hi = true
-					hi_nodes.push node
+				bin = kanjiRelevantRadicals node.data
+				bin = (x.radical for x in bin)
+				bin = bin.join ''
+				bin = (bins[bin] ?= [])
+				bin.push node
+			
+			node_r = my.config.edgeLength
+			node_offset = 3
+			bins_n = utils.length bins
+			for bin, bin_i in utils.sort bins
+				nodes = bins[bin]
+				nodes_n = utils.length nodes
+				for node, node_i in nodes
+					r = (node_i+node_offset) * node_r
+					meh = 1/Math.pow(2, Math.floor(bin_i / 4))
+					angle = ((bin_i % 4) + meh) * 0.5*Math.PI
+					#angle = bin_i / bins_n * 2*Math.PI
+					x = r * Math.cos angle
+					y = r * Math.sin angle
+					node.x = x
+					node.y = y
 					
-			### Balancing # XXX not perfect I believe @payload
-			Balancing is done in two phases. First it is counted such that
-			each line gets a balanced amount of hi nodes. Second each node
-			is assigned to a lines hi nodes. This ensures the sorting order
-			of the kanjis which results in a good edge network with minimal
-			connecting nodes. (Connecting nodes are nodes where an edge changes
-			star points.)
-			###
-			for node in hi_nodes
-				min = null
-				for radical in kanjiRelevantRadicals node.data
-					line = lines[radical.radical]
-					if min is null or line.hi < min.hi
-						min = line
-				min.hi++	
-			# setting the balancing result
-			for _, line of lines
-				hi = line.hi
-				line.hi = hi_nodes[...hi]
-				line.other = hi_nodes[hi..]
-				hi_nodes[...hi] = []
-		
-			node_r = my.config.gridSpacing * 4
-			kanji_offset = 5
 			central_node = kanjiNode central_kanji
-			n = central_kanji.radicals.length
-			lines = for line, line_i in d3.values lines
-				angle = line_i/n*Math.PI*2
-				# XXX this puts the radical node next to the central node
-				r = node_r #(line.hi.length+kanji_offset) * node_r
-				x = r * Math.cos angle
-				y = r * Math.sin angle
-				radical_node = new Node { x, y, data: line.radical }
-				for node, node_i in [ line.hi..., line.lo... ]
-					r = (node_i+kanji_offset) * node_r
-					node.x = r*Math.cos angle
-					node.y = r*Math.sin angle
-				nodes = [central_node, radical_node, line.hi..., line.other..., line.lo...]
-				nodes.obj = data: line.radical
-				nodes
+			central_node.fixed = true
+			lines = for radical in central_kanji.radicals
+				for bin in utils.sort bins
+					if radical.radical in bin
+						line = []#[ central_node ]
+						line.obj = data: radical
+						line.push central_node
+						line.push bins[bin]...
+						(line.bins ?= []).push bin
+						line
+					else continue
+			lines = d3.merge lines
 			
 			new Graph lines
 		

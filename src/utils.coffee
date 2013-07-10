@@ -145,9 +145,10 @@ define ->
 	styleZoom = (el, zoom, dontCall) ->
 		func = ->
 			t = zoom.translate()
-			el.style "-webkit-transform": "
+			z = zoom.scale()
+			el.attr('style', "-webkit-transform:
 				translate(#{t[0]}px, #{t[1]}px)
-				scale(#{zoom.scale()})"
+				scale(#{z})")
 		func() if not dontCall
 		func
 
@@ -199,16 +200,19 @@ define ->
 					result["max_"+key] = element
 		result
 		
-	max = (array, func) ->
+	extremaFunc = (comp) -> (array, func) ->
 		if typeof func == 'string'
 			func = do (func) -> (x) -> x[func]
-		max_value = max_e = undefined
+		ex_value = ex_e = undefined
 		for e in array
 			value = func e
-			if not max_value? or value > max_value
-				max_value = value
-				max_e = e
-		max_e
+			if not max_value? or comp value, max_value
+				ex_value = value
+				ex_e = e
+		ex_e
+		
+	max = extremaFunc ((a,b)->a>b)
+	min = extremaFunc ((a,b)->a<b)
 
 	distanceSqrXY = (a, b) ->
 		Math.pow( b.x - a.x, 2 ) + Math.pow( b.y - a.y, 2 )
@@ -289,8 +293,21 @@ define ->
 				memo = @memo[obj_id] ?= {}
 				value = memo[func_id] ?= func obj
 
+	breadthFirstSearch = (children) ->
+		bfs = (fringe, visited, goal) ->
+			return [visited, false] if not fringe.length
+			return [visited, true] if goal in fringe
+			visited.push e for e in fringe
+			next = []
+			for e in fringe
+				for child in children e
+					if child not in visited
+						next.push child
+			return bfs next, visited, goal
+		(start, goal) -> bfs [start], [], goal
+
 	{ copyAttrs, P, PN, PD, W, async, strUnique, expect, somePrettyPrint, length,
-	  sort, styleZoom, sunflower, vecX, vecY, vec, compareNumber, max,
+	  sort, styleZoom, sunflower, vecX, vecY, vec, compareNumber, max, min,
 	  parseMaybeNumber, equidistantSelection, getMinMax, arrayUnique,
 	  distanceSqrXY, nearestXY, nearest01, distanceSqr01, nearest, forall,
-	  rasterCircle, prettyDebug, sortSomewhat, Memo }
+	  rasterCircle, prettyDebug, sortSomewhat, Memo, breadthFirstSearch }

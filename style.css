@@ -2,7 +2,7 @@
 
 @import url('stroke_colors.css')
 
-body { overflow: hidden; margin: 0; }
+body { margin: 0; }
 
 circle, rect {
 	fill: white;
@@ -19,30 +19,40 @@ circle, rect {
 	text-anchor: start;
 }
 
+.station-kanji > text {
+	alignment-baseline: central;
+	text-anchor: middle;
+}
+
+.remove-col-btn > text {
+	alignment-baseline: central;
+	text-anchor: middle;
+	padding-left: 7px;
+}
+
+.mini-label > text{
+	alignment-baseline: central;
+	text-anchor: middle;
+	font-size: 0.005em;
+}
+
+#details .remove-col-btn{
+	cursor: pointer;
+	width: 20px;
+	height: 20px;
+	margin-left: 10px;
+	border-radius: 3px;
+	position: absolute;
+	background-color: rgb(220,220,220);
+}
+
 path {
 	fill: none;
 	stroke: black;
 	stroke-width: 5;
 }
 
-/*Output colors
-    [229,  53,  23, 1, "red"    ]
-    [151, 190,  13, 1, "green"  ]
-    [  0, 139, 208, 1, "blue"   ]
-    [255, 204,   0, 1, "yellow" ]
-    [226,   0, 122, 1, "pink"   ]
-    [100,  31, 128, 1, "purple" ]
-    [ 41,  14,   3, 1, "brown"  ]*/
 
-alias red #E53517
-alias green #97BE0D
-alias blue #008BD0
-alias yellow #FFCC00
-alias pink #E2007A
-alias purple #641F80
-alias brown #290E03
-alias orange #F07C0D
-alias teal #2FA199
 
 .highlighted {
 	stroke-width: 10;
@@ -73,7 +83,19 @@ svg > g * {
 #bottomBar {
 	display: -webkit-flex;
 	border: 1px solid silver;
+	max-height: 200px;
+	bottom: 0px;
+	transition: 1s;
+	position: absolute;
+	overflow: hidden;
 }
+
+#bottomBar #toggle-bottom-bar{
+	cursor: pointer;
+	background: rgb(220, 220, 220);
+	overflow: hidden;
+}
+
 #bottomBar > * {
 }
 #minimap {
@@ -86,13 +108,14 @@ svg > g * {
 	-webkit-align-items: center;
 }
 #details {
-	min-width: 30%;
-	max-width: 45%;
-	height: 202px;
+	width: 30%;
+	overflow: hidden;
 }
 
 #seafil {
 	width: 33%;
+	display: -webkit-flex;
+	overflow: hidden;
 }
 #seafil table td{
 	padding-bottom: 5px;
@@ -106,6 +129,8 @@ svg > g * {
 }
 #history {
 	width: 10%;
+	margin-top: 10px;
+	overflow: hidden;
 	
 }
 #seafil .btn_clear{
@@ -118,7 +143,13 @@ svg > g * {
 	white-space: nowrap;
 }
 
-.searchKanji, .hisKanji {
+.historylist{
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+.searchKanji, .hisKanji, .firsthisKanji {
 	cursor: pointer;
 	padding: 3px;
 	margin: 3px;
@@ -129,8 +160,6 @@ svg > g * {
 .firsthisKanji{
 	cursor: pointer;
 	padding: 6px;
-	margin: 6px;
-	border: 2px solid black;
+	margin: 11px;
 	font-size: 1.5em;
-	float: left;
 }
