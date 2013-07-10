@@ -55,11 +55,9 @@ define ['utils', 'graph'], (utils, { Graph, Node }) ->
 			for bin, bin_i in utils.sort bins
 				nodes = bins[bin]
 				nodes_n = utils.length nodes
+				angle = someAngle bin_i
 				for node, node_i in nodes
 					r = (node_i+node_offset) * node_r
-					meh = 1/Math.pow(2, Math.floor(bin_i / 4))
-					angle = ((bin_i % 4) + meh) * 0.5*Math.PI
-					#angle = bin_i / bins_n * 2*Math.PI
 					x = r * Math.cos angle
 					y = r * Math.sin angle
 					node.x = x
@@ -80,5 +78,41 @@ define ['utils', 'graph'], (utils, { Graph, Node }) ->
 			lines = d3.merge lines
 			
 			new Graph lines
+		
+	log2 = (x) -> Math.log(x) / Math.log(2)
+	
+	someAngle = (bin_i) ->
+		# this is some complicated shit man
+		if bin_i <= 1
+			angle = bin_i * Math.PI
+		else
+			exp = Math.floor log2 bin_i
+			a   = Math.pow 2, exp
+			b   = Math.pow 2, exp-1
+			c   = 1 + bin_i % a
+			angle = (1/a + c/b)*Math.PI
+		### based on following notes
+		0		1				  1/1*0		0
+		1		1				  1/1*1		1
+		1.5		0.5			1/2 + 1/1*1		2
+		0.5		0.5			1/2	      2		3
+		0.75	0.25		1/4 + 1/2*1		4
+		1.25	0.25		          2		5			1/a + 1/(a-1) * n
+		1.75	0.25				  3		6
+		0.25	0.25                  4		7
+		0.375	0.125		1/8 + 1/4*1		8
+		0.625	0.125                 2		9
+		0.875	0.125                 3		10
+		1.125	0.125
+		0.625	0.125
+		0.625	0.125
+		0.625	0.125
+		0.625	0.125
+
+
+		a   = pow 2, fl log 2,i
+		a-1 = pow 2, -1+ fl log 2,i
+		n   = 1 + i % a
+		###
 		
 	{ CentralStationEmbedder }
