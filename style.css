@@ -85,6 +85,7 @@ svg > g * {
 
 #bottomBar {
 	border: 1px solid silver;
+	background: white; 
 	bottom: 0px;
 	transition: 1s;
 	position: absolute;

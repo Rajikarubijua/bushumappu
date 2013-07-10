@@ -22,7 +22,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				h window.innerHeight
 			window.onresize()
 			new Observer ->
-				attrs = width : 0.95*w(), height: 0.66*h()
+				attrs = width : 0.95*w(), height: 0.98*h()
 				svg.attr attrs
 				svg.style attrs
 					
@@ -344,6 +344,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 						d3.select('#bottomBar').style('max-height', '10px')
 					else
 						d3.select('#bottomBar').style('max-height', '200px')
+						
 					)
 			# exit
 			edge.exit().remove()
