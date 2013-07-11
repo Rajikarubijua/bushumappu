@@ -222,17 +222,18 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 					.on('mouseleave.resetHoverLabel', (d) ->
 						clearHoverTimer(this)
 						d3.select(d3.event.srcElement.childNodes[1]).remove())
-					.on('click.hightlightSelected', (d) ->
-						node = d3.select('#kanji_'+d).classed('tableFocusKanji', true)
-						thisView.autoFocus d
-						kanjiId = d
-						setHoverTimer(node, 5000, -> 
-							d3.select('#kanji_'+kanjiId).classed('tableFocusKanji', false)
-							d3.select('#kanji_'+kanjiId).classed('station-kanji', true))
-						)
+ 					.on('click.hightlightSelected', (d) ->
+ 						node = d3.select('#kanji_'+d).classed('tableFocusKanji', true)
+ 						thisView.autoFocus d
+ 						kanjiId = d
+ 						setHoverTimer(node, 5000, -> 
+ 							d3.select('#kanji_'+kanjiId).classed('tableFocusKanji', false)
+ 							d3.select('#kanji_'+kanjiId).classed('station-kanji', true))
+ 						)
 			
 				
 			removeKanjiDetail = (d) ->
+				d3.event.stopPropagation()
 				index = 0
 				for label in table_data[0]
 					item = table_data[0][index]
@@ -259,6 +260,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				return if d == undefined
 				# we only need 1 button
 				return if d3.select(this).selectAll('g')[0].length != 0
+				
 				removeBtn = d3.select(this).append('g').classed('remove-col-btn', true)
 				removeBtn.append('text').text('x')
 				removeBtn.on('click.removeTableCol', (d) -> removeKanjiDetail(d))
