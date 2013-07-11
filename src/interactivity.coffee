@@ -41,7 +41,9 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 		autoFocus: (kanji) ->
 			focus = {}
 			for node in @graph.nodes
+				node.style.isFocused = false
 				if node.data.kanji == kanji
+					node.style.isFocused = true
 					focus = node
 
 			if focus == {} or kanji == undefined
@@ -62,9 +64,14 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				.on('zoom', styleZoom @svg, @zoom, true)
 			@parent.on('dblclick.zoom', null)
 
+			@update()
+
 		changeToCentral: (kanji) ->
+			return if kanji == @history.getCurrentCentral()
+
 			# delete all stationLabels
 			d3.selectAll('.station-label').remove()
+			
 			P "changeToCentral #{kanji.kanji}"
 			@history.addCentral kanji.kanji	
 			graph = @embedder.graph kanji, @radicals, @kanjis
@@ -237,14 +244,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 					.on('mouseleave.resetHoverLabel', (d) ->
 						clearHoverTimer(this)
 						d3.select(d3.event.srcElement.childNodes[1]).remove())
- 					.on('click.hightlightSelected', (d) ->
- 						node = d3.select('#kanji_'+d).classed('tableFocusKanji', true)
- 						thisView.autoFocus d
- 						kanjiId = d
- 						setHoverTimer(node, 5000, -> 
- 							d3.select('#kanji_'+kanjiId).classed('tableFocusKanji', false)
- 							d3.select('#kanji_'+kanjiId).classed('station-kanji', true))
- 						)
+ 					.on('click.hightlightSelected', (d) -> thisView.autoFocus d)
 			
 				
 			removeKanjiDetail = (d) ->
@@ -351,6 +351,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			edge.classed("filtered", (d) -> d.style.filtered)
 			node.classed("filtered", (d) -> d.style.filtered)
 			node.classed("searchresult", (d) -> d.style.isSearchresult)
+			node.classed("focused", (d) -> d.style.isFocused)
 			node_t = node.transition().duration(config.transitionTime)
 			node_t.attr(transform: (d) -> "translate(#{d.x} #{d.y})")
 			#node_t.style(fill: (d) -> if d.style.hi then "red" else if d.style.lo then "green" else null) # debug @payload

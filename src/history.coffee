@@ -38,4 +38,7 @@ define ['utils'], ({P, arrayUnique}) ->
 		setup: (eventtarget) ->
 			@target = eventtarget
 
+		getCurrentCentral: () ->
+			@history[0]
+
 	{ History }
