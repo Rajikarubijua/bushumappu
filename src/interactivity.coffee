@@ -22,7 +22,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				h window.innerHeight
 			window.onresize()
 			new Observer ->
-				attrs = width : 0.95*w(), height: 0.66*h()
+				attrs = width : 0.95*w(), height: 0.98*h()
 				svg.attr attrs
 				svg.style attrs
 					
@@ -36,7 +36,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			# This hasn't been reported yet.
 			svg.on('dblclick.zoom', null)
 	
-		colors = ["#E53517", "#008BD0", "#97BE0D", "#641F80", "#290E03", "#F07C0D", "#2FA199", "#FFCC00", "#E2007A"]
+		colors = ["#E53517", "#008BD0", "#97BE0D", "#641F80", "#F07C0D", "#2FA199", "#FFCC00", "#E2007A", "#290E03"]
 
 		autoFocus: (kanji) ->
 			focus = {}
@@ -63,6 +63,8 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			@parent.on('dblclick.zoom', null)
 
 		changeToCentral: (kanji) ->
+			# delete all stationLabels
+			d3.selectAll('.station-label').remove()
 			P "changeToCentral #{kanji.kanji}"
 			@history.addCentral kanji.kanji	
 			graph = @embedder.graph kanji, @radicals, @kanjis
@@ -110,15 +112,17 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			
 			that = this
 
-			radicals = []			
 			for node in nodes
 				node.label ?= node.data.kanji or node.data.radical or "?"
-				radicals.push node.data.radical if node.data.radical not in radicals
 			endnodes = (node for node in nodes when node.data.radical)
 			nodes = (node for node in nodes when node not in endnodes)
 			table = d3.select('table#details tbody')
 			tablehead = d3.select('thead').selectAll('tr')
 			table_data = [[],[],[],[],[]]
+			
+			#remove minilabels
+			minilabels = d3.selectAll(".mini-label")
+			minilabels.remove()
 
 			# join
 			edge = g_edges.selectAll(".edge")
@@ -153,13 +157,13 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			# this function sets a timer for the stationlabel to be displayed
 			# this means that after a certain time after the mouse entered the node
 			# the label will be displayed, not right away
-			setHoverTimer = (ms, func) ->
-				that.hoverTimer = setTimeout(((d) -> func d), ms)
+			setHoverTimer = ( obj, ms, func) ->
+				obj.hoverTimer = setTimeout(((d) -> func d), ms)
 				
 			
-			clearHoverTimer = (d) ->	
-				clearTimeout(that.hoverTimer)
-				that.hoverTimer = null
+			clearHoverTimer = (obj) ->	
+				clearTimeout(obj.hoverTimer)
+				obj.hoverTimer = null
 			
 			# this function delays a double click event and takes the delay in ms as 
 			# well as the function to be called after the timeout as a parameter
@@ -172,6 +176,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 						that.clickTimer = null
 						func d), ms)
 			
+			thisView = this
 			selectKanjiDetail = (d) ->
 				i = 1
 				nothingtodo = false
@@ -209,7 +214,6 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				
 				tablecontentcols = table.select('tr').selectAll('td')[0].length
 				tableheadcols = tablehead.selectAll('th')[0].length
-				
 				if tableheadcols < tablecontentcols
 					tablehead.append('th')
 				
@@ -218,13 +222,22 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				colLabels = d3.select('table#details tbody').select('tr').selectAll('td')
 					.on('mouseenter.hoverLabel', (d) -> 
 						that = this
-						setHoverTimer(1000, -> displayDeleteTableCol.call(that, d)))
+						setHoverTimer(that, 1000, -> displayDeleteTableCol.call(that, d)))
 					.on('mouseleave.resetHoverLabel', (d) ->
-						clearHoverTimer()
-						d3.select(d3.event.srcElement.childNodes[1]).remove()
-				)
+						clearHoverTimer(this)
+						d3.select(d3.event.srcElement.childNodes[1]).remove())
+ 					.on('click.hightlightSelected', (d) ->
+ 						node = d3.select('#kanji_'+d).classed('tableFocusKanji', true)
+ 						thisView.autoFocus d
+ 						kanjiId = d
+ 						setHoverTimer(node, 5000, -> 
+ 							d3.select('#kanji_'+kanjiId).classed('tableFocusKanji', false)
+ 							d3.select('#kanji_'+kanjiId).classed('station-kanji', true))
+ 						)
 			
+				
 			removeKanjiDetail = (d) ->
+				d3.event.stopPropagation()
 				index = 0
 				for label in table_data[0]
 					item = table_data[0][index]
@@ -251,6 +264,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				return if d == undefined
 				# we only need 1 button
 				return if d3.select(this).selectAll('g')[0].length != 0
+				
 				removeBtn = d3.select(this).append('g').classed('remove-col-btn', true)
 				removeBtn.append('text').text('x')
 				removeBtn.on('click.removeTableCol', (d) -> removeKanjiDetail(d))
@@ -273,11 +287,12 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				.classed("node", true)
 			stationKanji = node_g.append('g')
 				.classed("station-kanji", true)
+				.attr('id', (d) -> "kanji_"+d.data.kanji)
 				.on('mouseenter.showLabel', (d) ->  
 					that = this
-					setHoverTimer(800, -> showStationLabel.call(that, d)))
+					setHoverTimer(that, 800, -> showStationLabel.call(that, d)))
 				.on('mouseleave.resetHoverTimer', (d) ->
-					clearHoverTimer())
+					clearHoverTimer(this))
 				.on('click.displayDetailsOfNode', (d) ->
 					that = this
 					delayDblClick(550, -> selectKanjiDetail.call(that, d))
@@ -295,40 +310,32 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			endnode_g.append("text").text (d) -> d.label
 		
 			# update
+			radicals = []
 			edge.each (d) ->
-				d3.select(@).classed "line_"+d.line.data.radical, true
+				d3.select(@).attr("class", "edge line_" + d.line.data.radical)
+				radicals.push d.line.data.radical if d.line.data.radical not in radicals
 			for rad in radicals
 				selector = ".line_" + rad
-				d3.selectAll(selector).style("stroke", colors[radicals.indexOf(rad)-1])
+				d3.selectAll(selector).style("stroke", colors[radicals.indexOf(rad)])
+			i = 0
 			edge.transition().duration(config.transitionTime)
-				.attr d: (d) -> svgline01 createTubes d
+				.attr d: (d) -> 
+					i++
+					svgline01 createTubes d, i
 			edge.each (d) ->
-				if d.tube.minilabel is false
-					[vecx, vecy] = d.getVector()
-					placeholder = 10
-					ortho = d.tube.angle + Math.PI / 2
-					anglegrad = ortho * 180 / Math.PI
-					anglegrad -= 90 if 100  > anglegrad > 80
-					anglegrad -= 270 if 280  > anglegrad > 260
-					anglegrad += 180 if 260 >= anglegrad > 100
-					labelsize = 10
-					placecos = placeholder * Math.cos(ortho)
-					placesin = placeholder * Math.sin(ortho)
-					vecx = d.tube.x + vecx / 2 + (placeholder + d.tube.width * 0.5) * Math.cos(d.tube.angle) - placecos * (d.tube.radicals.length - 1) * 0.5
-					vecy = d.tube.y + vecy / 2 + (placeholder + d.tube.width * 0.5) * Math.sin(d.tube.angle) - placesin * (d.tube.radicals.length - 1) * 0.5
-					thisedge = d3.select(@.parentNode)
-					for rad in d.tube.radicals
-						selector = ".line_" + rad
-						color = d3.selectAll(selector).style("stroke")
-						posx = vecx + d.tube.radicals.indexOf(rad) * placecos
-						posy = vecy + d.tube.radicals.indexOf(rad) * placesin
-						#P posx + " " + posy
-						thisedge.append("text").classed("mini-label", true)
-							.text(rad)
-							.attr(x: posx, y: posy)
-							.attr(style: "font-size: 8px")
-							.attr(transform: "rotate(#{anglegrad}, #{posx}, #{posy})")
-							.attr(fill: "#{color}")
+				if d.tube.id % 5 is 0
+					thisparent = d3.select(@.parentNode)
+					rad = d.line.data.radical 
+					color = colors[radicals.indexOf(rad)]
+					P color + "  " +  rad
+					posx = d.tube.posx + d.tube.edges.indexOf(d) * d.tube.placecos
+					posy = d.tube.posy + d.tube.edges.indexOf(d) * d.tube.placesin
+					thisparent.append("text").classed("mini-label", true)
+						.text(rad)
+						.attr(x: posx, y: posy)
+						.attr(fill: "#{color}")
+						.attr(style: "font-size: 8px")
+						.attr(transform: "rotate(#{d.tube.anglegrad}, #{posx}, #{posy})")
 			edge.classed("filtered", (d) -> d.style.filtered)
 			node.classed("filtered", (d) -> d.style.filtered)
 			node.classed("searchresult", (d) -> d.style.isSearchresult)
@@ -346,6 +353,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 						d3.select('#bottomBar').style('max-height', '10px')
 					else
 						d3.select('#bottomBar').style('max-height', '200px')
+						
 					)
 			# exit
 			edge.exit().remove()

@@ -74,16 +74,28 @@ define ['utils', 'graph'], (utils, { Graph, Node }) ->
 			# setting the balancing result
 			for _, line of lines
 				hi = line.hi
-				line.hi = hi_nodes[...hi]
-				line.other = hi_nodes[hi..]
-				hi_nodes[...hi] = []
+				a = []
+				b = []
+				for node in hi_nodes
+					if line.radical in node.data.radicals
+						a.push node
+					else
+						b.push node
+				line.hi = a[...hi]
+				hi_nodes = b.concat a[hi..]
+			for _, line_a of lines
+				line_a.other = []
+				for _, line_b of lines
+					for node in line_b.hi
+						if line_a.radical in node.data.radicals
+							line_a.other.push node
 		
 			node_r = 64
 			kanji_offset = 5
 			central_node = kanjiNode central_kanji
 			n = central_kanji.radicals.length
 			lines = for line, line_i in d3.values lines
-				angle = line_i/n*Math.PI*2
+				angle = someAngle line_i
 				# XXX this puts the radical node next to the central node
 				r = node_r #(line.hi.length+kanji_offset) * node_r
 				x = r * Math.cos angle
@@ -98,5 +110,19 @@ define ['utils', 'graph'], (utils, { Graph, Node }) ->
 				nodes
 			
 			new Graph lines
+		
+	log2 = (x) -> Math.log(x) / Math.log(2)
+   
+	someAngle = (i) ->
+		# this is some complicated shit man
+		if i <= 1
+			angle = i * Math.PI
+		else
+			exp = Math.floor log2 i
+			a   = Math.pow 2, exp
+			b   = Math.pow 2, exp-1
+			c   = 1 + i % a
+			angle = (1/a + c/b)*Math.PI
+
 		
 	{ CentralStationEmbedder }
