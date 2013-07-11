@@ -63,6 +63,8 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			@parent.on('dblclick.zoom', null)
 
 		changeToCentral: (kanji) ->
+			# delete all stationLabels
+			d3.selectAll('.station-label').remove()
 			P "changeToCentral #{kanji.kanji}"
 			@history.addCentral kanji.kanji	
 			graph = @embedder.graph kanji, @radicals, @kanjis
