@@ -151,13 +151,13 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			# this function sets a timer for the stationlabel to be displayed
 			# this means that after a certain time after the mouse entered the node
 			# the label will be displayed, not right away
-			setHoverTimer = (ms, func) ->
-				that.hoverTimer = setTimeout(((d) -> func d), ms)
+			setHoverTimer = ( obj, ms, func) ->
+				obj.hoverTimer = setTimeout(((d) -> func d), ms)
 				
 			
-			clearHoverTimer = (d) ->	
-				clearTimeout(that.hoverTimer)
-				that.hoverTimer = null
+			clearHoverTimer = (obj) ->	
+				clearTimeout(obj.hoverTimer)
+				obj.hoverTimer = null
 			
 			# this function delays a double click event and takes the delay in ms as 
 			# well as the function to be called after the timeout as a parameter
@@ -216,14 +216,20 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				colLabels = d3.select('table#details tbody').select('tr').selectAll('td')
 					.on('mouseenter.hoverLabel', (d) -> 
 						that = this
-						setHoverTimer(1000, -> displayDeleteTableCol.call(that, d)))
+						setHoverTimer(that, 1000, -> displayDeleteTableCol.call(that, d)))
 					.on('mouseleave.resetHoverLabel', (d) ->
-						clearHoverTimer()
+						clearHoverTimer(this)
 						d3.select(d3.event.srcElement.childNodes[1]).remove())
 					.on('click.hightlightSelected', (d) ->
-						d3.select('#kanji_'+d).classed('tableFocusKanji', true)
-						thisView.autoFocus d)
+						node = d3.select('#kanji_'+d).classed('tableFocusKanji', true)
+						thisView.autoFocus d
+						kanjiId = d
+						setHoverTimer(node, 5000, -> 
+							d3.select('#kanji_'+kanjiId).classed('tableFocusKanji', false)
+							d3.select('#kanji_'+kanjiId).classed('station-kanji', true))
+						)
 			
+				
 			removeKanjiDetail = (d) ->
 				index = 0
 				for label in table_data[0]
@@ -276,9 +282,9 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				.attr('id', (d) -> "kanji_"+d.data.kanji)
 				.on('mouseenter.showLabel', (d) ->  
 					that = this
-					setHoverTimer(800, -> showStationLabel.call(that, d)))
+					setHoverTimer(that, 800, -> showStationLabel.call(that, d)))
 				.on('mouseleave.resetHoverTimer', (d) ->
-					clearHoverTimer())
+					clearHoverTimer(this))
 				.on('click.displayDetailsOfNode', (d) ->
 					that = this
 					delayDblClick(550, -> selectKanjiDetail.call(that, d))
