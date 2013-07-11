@@ -175,13 +175,13 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			# this function sets a timer for the stationlabel to be displayed
 			# this means that after a certain time after the mouse entered the node
 			# the label will be displayed, not right away
-			setHoverTimer = ( obj, ms, func) ->
-				obj.hoverTimer = setTimeout(((d) -> func d), ms)
+			setFuncTimer = ( obj, ms, func) ->
+				obj.funcTimer = setTimeout(((d) -> func d), ms)
 				
 			
-			clearHoverTimer = (obj) ->	
-				clearTimeout(obj.hoverTimer)
-				obj.hoverTimer = null
+			clearFuncTimer = (obj) ->	
+				clearTimeout(obj.funcTimer)
+				obj.funcTimer = null
 			
 			# this function delays a double click event and takes the delay in ms as 
 			# well as the function to be called after the timeout as a parameter
@@ -240,9 +240,9 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				colLabels = d3.select('table#details tbody').select('tr').selectAll('td')
 					.on('mouseenter.hoverLabel', (d) -> 
 						that = this
-						setHoverTimer(that, 1000, -> displayDeleteTableCol.call(that, d)))
+						setFuncTimer(that, 1000, -> displayDeleteTableCol.call(that, d)))
 					.on('mouseleave.resetHoverLabel', (d) ->
-						clearHoverTimer(this)
+						clearFuncTimer(this)
 						d3.select(d3.event.srcElement.childNodes[1]).remove())
  					.on('click.hightlightSelected', (d) -> thisView.autoFocus d)
 			
@@ -302,9 +302,9 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				.on('mouseenter.showLabel', (d) ->  
 					edges = d3.select(this.parentNode.__data__.edges)
 					that = this
-					setHoverTimer(that, 800, -> showStationLabel.call(that, d, edges)))
+					setFuncTimer(that, 800, -> showStationLabel.call(that, d, edges)))
 				.on('mouseleave.resetHoverTimer', (d) ->
-					clearHoverTimer(this))
+					clearFuncTimer(this))
 				.on('click.displayDetailsOfNode', (d) ->
 					that = this
 					delayDblClick(550, -> selectKanjiDetail.call(that, d))
