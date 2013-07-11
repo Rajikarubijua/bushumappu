@@ -36,7 +36,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			# This hasn't been reported yet.
 			svg.on('dblclick.zoom', null)
 	
-		colors = ["#E53517", "#008BD0", "#97BE0D", "#641F80", "#290E03", "#F07C0D", "#2FA199", "#FFCC00", "#E2007A"]
+		colors = ["#E53517", "#008BD0", "#97BE0D", "#641F80", "#F07C0D", "#2FA199", "#FFCC00", "#E2007A", "#290E03"]
 
 		autoFocus: (kanji) ->
 			focus = {}
@@ -108,15 +108,17 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			
 			that = this
 
-			radicals = []			
 			for node in nodes
 				node.label ?= node.data.kanji or node.data.radical or "?"
-				radicals.push node.data.radical if node.data.radical not in radicals
 			endnodes = (node for node in nodes when node.data.radical)
 			nodes = (node for node in nodes when node not in endnodes)
 			table = d3.select('table#details tbody')
 			tablehead = d3.select('thead').selectAll('tr')
 			table_data = [[],[],[],[],[]]
+			
+			#remove minilabels
+			minilabels = d3.selectAll(".mini-label")
+			minilabels.remove()
 
 			# join
 			edge = g_edges.selectAll(".edge")
@@ -302,40 +304,27 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			endnode_g.append("text").text (d) -> d.label
 		
 			# update
+			radicals = []
 			edge.each (d) ->
-				d3.select(@).classed "line_"+d.line.data.radical, true
+				d3.select(@).attr("class", "edge line_" + d.line.data.radical)
+				radicals.push d.line.data.radical if d.line.data.radical not in radicals
 			for rad in radicals
 				selector = ".line_" + rad
-				d3.selectAll(selector).style("stroke", colors[radicals.indexOf(rad)-1])
+				d3.selectAll(selector).style("stroke", colors[radicals.indexOf(rad)])
 			edge.transition().duration(config.transitionTime)
 				.attr d: (d) -> svgline01 createTubes d
 			edge.each (d) ->
-				if d.tube.minilabel is false
-					[vecx, vecy] = d.getVector()
-					placeholder = 10
-					ortho = d.tube.angle + Math.PI / 2
-					anglegrad = ortho * 180 / Math.PI
-					anglegrad -= 90 if 100  > anglegrad > 80
-					anglegrad -= 270 if 280  > anglegrad > 260
-					anglegrad += 180 if 260 >= anglegrad > 100
-					labelsize = 10
-					placecos = placeholder * Math.cos(ortho)
-					placesin = placeholder * Math.sin(ortho)
-					vecx = d.tube.x + vecx / 2 + (placeholder + d.tube.width * 0.5) * Math.cos(d.tube.angle) - placecos * (d.tube.radicals.length - 1) * 0.5
-					vecy = d.tube.y + vecy / 2 + (placeholder + d.tube.width * 0.5) * Math.sin(d.tube.angle) - placesin * (d.tube.radicals.length - 1) * 0.5
-					thisedge = d3.select(@.parentNode)
-					for rad in d.tube.radicals
-						selector = ".line_" + rad
-						color = d3.selectAll(selector).style("stroke")
-						posx = vecx + d.tube.radicals.indexOf(rad) * placecos
-						posy = vecy + d.tube.radicals.indexOf(rad) * placesin
-						#P posx + " " + posy
-						thisedge.append("text").classed("mini-label", true)
-							.text(rad)
-							.attr(x: posx, y: posy)
-							.attr(style: "font-size: 8px")
-							.attr(transform: "rotate(#{anglegrad}, #{posx}, #{posy})")
-							.attr(fill: "#{color}")
+				thisparent = d3.select(@.parentNode)
+				rad = d.line.data.radical 
+				color = d3.select(@).style("stroke")
+				posx = d.tube.posx + d.tube.edges.indexOf(d) * d.tube.placecos
+				posy = d.tube.posy + d.tube.edges.indexOf(d) * d.tube.placesin
+				thisparent.append("text").classed("mini-label", true)
+					.text(rad)
+					.attr(x: posx, y: posy)
+					.attr(style: "font-size: 8px")
+					.attr(transform: "rotate(#{d.tube.anglegrad}, #{posx}, #{posy})")
+					.attr(fill: "#{color}")
 			edge.classed("filtered", (d) -> d.style.filtered)
 			node.classed("filtered", (d) -> d.style.filtered)
 			node.classed("searchresult", (d) -> d.style.isSearchresult)
