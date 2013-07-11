@@ -40,7 +40,7 @@ define ['utils', 'graph'], ({P, length}, {Graph, Edge, Node, Line}) ->
 				strokewidth = parseInt d3.selectAll(selector).style("stroke-width")
 				if i is 0
 					tube.width += strokewidth / 2 + cptplaceholder
-					tube.angle = edge.getEdgeAngle() + Math.PI/2
+					tube.angle = ed.getEdgeAngle() + Math.PI/2
 					tube.width = 0 if tube.edges.length is 1
 				else
 					if i is (tube.edges.length - 1)

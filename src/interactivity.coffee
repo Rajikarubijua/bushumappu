@@ -117,6 +117,10 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			table = d3.select('table#details tbody')
 			tablehead = d3.select('thead').selectAll('tr')
 			table_data = [[],[],[],[],[]]
+			
+			#remove minilabels
+			minilabels = d3.selectAll(".mini-label")
+			minilabels.remove()
 
 			# join
 			edge = g_edges.selectAll(".edge")
@@ -308,10 +312,10 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 					[vecx, vecy] = d.getVector()
 					placeholder = 10
 					ortho = d.tube.angle + Math.PI / 2
-					anglegrad = ortho * 180 / Math.PI
-					anglegrad -= 90 if 100  > anglegrad > 80
-					anglegrad -= 270 if 280  > anglegrad > 260
-					anglegrad += 180 if 260 >= anglegrad > 100
+					anglegrad = Math.round(ortho * 180 / Math.PI)
+					anglegrad -= 90 if 135  > anglegrad > 45
+					anglegrad -= 270 if 305  > anglegrad > 235
+					anglegrad -= 180 if 235 >= anglegrad > 135
 					labelsize = 10
 					placecos = placeholder * Math.cos(ortho)
 					placesin = placeholder * Math.sin(ortho)
