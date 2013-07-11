@@ -19,6 +19,7 @@ config =
 	optimizeMaxSteps:			0
 	slideshowSteps:				1
 	nodeSize:					12
+	showInitialMode:			true
 figue.KMEANS_MAX_ITERATIONS = 1
 
 # the global object where we can put stuff into it
@@ -54,7 +55,11 @@ define ['utils', 'load_data',
 		kanjis = prepare.getKanjis radicals
 
 		view = new View { svg, config, kanjis, radicals }
-		view.doSlideshow()
+
+		if config.showInitialMode
+			view.doInitial()
+		else
+			view.doSlideshow()
 			
 	showDebugOverlay = (el) ->
 		el.append('pre').attr(id:'my').text somePrettyPrint my

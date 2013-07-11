@@ -92,6 +92,7 @@ svg > g * {
 	bottom: 0px;
 	transition: 1s;
 	position: absolute;
+	width: 100%;
 }
 
 #bottomBar #toggle-bottom-bar{
@@ -139,7 +140,7 @@ svg > g * {
 	float: left;
 	
 }
-#seafil .btn_clear{
+#seafil .btn_clear, #overlay .btn_clear{
 	width: 1em;
 	padding-left: 0.2em;
 	border-radius: 0.7em;
@@ -168,4 +169,32 @@ svg > g * {
 	padding: 6px;
 	margin: 11px;
 	font-size: 1.5em;
+}
+
+.lower{
+	padding: 3px;
+	margin: 3px;
+	float: left;	
+}
+
+
+
+#overlay {
+	display: block;
+	width: 100%;
+	height: 100%;
+	z-index: 100;
+	position: absolute;
+	background-color: white;
+}
+
+#kanjilist{
+	margin: 10px;
+	overflow: auto;
+	resize: both;
+}
+
+.nolist {
+	float:left;
+	list-style: none outside none;
 }
