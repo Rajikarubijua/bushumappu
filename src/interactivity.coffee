@@ -322,15 +322,16 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				if d.tube.id % 5 is 0
 					thisparent = d3.select(@.parentNode)
 					rad = d.line.data.radical 
-					color = d3.select(@).style("stroke")
+					color = colors[radicals.indexOf(rad)]
+					P color + "  " +  rad
 					posx = d.tube.posx + d.tube.edges.indexOf(d) * d.tube.placecos
 					posy = d.tube.posy + d.tube.edges.indexOf(d) * d.tube.placesin
 					thisparent.append("text").classed("mini-label", true)
 						.text(rad)
 						.attr(x: posx, y: posy)
+						.attr(fill: "#{color}")
 						.attr(style: "font-size: 8px")
 						.attr(transform: "rotate(#{d.tube.anglegrad}, #{posx}, #{posy})")
-						.attr(fill: "#{color}")
 			edge.classed("filtered", (d) -> d.style.filtered)
 			node.classed("filtered", (d) -> d.style.filtered)
 			node.classed("searchresult", (d) -> d.style.isSearchresult)
