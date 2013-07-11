@@ -153,13 +153,13 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			# this function sets a timer for the stationlabel to be displayed
 			# this means that after a certain time after the mouse entered the node
 			# the label will be displayed, not right away
-			setHoverTimer = (ms, func) ->
-				that.hoverTimer = setTimeout(((d) -> func d), ms)
+			setHoverTimer = ( obj, ms, func) ->
+				obj.hoverTimer = setTimeout(((d) -> func d), ms)
 				
 			
-			clearHoverTimer = (d) ->	
-				clearTimeout(that.hoverTimer)
-				that.hoverTimer = null
+			clearHoverTimer = (obj) ->	
+				clearTimeout(obj.hoverTimer)
+				obj.hoverTimer = null
 			
 			# this function delays a double click event and takes the delay in ms as 
 			# well as the function to be called after the timeout as a parameter
@@ -218,16 +218,22 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				colLabels = d3.select('table#details tbody').select('tr').selectAll('td')
 					.on('mouseenter.hoverLabel', (d) -> 
 						that = this
-						setHoverTimer(1000, -> displayDeleteTableCol.call(that, d)))
+						setHoverTimer(that, 1000, -> displayDeleteTableCol.call(that, d)))
 					.on('mouseleave.resetHoverLabel', (d) ->
-						clearHoverTimer()
+						clearHoverTimer(this)
 						d3.select(d3.event.srcElement.childNodes[1]).remove())
-					.on('click.hightlightSelected', (d) ->
-						#that = this
-						#d3.select(d).classed('.tableFocusKanji', true)
-						thisView.autoFocus d)
+ 					.on('click.hightlightSelected', (d) ->
+ 						node = d3.select('#kanji_'+d).classed('tableFocusKanji', true)
+ 						thisView.autoFocus d
+ 						kanjiId = d
+ 						setHoverTimer(node, 5000, -> 
+ 							d3.select('#kanji_'+kanjiId).classed('tableFocusKanji', false)
+ 							d3.select('#kanji_'+kanjiId).classed('station-kanji', true))
+ 						)
 			
+				
 			removeKanjiDetail = (d) ->
+				d3.event.stopPropagation()
 				index = 0
 				for label in table_data[0]
 					item = table_data[0][index]
@@ -254,6 +260,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				return if d == undefined
 				# we only need 1 button
 				return if d3.select(this).selectAll('g')[0].length != 0
+				
 				removeBtn = d3.select(this).append('g').classed('remove-col-btn', true)
 				removeBtn.append('text').text('x')
 				removeBtn.on('click.removeTableCol', (d) -> removeKanjiDetail(d))
@@ -276,11 +283,12 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				.classed("node", true)
 			stationKanji = node_g.append('g')
 				.classed("station-kanji", true)
+				.attr('id', (d) -> "kanji_"+d.data.kanji)
 				.on('mouseenter.showLabel', (d) ->  
 					that = this
-					setHoverTimer(800, -> showStationLabel.call(that, d)))
+					setHoverTimer(that, 800, -> showStationLabel.call(that, d)))
 				.on('mouseleave.resetHoverTimer', (d) ->
-					clearHoverTimer())
+					clearHoverTimer(this))
 				.on('click.displayDetailsOfNode', (d) ->
 					that = this
 					delayDblClick(550, -> selectKanjiDetail.call(that, d))
