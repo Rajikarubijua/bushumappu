@@ -327,7 +327,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 					thisparent = d3.select(@.parentNode)
 					rad = d.line.data.radical 
 					color = colors[radicals.indexOf(rad)]
-					P color + "  " +  rad
+					#P color + "  " +  rad
 					posx = d.tube.posx + d.tube.edges.indexOf(d) * d.tube.placecos
 					posy = d.tube.posy + d.tube.edges.indexOf(d) * d.tube.placesin
 					thisparent.append("text").classed("mini-label", true)
