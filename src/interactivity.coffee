@@ -140,17 +140,28 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				this.parentNode.stationLabel = undefined
 				d3.select(this).remove()
 			
-			showStationLabel = (d) ->
+			showStationLabel = (node, edges) ->
 				return if this.parentNode.stationLabel
 				stationLabel = d3.select(this.parentNode).append('g').classed("station-label", true)
 					.on('click.closeLabel', closeStationLabel)
-				rectLength = d.data.meaning.length + 2
-				stationLabel.append('rect')	
-					.attr(x:20, y:-config.nodeSize-3)
-					.attr(width: 8*rectLength, height: 2.5*config.nodeSize)
+				edgeAngles = []
+				index = 0
+				for e in edges[0][0]
+					edgeAngles.push(Math.floor(edges[0][0][index].getEdgeAngle()))
+					index++
+				if 0 in edgeAngles or 3 in edgeAngles
+					stationLabelAngle = -45
+				else
+					stationLabelAngle = 0
+				labelRect = stationLabel.append('rect')	
+					.attr(x:24, y:-config.nodeSize-3)
+					.attr(transform: "rotate(#{stationLabelAngle})")
 				stationLabel.append('text')
 					.text((d) -> d.data.meaning or '?')
-					.attr(x:23, y:-config.nodeSize/2+4)
+					.attr(x:28, y:-config.nodeSize/2+4)
+					.attr(transform: "rotate(#{stationLabelAngle})")
+				rectLength = stationLabel[0][0].lastElementChild.clientWidth + 10
+				labelRect.attr(width: rectLength, height: 2.5*config.nodeSize) # inflating the rectangle
 				this.parentNode.stationLabel = stationLabel
 				
 			
@@ -289,8 +300,9 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				.classed("station-kanji", true)
 				.attr('id', (d) -> "kanji_"+d.data.kanji)
 				.on('mouseenter.showLabel', (d) ->  
+					edges = d3.select(this.parentNode.__data__.edges)
 					that = this
-					setHoverTimer(that, 800, -> showStationLabel.call(that, d)))
+					setHoverTimer(that, 800, -> showStationLabel.call(that, d, edges)))
 				.on('mouseleave.resetHoverTimer', (d) ->
 					clearHoverTimer(this))
 				.on('click.displayDetailsOfNode', (d) ->
