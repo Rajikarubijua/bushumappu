@@ -1,28 +1,41 @@
 define ['utils'], ({P}) ->
 
 	class FilterSearch
-		constructor: ({@graph})->
-			@inHandler = new InputHandler {@graph}
 
-		filter: () ->
+		setup: (view, isInitial) ->
+			@view = view
+			if @view.graph == undefined or isInitial
+				@kanjis = @view.kanjis
+			else
+				@kanjis = @view.graph.kanjis()
+
+			isInitial ?= false
+
+			@inHandler = new InputHandler {@kanjis}
+			@inHandler.fillStandardInput('', true)
+			@inHandler.setupFilterSearchEvents(this, isInitial)
+			@inHandler.renderKanjiList() if isInitial
+			@inHandler.reloadInitialSwitch this if isInitial
+
+		filter: (graph) ->
 			criteria = @inHandler.getInputData()
-			for node in @graph.nodes
+			for node in graph.nodes
 				if @isWithinCriteria(node.data, criteria)
 					node.style.filtered = false
 				else
 					node.style.filtered = true
 
-			for edge in @graph.edges
+			for edge in graph.edges
 				nearHidden = edge.source.style.filtered or edge.target.style.filtered 
 				if nearHidden 
 					edge.style.filtered = true
 
 			@view.update()
 
-		search: () ->
+		search: (graph) ->
 			searchresult = []
 			criteria = @inHandler.getInputData()
-			for node in @graph.nodes
+			for node in graph.nodes
 				node.style.isSearchresult = false
 				if @isWithinCriteria(node.data, criteria)
 					node.style.isSearchresult = true
@@ -31,14 +44,25 @@ define ['utils'], ({P}) ->
 			@view.update()
 			searchresult
 
+		update: () ->
+			searchresult = []
+			criteria = @inHandler.getInputData()
+			for k in @kanjis
+				if @isWithinCriteria(k, criteria)
+					searchresult.push k
+
+			@inHandler.renderKanjiList searchresult
+			@inHandler.reloadInitialSwitch this
+
+
 		resetFilter: (id) -> 
 			@inHandler.fillStandardInput(id)
 
-		resetAll: () ->
-			for node in @graph.nodes
+		resetAll: (graph) ->
+			for node in graph.nodes
 				node.style.isSearchresult = false
 				node.style.filtered = false
-			for edge in @graph.edges
+			for edge in graph.edges
 				edge.style.isSearchresult = false
 				edge.style.filtered = false
 			@inHandler.clearInput()
@@ -89,34 +113,48 @@ define ['utils'], ({P}) ->
 						return true
 			false
 
-		setup: (view) ->
-			@view = view
-			@inHandler.fillStandardInput('', true)
-			@inHandler.setupFilterSearchEvents(this)
-
 
 	class InputHandler
-		constructor: ({@graph})->
+		constructor: ({@kanjis})->
 
-		displayResult: ( result ) ->
+		displayResult: ( result, length) ->
+			length ?= 7
 			resultString = ''
+			i = 0
 			for node in result
+				if i == length
+					resultString = "#{resultString} <span class=lower> [...] </span>"
+					break
+				i++
 				resultString = "#{resultString} <div class='searchKanji'>#{node.data.kanji}</div>"
 			
 			if resultString == ''
 				resultString = 'nothing found in current view'
 
+			d3.select('#kanjiresultCount')[0][0].innerHTML = "#{result.length} found"
 			d3.select('table #kanjiresult')[0][0].innerHTML =
 				"#{resultString}"
+
+		renderKanjiList: (arrKanjis) ->
+			arrKanjis ?= @kanjis
+			list = ''
+			for k in arrKanjis
+				list = "#{list} <div class='searchKanji'>#{k.kanji}</div>"
+			if list == ''
+				list = 'no kanji found'
+			else
+				list = "<div> #{arrKanjis.length} kanji have been found. </div> #{list}"
+
+			d3.select('#kanjilist')[0][0].innerHTML = list
 
 		# if flag then fill force
 		fillStandardInput: (id, flag) ->
 			flag ?= false
 			if id == 'btn_clear1' or flag
 				@fillInputData '#count_min',	1
-				@fillInputData '#count_max', @getStrokeCountMax(@graph)
+				@fillInputData '#count_max', @getStrokeCountMax(@kanjis)
 			if id == 'btn_clear2' or flag
-				@fillInputData '#frq_min',	@getFreqMax(@graph)
+				@fillInputData '#frq_min',	@getFreqMax(@kanjis)
 				@fillInputData '#frq_max',	1
 			if id == 'btn_clear3' or flag
 				@fillInputData '#grade_min',	1
@@ -124,7 +162,7 @@ define ['utils'], ({P}) ->
 
 		# fill fields with standard and with test data
 		fillSeaFilTest: ()->
-			@fillStandardInput(@graph, '', true)
+			@fillStandardInput('', true)
 
 			# testing
 			@fillInputData '#kanjistring',	'日,木,森'
@@ -140,19 +178,20 @@ define ['utils'], ({P}) ->
 			@fillInputData '#meaningstring', ''
 
 		clearSearchResult: () ->
-			d3.select('table #kanjiresult')[0][0].innerHTML = ''
+			d3.select('#kanjiresult')[0][0].innerHTML = ''
+			d3.select('#kanjiresultCount')[0][0].innerHTML = ""
 
 		fillInputData: (id, value) ->
-			path = "#seafil form #{id}"
-			d3.select(path).property 'value', value
+			path = "form #{id}"
+			d3.selectAll(path).property 'value', value
 
 		getInputInt: (id) ->
-			path = "#seafil form #{id}"
-			+d3.select(path).property('value').trim()
+			path = "form #{id}"
+			+d3.selectAll(path).property('value').trim()
 
 		getInput: (id) ->
-			path = "#seafil form #{id}"
-			d3.select(path).property('value').trim()
+			path = "form #{id}"
+			d3.selectAll(path).property('value').trim()
 
 		getInputData: () ->
 			strokeMin 	: @getInputInt '#count_min'
@@ -166,45 +205,67 @@ define ['utils'], ({P}) ->
 			inKun 		: @getInput '#kunyomistring'
 			inMean 		: @getInput '#meaningstring'
 
-		getStrokeCountMax: () ->
+		getStrokeCountMax: (kanjis) ->
 			max = 1
-			for kanji in @graph.kanjis()
+			for kanji in kanjis
 				if kanji.stroke_n > max
 					max = kanji.stroke_n
 			max
 
-		getFreqMax: () ->
+		getFreqMax: (kanjis) ->
 			max = 1
-			for kanji in @graph.kanjis()
+			for kanji in kanjis
 				if kanji.freq > max
 					max = kanji.freq
 			max	
 
-		setupFilterSearchEvents: (target) ->
+		setupFilterSearchEvents: (filsea, isInitial) ->
 
 			filter = () ->
-				target.filter()
+				filsea.filter(filsea.view.graph)
 
 			autoFocus = () ->
 				kanji = d3.event.srcElement.innerHTML
-				target.autoFocus(kanji)
+				filsea.autoFocus(kanji)
 
 			search = () ->
-				result = target.search()
-				target.inHandler.displayResult(result)
+				result = filsea.search(filsea.view.graph)
+				filsea.inHandler.displayResult(result)
 				d3.selectAll('#kanjiresult .searchKanji').on 'click' ,  autoFocus
 
 			resetFilter = () ->
-				target.resetFilter(d3.event.srcElement.id)
+				filsea.resetFilter(d3.event.srcElement.id)
+				filsea.update()
 
 			resetAll = () ->
-				target.resetAll()
+				filsea.resetAll(filsea.view.graph)
 
-			d3.select('#btn_filter').on 'click' , filter
-			d3.select('#btn_search').on 'click' , search
-			d3.select('#btn_reset').on 'click' ,  resetAll
+			update = () ->
+				filsea.update()
+
+			# all
 			d3.selectAll('#btn_clear1').on 'click' ,  resetFilter
 			d3.selectAll('#btn_clear2').on 'click' ,  resetFilter
 			d3.selectAll('#btn_clear3').on 'click' ,  resetFilter
+
+			if !isInitial
+				# central view
+				d3.select('#btn_filter').on 'click' , filter
+				d3.select('#btn_search').on 'click' , search
+				d3.select('#btn_reset').on 'click' ,  resetAll
+			else
+				# initial view
+				d3.selectAll('form input[type=text]').on 'change' , update
+
+		reloadInitialSwitch: (filsea) ->
+
+			switchToMain = () ->
+				#d3.select('#overlay').style 'display', 'none'
+				d3.select('#overlay').remove()
+				strKanji = d3.event.srcElement.innerHTML
+				filsea.view.changeToCentralFromStr(strKanji)
+
+			d3.selectAll('#overlay .searchKanji').on 'click', switchToMain
+
 
 	{FilterSearch}

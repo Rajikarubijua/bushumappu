@@ -11,8 +11,8 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			@zoom = d3.behavior.zoom()
 			@history = new History {}
 			@history.setup this
-			@graph = {}
 			@embedder = new CentralStationEmbedder { @config }
+			@seaFill = new FilterSearch {}
 
 			#setup zoom
 			w = new Signal
@@ -67,10 +67,8 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			@history.addCentral kanji.kanji	
 			graph = @embedder.graph kanji, @radicals, @kanjis
 
-			seaFill = new FilterSearch { graph }
-			seaFill.setup this
-
 			@update graph
+			@seaFill.setup this, false
 			
 		changeToCentralFromNode: (node) ->	
 			@changeToCentral node.data
@@ -86,11 +84,15 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				P "cannot set central (#{strKanji}) that is not in kanjis"
 				P @kanjis
 				return
-
-			@history.addCentral central.kanji	
+	
 			@changeToCentral central
 
+		doInitial: () ->
+			@seaFill.setup this, true
+
 		doSlideshow: () ->
+			#d3.select('#overlay').style 'display', 'none'	
+			d3.select('#overlay').remove()
 			me = this
 			do slideshow = ->
 				slideshow.steps ?= 0
