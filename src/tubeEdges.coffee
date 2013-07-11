@@ -1,16 +1,17 @@
 define ['utils', 'graph'], ({P, length}, {Graph, Edge, Node, Line}) ->
 
-	cptplaceholder = 3
+	cptplaceholder = 1
 
 	class Tube
 		constructor: ({ @radicals, @width, @angle, @x, @y, @edges}={}) ->
 			@radicals     ?= []
 			@width     ?= 0
 			@angle ?= 0
-			@x ?= 0
-			@y ?= 0
+			@posx ?= 0
+			@posy ?= 0
 			@edges ?= []
-			@minilabel ?= false
+			@placesin ?= 0
+			@placecos ?= 0
 
 	createTubes = (sourceedge) ->
 		return [sourceedge.sourcecoord, sourceedge.targetcoord] if sourceedge.calc
@@ -49,6 +50,17 @@ define ['utils', 'graph'], ({P, length}, {Graph, Edge, Node, Line}) ->
 						tube.width += strokewidth + cptplaceholder
 				i++
 			layoutTube tube
+			[vecx, vecy] = sourceedge.getVector()
+			ortho = tube.angle + Math.PI / 2
+			placeholder = 10
+			tube.anglegrad = Math.round(ortho * 180 / Math.PI)
+			tube.anglegrad -= 90 if 135  > tube.anglegrad > 45
+			tube.anglegrad -= 270 if 305  > tube.anglegrad > 235
+			tube.anglegrad -= 180 if 235 >= tube.anglegrad > 135
+			tube.placecos = placeholder * Math.cos(ortho)
+			tube.placesin = placeholder * Math.sin(ortho)
+			tube.posx = tube.x + vecx / 2 + (placeholder + tube.width * 0.5) * Math.cos(tube.angle) - tube.placecos * (tube.radicals.length - 1) * 0.5
+			tube.posy = tube.y + vecy / 2 + (placeholder + tube.width * 0.5) * Math.sin(tube.angle) - tube.placesin * (tube.radicals.length - 1) * 0.5
 		return [sourceedge.sourcecoord, sourceedge.targetcoord]
 					
 	
