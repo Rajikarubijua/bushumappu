@@ -221,8 +221,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 						clearHoverTimer()
 						d3.select(d3.event.srcElement.childNodes[1]).remove())
 					.on('click.hightlightSelected', (d) ->
-						#that = this
-						#d3.select(d).classed('.tableFocusKanji', true)
+						d3.select('#kanji_'+d).classed('tableFocusKanji', true)
 						thisView.autoFocus d)
 			
 			removeKanjiDetail = (d) ->
@@ -274,6 +273,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				.classed("node", true)
 			stationKanji = node_g.append('g')
 				.classed("station-kanji", true)
+				.attr('id', (d) -> "kanji_"+d.data.kanji)
 				.on('mouseenter.showLabel', (d) ->  
 					that = this
 					setHoverTimer(800, -> showStationLabel.call(that, d)))
