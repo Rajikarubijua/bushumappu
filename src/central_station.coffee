@@ -90,19 +90,22 @@ define ['utils', 'graph'], (utils, { Graph, Node }) ->
 						if line_a.radical in node.data.radicals
 							line_a.other.push node
 		
-			node_r = 64
+			node_r = my.config.gridSpacing
 			kanji_offset = 5
 			central_node = kanjiNode central_kanji
+			central_node.central_node = true
 			n = central_kanji.radicals.length
 			lines = for line, line_i in d3.values lines
 				angle = someAngle line_i
 				# XXX this puts the radical node next to the central node
-				r = node_r #(line.hi.length+kanji_offset) * node_r
+				r = line.hi.length + line.lo.length + kanji_offset
+				r *= radius node_r, angle
 				x = r * Math.cos angle
 				y = r * Math.sin angle
 				radical_node = new Node { x, y, data: line.radical }
 				for node, node_i in [ line.hi..., line.lo... ]
-					r = (node_i+kanji_offset) * node_r
+					r = node_i + kanji_offset
+					r *= radius node_r, angle
 					node.x = r*Math.cos angle
 					node.y = r*Math.sin angle
 				nodes = [central_node, radical_node, line.hi..., line.other..., line.lo...]
@@ -113,6 +116,12 @@ define ['utils', 'graph'], (utils, { Graph, Node }) ->
 		
 	log2 = (x) -> Math.log(x) / Math.log(2)
    
+	radius = (base, angle) ->
+		if (Math.round angle / 0.25/Math.PI) % 2 == 0
+			base
+		else
+			Math.sqrt 2 * Math.pow base, 2
+	   
 	someAngle = (i) ->
 		# this is some complicated shit man
 		if i <= 1

@@ -1,13 +1,26 @@
 define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'], 
 ({ P, compareNumber, styleZoom }, {Tube, createTubes}, {FilterSearch}, {History}, {CentralStationEmbedder}) ->
 
+	colors = [
+		"#E53517", #red
+		"#008BD0", #blue
+		"#97BE0D", #green 
+		"#641F80", #violet
+		"#F07C0D", #orange 
+		"#2FA199", #turquoise
+		"#FFCC00", #yellow
+		"#E2007A", #pink
+		"#290E03"  #brown
+	]
+
 	class View
-		constructor: ({ svg, @config, @kanjis, @radicals }) ->
+		constructor: ({ svg, @config, @kanjis, @radicals, @optimizer }) ->
 			@svg = svg.g
 			@parent = svg
-			@g_edges = @svg.append 'g'
-			@g_nodes = @svg.append 'g'
-			@g_endnodes = @svg.append 'g'
+			@g_edges = @svg.append('g').attr('id': 'edge_')
+			@g_nodes = @svg.append('g').attr('id': 'node_')
+			@g_endnodes = @svg.append('g').attr('id': 'ednnode_')
+			@g_stationLabels = @svg.append('g').attr('id': 'stationLabel_')
 			@zoom = d3.behavior.zoom()
 			@history = new History {}
 			@history.setup this
@@ -35,18 +48,6 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			# And we need it to do defered, cause d3 would fail unexpectetly.
 			# This hasn't been reported yet.
 			svg.on('dblclick.zoom', null)
-	
-		colors = [
-				"#E53517", #red
-				"#008BD0", #blue
-				"#97BE0D", #green 
-				"#641F80", #violet
-				"#F07C0D", #orange 
-				"#2FA199", #turquoise
-				"#FFCC00", #yellow
-				"#E2007A", #pink
-				"#290E03"  #brown
-			]
 
 		autoFocus: (kanji) ->
 			focus = {}
@@ -86,6 +87,10 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			@history.addCentral kanji.kanji	
 			graph = @embedder.graph kanji, @radicals, @kanjis
 
+			@optimizer.graph graph
+			@optimizer.snapNodes =>
+				@update graph
+
 			@update graph
 			@seaFill.setup this, false
 			
@@ -118,12 +123,18 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				return if slideshow.steps++ >= me.config.slideshowSteps
 				i = Math.floor Math.random()*me.kanjis.length
 				kanji = me.kanjis[i]
+				if slideshow.steps == 1
+					kanji = my.kanjis[config.debugKanji]
 				me.changeToCentral kanji
 				setTimeout slideshow, me.config.transitionTime + 2000
 	
+		invalidateEdgeCoords: (edges) ->
+			for edge in edges
+				edge.sourcecoord = edge.targetcoord = undefined
+	
 		update: (graph) ->
 			@graph = graph if graph
-			{ svg, config, g_edges, g_nodes, g_endnodes } = this
+			{ svg, config, g_edges, g_nodes, g_endnodes, g_stationLabels } = this
 			{ nodes, lines, edges } = @graph
 			r = config.nodeSize
 			
@@ -132,14 +143,20 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			for node in nodes
 				node.label ?= node.data.kanji or node.data.radical or "?"
 			endnodes = (node for node in nodes when node.data.radical)
-			nodes = (node for node in nodes when node not in endnodes)
+			#central_node = (node for node in nodes when node.central_node)
+			#central_node = central_node[0]
+			central_node = undefined
+			nodes = (node for node in nodes when node not in endnodes and node != central_node)
+			nodes.push central_node if central_node
 			table = d3.select('table#details tbody')
 			tablehead = d3.select('thead').selectAll('tr')
 			table_data = [[],[],[],[],[]]
 			
-			#remove minilabels
+			# remove minilabels
 			minilabels = d3.selectAll(".mini-label")
 			minilabels.remove()
+			
+			@invalidateEdgeCoords edges
 
 			# join
 			edge = g_edges.selectAll(".edge")
@@ -154,13 +171,14 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			
 			# enter
 			closeStationLabel = (d) ->
-				this.parentNode.stationLabel = undefined
-				d3.select(this).remove()
+				d.style.stationLabel.remove()
+				d.style.stationLabel = undefined
 			
 			showStationLabel = (node, edges) ->
-				return if this.parentNode.stationLabel
-				stationLabel = d3.select(this.parentNode).append('g').classed("station-label", true)
-					.on('click.closeLabel', closeStationLabel)
+				return if node.style.stationLabel
+				stationLabel = g_stationLabels.append('g').classed("station-label", true)
+					.attr(transform: nodeTransform node)
+					.on('click.closeLabel', (d) -> closeStationLabel node)
 				edgeAngles = []
 				index = 0
 				for e in edges[0][0]
@@ -180,13 +198,12 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 					.attr(x:24, y:-config.nodeSize-3)
 					.attr(transform: "rotate(#{stationLabelAngle})")
 				label_text = stationLabel.append('text')
-					.text((d) -> d.data.meaning or '?')
+					.text((d) -> node.data.meaning or '?')
 					.attr(x:28, y:-config.nodeSize/2+4)
 					.attr(transform: "rotate(#{stationLabelAngle})")
 				rectLength = label_text.node().getBBox().width + 8
 				label_rect.attr(width: rectLength, height: 2.5*config.nodeSize) # inflating the rectangle
-				this.parentNode.stationLabel = stationLabel
-				
+				node.style.stationLabel = stationLabel
 			
 			# this function sets a timer for the stationlabel to be displayed
 			# this means that after a certain time after the mouse entered the node
@@ -347,29 +364,17 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				d3.selectAll(selector).style("stroke", colors[radicals.indexOf(rad)])
 			i = 0
 			edge.transition().duration(config.transitionTime)
-				.attr d: (d) -> 
-					i++
-					svgline01 createTubes d, i
-			edge.each (d) ->
-				if d.tube.id % 5 is 0
-					thisparent = d3.select(@.parentNode)
-					rad = d.line.data.radical 
-					color = colors[radicals.indexOf(rad)]
-					#P color + "  " +  rad
-					posx = d.tube.posx + d.tube.edges.indexOf(d) * d.tube.placecos
-					posy = d.tube.posy + d.tube.edges.indexOf(d) * d.tube.placesin
-					thisparent.append("text").classed("mini-label", true)
-						.text(rad)
-						.attr(x: posx, y: posy)
-						.attr(fill: "#{color}")
-						.attr(style: "font-size: 8px")
-						.attr(transform: "rotate(#{d.tube.anglegrad}, #{posx}, #{posy})")
+				.attr d: (d) -> svgline01 createTubes d
+			that = this
+			edge.each (d) -> 
+				if d.tube.id % 5 == 0
+					that.createMiniLabel d, this, radicals
 			edge.classed("filtered", (d) -> d.style.filtered)
 			node.classed("filtered", (d) -> d.style.filtered)
 			node.classed("searchresult", (d) -> d.style.isSearchresult)
 			node.classed("focused", (d) -> d.style.isFocused)
 			node_t = node.transition().duration(config.transitionTime)
-			node_t.attr(transform: (d) -> "translate(#{d.x} #{d.y})")
+			node_t.attr(transform: (d) -> nodeTransform d)
 			#node_t.style(fill: (d) -> if d.style.hi then "red" else if d.style.lo then "green" else null) # debug @payload
 			node_t.select('text').text (d) -> d.label
 
@@ -401,6 +406,27 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 					.on 'tick', -> updatePositions()
 				node.call force.drag
 			
+		createMiniLabel: (edge, dom, radicals) ->
+			parent = d3.select(dom.parentNode)
+			{ line, tube } = edge 
+			rad = line.data.radical 
+			color = colors[radicals.indexOf(rad)]
+			i = tube.edges.indexOf(edge) - tube.edges.length/2
+			length = edge.length() / 2
+			x_mid = tube.x + length * Math.cos tube.angle
+			y_mid = tube.y + length * Math.sin tube.angle
+			x = x_mid + 8 * i * Math.cos tube.angle
+			y = y_mid + 8 * i * Math.sin tube.angle
+			x += (tube.width+5) * Math.cos tube.angle + 0.5*Math.PI
+			y += (tube.width+5) * Math.sin tube.angle + 0.5*Math.PI
+			grad = tube.angle / 2/Math.PI * 360
+			parent.append("text").classed("mini-label", true)
+				.text(rad)
+				.attr({ x, y })
+				.attr(fill: "#{color}")
+				.attr(style: "font-size: 8px")
+				.attr(transform: "rotate(#{grad}, #{x}, #{y})")
+			
 	svgline = d3.svg.line()
 		.x(({x}) -> x)
 		.y(({y}) -> y)
@@ -409,6 +435,8 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 		.x( (d) -> d[0])
 		.y( (d) -> d[1])
 	
+	nodeTransform = (d) -> 
+		"translate(#{d.x} #{d.y})"
 
 	endnodeSelectLine = (d) ->
 		selector = ".line_"+d.data.radical

@@ -13,6 +13,10 @@ define ['utils'], (utils) ->
 			@id    ?= next_id++
 		
 		coord: -> @x+"x"+@y
+		
+		move: (@x, @y) ->
+			
+		moveBy: (x, y) -> @move @x+x, @y+y
 	
 	class Edge
 		constructor: ({ @source, @target, @line, @radical }={}) ->
@@ -47,6 +51,8 @@ define ['utils'], (utils) ->
 		lengthSqr: ->
 			[ x, y ] = @getVector()
 			(Math.pow x, 2) + (Math.pow y, 2)
+			
+		length: -> Math.sqrt @lengthSqr()
 
 
 	class Line
@@ -62,6 +68,7 @@ define ['utils'], (utils) ->
 			@nodes = []
 			@edges = []
 			@lines = []
+			@nodesById = {}
 			nodes = []
 			for line_nodes in lines
 				for node in line_nodes
@@ -85,8 +92,25 @@ define ['utils'], (utils) ->
 					@edges.push edge
 					line.edges.push edge
 					source = target
+			for node in @nodes
+				@nodesById[node.id] = node
+				if node.edges.length > 10
+					P "node with many edges", node
 					
 		kanjis: ->
 			node.data for node in @nodes when node.data.kanji
+			
+		toPlainLines: ->
+			nodes = {}
+			for node in @nodes
+				nodes[node.id] =
+					x: node.x,
+					y: node.y,
+					data: node.data,
+					id: node.id,
+					fixed: node.fixed
+			lines = for line in @lines
+				for node in line.nodes
+					nodes[node.id]
 
 	my.graph = { Node, Edge, Line, Graph }
