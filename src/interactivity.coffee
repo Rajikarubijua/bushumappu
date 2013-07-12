@@ -2,7 +2,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 ({ P, compareNumber, styleZoom }, {Tube, createTubes}, {FilterSearch}, {History}, {CentralStationEmbedder}) ->
 
 	class View
-		constructor: ({ svg, @config, @kanjis, @radicals }) ->
+		constructor: ({ svg, @config, @kanjis, @radicals, @optimizer }) ->
 			@svg = svg.g
 			@parent = svg
 			@g_edges = @svg.append 'g'
@@ -75,6 +75,10 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			P "changeToCentral #{kanji.kanji}"
 			@history.addCentral kanji.kanji	
 			graph = @embedder.graph kanji, @radicals, @kanjis
+
+			@optimizer.graph graph
+			@optimizer.snapNodes =>
+				@update graph
 
 			@update graph
 			@seaFill.setup this, false

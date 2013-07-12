@@ -11,10 +11,10 @@ window.my = {
 
 define ['utils', 'load_data', 
 	'interactivity', 'routing', 'prepare_data',
-	'test_routing', 'test_bench', 'tests'], (
+	'test_routing', 'test_bench', 'tests', 'optimizer_client'], (
 	{ P, somePrettyPrint, styleZoom, async, prettyDebug, copyAttrs },
 	loadData, { View }, { MetroMapLayout }, prepare,
-	testRouting, testBench, tests
+	testRouting, testBench, tests, { Optimizer }
 	) ->
 
 	main = () ->
@@ -32,12 +32,13 @@ define ['utils', 'load_data',
 		radicals = prepare.getRadicals()
 		kanjis = prepare.getKanjis radicals
 
-		view = new View { svg, config, kanjis, radicals }
+		optimizer = new Optimizer ->
+			view = new View { svg, config, kanjis, radicals, optimizer }
 
-		if config.showInitialMode
-			view.doInitial()
-		else
-			view.doSlideshow()
+			if config.showInitialMode
+				view.doInitial()
+			else
+				view.doSlideshow()
 			
 	showDebugOverlay = (el) ->
 		el.append('pre').attr(id:'my').text somePrettyPrint my
