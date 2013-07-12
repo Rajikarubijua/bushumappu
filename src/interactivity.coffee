@@ -108,8 +108,14 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				return if slideshow.steps++ >= me.config.slideshowSteps
 				i = Math.floor Math.random()*me.kanjis.length
 				kanji = me.kanjis[i]
+				if slideshow.steps == 1
+					kanji = my.kanjis[config.debugKanji]
 				me.changeToCentral kanji
 				setTimeout slideshow, me.config.transitionTime + 2000
+	
+		invalidateEdgeCoords: (edges) ->
+			for edge in edges
+				edge.sourcecoord = edge.targetcoord = undefined
 	
 		update: (graph) ->
 			@graph = graph if graph
@@ -127,9 +133,11 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			tablehead = d3.select('thead').selectAll('tr')
 			table_data = [[],[],[],[],[]]
 			
-			#remove minilabels
+			# remove minilabels
 			minilabels = d3.selectAll(".mini-label")
 			minilabels.remove()
+			
+			@invalidateEdgeCoords edges
 
 			# join
 			edge = g_edges.selectAll(".edge")
