@@ -420,12 +420,16 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			x += (tube.width+5) * Math.cos tube.angle + 0.5*Math.PI
 			y += (tube.width+5) * Math.sin tube.angle + 0.5*Math.PI
 			grad = tube.angle / 2/Math.PI * 360
+			grad = if (Math.round grad/45) % 2 == 0 then 0 else -45
 			parent.append("text").classed("mini-label", true)
 				.text(rad)
-				.attr({ x, y })
-				.attr(fill: "#{color}")
-				.attr(style: "font-size: 8px")
-				.attr(transform: "rotate(#{grad}, #{x}, #{y})")
+				.style(
+					"font-size": "8px"
+					"font-anchor": "middle"
+					"alignment-baseline": "central")
+				.attr
+					fill: "#{color}"
+					transform: "translate(#{x} #{y}) rotate(#{grad}, #{x}, #{y})"
 			
 	svgline = d3.svg.line()
 		.x(({x}) -> x)
