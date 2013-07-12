@@ -155,12 +155,7 @@ svg > g * {
 	float: left;
 	
 }
-#seafil .btn_clear, #overlay .btn_clear{
-	width: 1em;
-	padding-left: 0.2em;
-	border-radius: 0.7em;
-	border-width: 0;
-}
+
 .no-wrap{
 	white-space: nowrap;
 }
@@ -207,9 +202,4 @@ svg > g * {
 	margin: 10px;
 	overflow: auto;
 	resize: both;
-}
-
-.nolist {
-	float:left;
-	list-style: none outside none;
 }
