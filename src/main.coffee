@@ -19,7 +19,7 @@ config =
 	optimizeMaxSteps:			0
 	slideshowSteps:				1
 	nodeSize:					12
-	showInitialMode:			false
+	showInitialMode:			true
 figue.KMEANS_MAX_ITERATIONS = 1
 
 # the global object where we can put stuff into it

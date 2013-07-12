@@ -37,7 +37,17 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			# This hasn't been reported yet.
 			svg.on('dblclick.zoom', null)
 	
-		colors = ["#E53517", "#008BD0", "#97BE0D", "#641F80", "#F07C0D", "#2FA199", "#FFCC00", "#E2007A", "#290E03"]
+		colors = [
+				"#E53517", #red
+				"#008BD0", #blue
+				"#97BE0D", #green 
+				"#641F80", #violet
+				"#F07C0D", #orange 
+				"#2FA199", #turquoise
+				"#FFCC00", #yellow
+				"#E2007A", #pink
+				"#290E03"  #brown
+			]
 
 		autoFocus: (kanji) ->
 			focus = {}
