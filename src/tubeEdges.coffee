@@ -3,6 +3,7 @@ define ['utils', 'graph'], ({P, length}, {Graph, Edge, Node, Line}) ->
 	cptplaceholder = 3
 
 	class Tube
+		tube_id = 0
 		constructor: ({ @radicals, @width, @angle, @x, @y, @edges}={}) ->
 			@radicals     ?= []
 			@width     ?= 0
@@ -11,7 +12,7 @@ define ['utils', 'graph'], ({P, length}, {Graph, Edge, Node, Line}) ->
 			@y ?= 0
 			@edges ?= []
 			@minilabel ?= false
-
+			@id = tube_id++
 	createTubes = (my_edge) ->
 		if my_edge.sourcecoord? and my_edge.targetcoord?
 			return [my_edge.sourcecoord, my_edge.targetcoord]
@@ -19,7 +20,7 @@ define ['utils', 'graph'], ({P, length}, {Graph, Edge, Node, Line}) ->
 		tube = new Tube
 		tube.x = source.x
 		tube.y = source.y
-		tube.angle = my_edge.getEdgeAngle() + Math.PI/2
+		tube.angle = my_edge.getEdgeAngle()
 		for edge in source.edges
 			continue if not (
 				edge.source in [ source, target ] and
@@ -29,8 +30,9 @@ define ['utils', 'graph'], ({P, length}, {Graph, Edge, Node, Line}) ->
 			{ radical } = edge.line.data
 			tube.radicals.push radical if radical not in tube.radicals
 		# layout tube
-		cos_angle = Math.cos tube.angle
-		sin_angle = Math.sin tube.angle
+		normal = tube.angle + 0.5*Math.PI
+		cos_angle = Math.cos normal
+		sin_angle = Math.sin normal
 		edges_n = tube.edges.length
 		for edge, edge_i in tube.edges
 			{ source, target, line } = edge

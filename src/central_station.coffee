@@ -93,6 +93,7 @@ define ['utils', 'graph'], (utils, { Graph, Node }) ->
 			node_r = my.config.gridSpacing
 			kanji_offset = 5
 			central_node = kanjiNode central_kanji
+			central_node.central_node = true
 			n = central_kanji.radicals.length
 			lines = for line, line_i in d3.values lines
 				angle = someAngle line_i

@@ -51,6 +51,8 @@ define ['utils'], (utils) ->
 		lengthSqr: ->
 			[ x, y ] = @getVector()
 			(Math.pow x, 2) + (Math.pow y, 2)
+			
+		length: -> Math.sqrt @lengthSqr()
 
 
 	class Line

@@ -1,6 +1,18 @@
 define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'], 
 ({ P, compareNumber, styleZoom }, {Tube, createTubes}, {FilterSearch}, {History}, {CentralStationEmbedder}) ->
 
+	colors = [
+		"#E53517", #red
+		"#008BD0", #blue
+		"#97BE0D", #green 
+		"#641F80", #violet
+		"#F07C0D", #orange 
+		"#2FA199", #turquoise
+		"#FFCC00", #yellow
+		"#E2007A", #pink
+		"#290E03"  #brown
+	]
+
 	class View
 		constructor: ({ svg, @config, @kanjis, @radicals, @optimizer }) ->
 			@svg = svg.g
@@ -35,18 +47,6 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			# And we need it to do defered, cause d3 would fail unexpectetly.
 			# This hasn't been reported yet.
 			svg.on('dblclick.zoom', null)
-	
-		colors = [
-				"#E53517", #red
-				"#008BD0", #blue
-				"#97BE0D", #green 
-				"#641F80", #violet
-				"#F07C0D", #orange 
-				"#2FA199", #turquoise
-				"#FFCC00", #yellow
-				"#E2007A", #pink
-				"#290E03"  #brown
-			]
 
 		autoFocus: (kanji) ->
 			focus = {}
@@ -142,7 +142,11 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			for node in nodes
 				node.label ?= node.data.kanji or node.data.radical or "?"
 			endnodes = (node for node in nodes when node.data.radical)
-			nodes = (node for node in nodes when node not in endnodes)
+			#central_node = (node for node in nodes when node.central_node)
+			#central_node = central_node[0]
+			central_node = undefined
+			nodes = (node for node in nodes when node not in endnodes and node != central_node)
+			nodes.push central_node if central_node
 			table = d3.select('table#details tbody')
 			tablehead = d3.select('thead').selectAll('tr')
 			table_data = [[],[],[],[],[]]
@@ -359,23 +363,11 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				d3.selectAll(selector).style("stroke", colors[radicals.indexOf(rad)])
 			i = 0
 			edge.transition().duration(config.transitionTime)
-				.attr d: (d) -> 
-					i++
-					svgline01 createTubes d, i
-			edge.each (d) ->
-				if d.tube.id % 5 is 0
-					thisparent = d3.select(@.parentNode)
-					rad = d.line.data.radical 
-					color = colors[radicals.indexOf(rad)]
-					#P color + "  " +  rad
-					posx = d.tube.posx + d.tube.edges.indexOf(d) * d.tube.placecos
-					posy = d.tube.posy + d.tube.edges.indexOf(d) * d.tube.placesin
-					thisparent.append("text").classed("mini-label", true)
-						.text(rad)
-						.attr(x: posx, y: posy)
-						.attr(fill: "#{color}")
-						.attr(style: "font-size: 8px")
-						.attr(transform: "rotate(#{d.tube.anglegrad}, #{posx}, #{posy})")
+				.attr d: (d) -> svgline01 createTubes d
+			that = this
+			edge.each (d) -> 
+				if d.tube.id % 5 == 0
+					that.createMiniLabel d, this, radicals
 			edge.classed("filtered", (d) -> d.style.filtered)
 			node.classed("filtered", (d) -> d.style.filtered)
 			node.classed("searchresult", (d) -> d.style.isSearchresult)
@@ -413,6 +405,27 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 					.on 'tick', -> updatePositions()
 				node.call force.drag
 			
+		createMiniLabel: (edge, dom, radicals) ->
+			parent = d3.select(dom.parentNode)
+			{ line, tube } = edge 
+			rad = line.data.radical 
+			color = colors[radicals.indexOf(rad)]
+			i = tube.edges.indexOf(edge) - tube.edges.length/2
+			length = edge.length() / 2
+			x_mid = tube.x + length * Math.cos tube.angle
+			y_mid = tube.y + length * Math.sin tube.angle
+			x = x_mid + 8 * i * Math.cos tube.angle
+			y = y_mid + 8 * i * Math.sin tube.angle
+			x += 24 * Math.cos tube.angle + 0.5*Math.PI
+			y += 24 * Math.sin tube.angle + 0.5*Math.PI
+			grad = tube.angle / 2/Math.PI * 360
+			parent.append("text").classed("mini-label", true)
+				.text(rad)
+				.attr({ x, y })
+				.attr(fill: "#{color}")
+				.attr(style: "font-size: 8px")
+				.attr(transform: "rotate(#{grad}, #{x}, #{y})")
+			
 	svgline = d3.svg.line()
 		.x(({x}) -> x)
 		.y(({y}) -> y)
@@ -420,7 +433,6 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 	svgline01 = d3.svg.line()
 		.x( (d) -> d[0])
 		.y( (d) -> d[1])
-	
 
 	endnodeSelectLine = (d) ->
 		selector = ".line_"+d.data.radical
