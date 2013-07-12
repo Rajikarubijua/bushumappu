@@ -154,21 +154,28 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				edgeAngles = []
 				index = 0
 				for e in edges[0][0]
-					edgeAngles.push(Math.floor(edges[0][0][index].getEdgeAngle()))
+					a = edges[0][0][index].getEdgeAngle()
+					r_a = Math.round(a / (0.25*Math.PI))
+					edgeAngles.push(r_a)
 					index++
-				if 0 in edgeAngles or 3 in edgeAngles
+				if 0 in edgeAngles and -1 in edgeAngles
+					stationLabelAngle = 0
+				else if 0 in edgeAngles or 4 in edgeAngles
 					stationLabelAngle = -45
+				else if -2 in edgeAngles or 0 in edgeAngles
+					stationLabelAngle = 0
 				else
 					stationLabelAngle = 0
-				labelRect = stationLabel.append('rect')	
+				P edgeAngles , ' ,', stationLabelAngle
+				label_rect = stationLabel.append('rect')
 					.attr(x:24, y:-config.nodeSize-3)
 					.attr(transform: "rotate(#{stationLabelAngle})")
-				stationLabel.append('text')
+				label_text = stationLabel.append('text')
 					.text((d) -> d.data.meaning or '?')
 					.attr(x:28, y:-config.nodeSize/2+4)
 					.attr(transform: "rotate(#{stationLabelAngle})")
-				rectLength = stationLabel[0][0].lastElementChild.clientWidth + 10
-				labelRect.attr(width: rectLength, height: 2.5*config.nodeSize) # inflating the rectangle
+				rectLength = label_text.node().getBBox().width + 8
+				label_rect.attr(width: rectLength, height: 2.5*config.nodeSize) # inflating the rectangle
 				this.parentNode.stationLabel = stationLabel
 				
 			
