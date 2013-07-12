@@ -157,30 +157,47 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				this.parentNode.stationLabel = undefined
 				d3.select(this).remove()
 			
-			showStationLabel = (d) ->
+			showStationLabel = (node, edges) ->
 				return if this.parentNode.stationLabel
 				stationLabel = d3.select(this.parentNode).append('g').classed("station-label", true)
 					.on('click.closeLabel', closeStationLabel)
-				rectLength = d.data.meaning.length + 2
-				stationLabel.append('rect')	
-					.attr(x:20, y:-config.nodeSize-3)
-					.attr(width: 8*rectLength, height: 2.5*config.nodeSize)
-				stationLabel.append('text')
+				edgeAngles = []
+				index = 0
+				for e in edges[0][0]
+					a = edges[0][0][index].getEdgeAngle()
+					r_a = Math.round(a / (0.25*Math.PI))
+					edgeAngles.push(r_a)
+					index++
+				if 0 in edgeAngles and -1 in edgeAngles
+					stationLabelAngle = 0
+				else if 0 in edgeAngles or 4 in edgeAngles
+					stationLabelAngle = -45
+				else if -2 in edgeAngles or 0 in edgeAngles
+					stationLabelAngle = 0
+				else
+					stationLabelAngle = 0
+				label_rect = stationLabel.append('rect')
+					.attr(x:24, y:-config.nodeSize-3)
+					.attr(transform: "rotate(#{stationLabelAngle})")
+				label_text = stationLabel.append('text')
 					.text((d) -> d.data.meaning or '?')
-					.attr(x:23, y:-config.nodeSize/2+4)
+					.attr(x:28, y:-config.nodeSize/2+4)
+					.attr(transform: "rotate(#{stationLabelAngle})")
+				rectLength = label_text.node().getBBox().width + 8
+				label_rect.attr(width: rectLength, height: 2.5*config.nodeSize) # inflating the rectangle
 				this.parentNode.stationLabel = stationLabel
 				
 			
 			# this function sets a timer for the stationlabel to be displayed
 			# this means that after a certain time after the mouse entered the node
 			# the label will be displayed, not right away
-			setHoverTimer = ( obj, ms, func) ->
-				obj.hoverTimer = setTimeout(((d) -> func d), ms)
+			setFuncTimer = ( obj, ms, func) ->
+				obj.funcTimer = setTimeout(((d) -> func d), ms)
 				
 			
-			clearHoverTimer = (obj) ->	
-				clearTimeout(obj.hoverTimer)
-				obj.hoverTimer = null
+			clearFuncTimer = (obj) ->	
+				clearTimeout(obj.funcTimer)
+				obj.funcTimer = null
 			
 			# this function delays a double click event and takes the delay in ms as 
 			# well as the function to be called after the timeout as a parameter
@@ -239,9 +256,9 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				colLabels = d3.select('table#details tbody').select('tr').selectAll('td')
 					.on('mouseenter.hoverLabel', (d) -> 
 						that = this
-						setHoverTimer(that, 1000, -> displayDeleteTableCol.call(that, d)))
+						setFuncTimer(that, 1000, -> displayDeleteTableCol.call(that, d)))
 					.on('mouseleave.resetHoverLabel', (d) ->
-						clearHoverTimer(this)
+						clearFuncTimer(this)
 						d3.select(d3.event.srcElement.childNodes[1]).remove())
  					.on('click.hightlightSelected', (d) -> thisView.autoFocus d)
 			
@@ -299,10 +316,11 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				.classed("station-kanji", true)
 				.attr('id', (d) -> "kanji_"+d.data.kanji)
 				.on('mouseenter.showLabel', (d) ->  
+					edges = d3.select(this.parentNode.__data__.edges)
 					that = this
-					setHoverTimer(that, 800, -> showStationLabel.call(that, d)))
+					setFuncTimer(that, 800, -> showStationLabel.call(that, d, edges)))
 				.on('mouseleave.resetHoverTimer', (d) ->
-					clearHoverTimer(this))
+					clearFuncTimer(this))
 				.on('click.displayDetailsOfNode', (d) ->
 					that = this
 					delayDblClick(550, -> selectKanjiDetail.call(that, d))
