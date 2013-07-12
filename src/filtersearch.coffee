@@ -113,7 +113,6 @@ define ['utils'], ({P}) ->
 						return true
 			false
 
-
 	class InputHandler
 		constructor: ({@kanjis})->
 
@@ -132,19 +131,22 @@ define ['utils'], ({P}) ->
 				resultString = 'nothing found in current view'
 
 			d3.select('#kanjiresultCount')[0][0].innerHTML = "#{result.length} found"
-			d3.select('table #kanjiresult')[0][0].innerHTML =
-				"#{resultString}"
+			d3.select('#kanjiresult')[0][0].innerHTML = "#{resultString}"
+
 
 		renderKanjiList: (arrKanjis) ->
 			arrKanjis ?= @kanjis
-			list = ''
+			list  = ''
+			count = ''
 			for k in arrKanjis
 				list = "#{list} <div class='searchKanji'>#{k.kanji}</div>"
-			if list == ''
-				list = 'no kanji found'
-			else
-				list = "<div> #{arrKanjis.length} kanji have been found. </div> #{list}"
 
+			if list == ''
+				count = 'no kanji found'
+			else
+				count = "<div> #{arrKanjis.length} kanji have been found. </div>"
+
+			d3.select('#kanjicount')[0][0].innerHTML = count
 			d3.select('#kanjilist')[0][0].innerHTML = list
 
 		# if flag then fill force

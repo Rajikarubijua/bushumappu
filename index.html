@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf8"/>
-<title> BushuMappu - 部首 マップ</title>
+<title> BushuMappu 部首マップ</title>
 <script>
 var require = {
 	urlArgs: "bust=" +  (new Date()).getTime()
@@ -13,12 +13,16 @@ var require = {
 <script src="lib/reactor.js"></script>
 <script data-main="js/main.js" src="lib/require.js"></script>
 <link href="pure-min.css" rel="stylesheet"/>
+<link href="page.css"    rel="stylesheet"/>
 <link href="style.css"    rel="stylesheet"/>
 </head>
 <body>
 	<div id="overlay">
 		<div id="content">
-			<h1>  BushuMappu - 部首 マップ </h1>
+			<div class="header">  
+				<h1> BushuMappu 部首マップ </h1>
+				<div class="sub"> a tube map that visualizes radicals of kanji  </div>
+			</div>
 			<div class="row">
 				<form>
 					<table>
@@ -52,39 +56,41 @@ var require = {
 					<tr>
 						<td>Meaning</td>
 						<td><input type="text" id="meaningstring" class="long"></td>
-						<td colspan="2"> </td>
+						<td colspan="2" id="kanjicount"> </td>
 					</tr>
 
 					</table>
 				</form>
 			</div>
-			<p> Please select a Kanji to start with</p>
-			<div id="kanjilist">
-					loading kanjis...
+			<div class="listwrapper">
+				<div id="kanjilist">
+						loading kanjis...
+				</div>
 			</div>
 		</div>
 		<div id="footer">
-			<hr>
-			<ol class="nolist">
-             <li><strong>Gruppe</strong> Team D - Tubemap</li>
-             <li><strong>Semester</strong> Sommersemester 13</li>
-             <li><strong>Mitglieder</strong> Gilbert R. Röhrbein, <br>Alexandra Weiß, Robert Morawa, <br>Paula Schöley</li>
-             <li><strong>Source</strong> <a href="https://github.com/organizations/Rajikarubijua">Git</a></li>
-            </ol>
-			<ol class="nolist">
-             <li><strong>Professur</strong> für Multimedia-Technologie </li>
-             <li><strong>Institut</strong> für Software- und Multimediatechnik</li>
-             <li><strong>Fakultät</strong> Informatik</li>
-             <li><strong>Betreuung</strong> Ricardo Langner, Ulrike Kister</li>
-             <li>Technische Universität Dresden</li>
-             <li><a href="http://mt.inf.tu-dresden.de/index.html">Zum Lehrstuhl</a></li>
-            </ol>
-			<ol class="nolist">
-             <li><strong>Language</strong> CoffeeScript </li>
-             <li><strong>Framework</strong> D3 JS</li>
-             <li><strong>Style</strong> normalize.css </li>
-             <li><strong>Data</strong>???</li>
-            </ol>
+			<div class="footwrapper">
+				<ol class="nolist">
+	             <li><strong>Gruppe</strong> Team D - Tubemap</li>
+	             <li><strong>Semester</strong> Sommersemester 13</li>
+	             <li><strong>Mitglieder</strong> Gilbert R. Röhrbein, <br>Alexandra Weiß, Robert Morawa, <br>Paula Schöley</li>
+	             <li><strong>Source</strong> <a href="https://github.com/organizations/Rajikarubijua">Git</a></li>
+	            </ol>
+				<ol class="nolist">
+	             <li><strong>Professur</strong> für Multimedia-Technologie </li>
+	             <li><strong>Institut</strong> für Software- und Multimediatechnik</li>
+	             <li><strong>Fakultät</strong> Informatik</li>
+	             <li><strong>Betreuung</strong> Ricardo Langner, Ulrike Kister</li>
+	             <li>Technische Universität Dresden</li>
+	             <li><a href="http://mt.inf.tu-dresden.de/index.html">Zum Lehrstuhl</a></li>
+	            </ol>
+				<ol class="nolist">
+	             <li><strong>Language</strong> CoffeeScript </li>
+	             <li><strong>Framework</strong> D3 JS</li>
+	             <li><strong>Style</strong> normalize.css </li>
+	             <li><strong>Data</strong>???</li>
+	            </ol>
+	        </div>
 		</div>
 	</div>
 	<svg id="graph"> 
