@@ -17,9 +17,10 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 		constructor: ({ svg, @config, @kanjis, @radicals, @optimizer }) ->
 			@svg = svg.g
 			@parent = svg
-			@g_edges = @svg.append 'g'
-			@g_nodes = @svg.append 'g'
-			@g_endnodes = @svg.append 'g'
+			@g_edges = @svg.append('g').attr('id': 'edge_')
+			@g_nodes = @svg.append('g').attr('id': 'node_')
+			@g_endnodes = @svg.append('g').attr('id': 'ednnode_')
+			@g_stationLabels = @svg.append('g').attr('id': 'stationLabel_')
 			@zoom = d3.behavior.zoom()
 			@history = new History {}
 			@history.setup this
@@ -133,7 +134,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 	
 		update: (graph) ->
 			@graph = graph if graph
-			{ svg, config, g_edges, g_nodes, g_endnodes } = this
+			{ svg, config, g_edges, g_nodes, g_endnodes, g_stationLabels } = this
 			{ nodes, lines, edges } = @graph
 			r = config.nodeSize
 			
@@ -170,13 +171,14 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			
 			# enter
 			closeStationLabel = (d) ->
-				this.parentNode.stationLabel = undefined
-				d3.select(this).remove()
+				d.style.stationLabel.remove()
+				d.style.stationLabel = undefined
 			
 			showStationLabel = (node, edges) ->
-				return if this.parentNode.stationLabel
-				stationLabel = d3.select(this.parentNode).append('g').classed("station-label", true)
-					.on('click.closeLabel', closeStationLabel)
+				return if node.style.stationLabel
+				stationLabel = g_stationLabels.append('g').classed("station-label", true)
+					.attr(transform: nodeTransform node)
+					.on('click.closeLabel', (d) -> closeStationLabel node)
 				edgeAngles = []
 				index = 0
 				for e in edges[0][0]
@@ -196,13 +198,12 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 					.attr(x:24, y:-config.nodeSize-3)
 					.attr(transform: "rotate(#{stationLabelAngle})")
 				label_text = stationLabel.append('text')
-					.text((d) -> d.data.meaning or '?')
+					.text((d) -> node.data.meaning or '?')
 					.attr(x:28, y:-config.nodeSize/2+4)
 					.attr(transform: "rotate(#{stationLabelAngle})")
 				rectLength = label_text.node().getBBox().width + 8
 				label_rect.attr(width: rectLength, height: 2.5*config.nodeSize) # inflating the rectangle
-				this.parentNode.stationLabel = stationLabel
-				
+				node.style.stationLabel = stationLabel
 			
 			# this function sets a timer for the stationlabel to be displayed
 			# this means that after a certain time after the mouse entered the node
@@ -373,7 +374,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			node.classed("searchresult", (d) -> d.style.isSearchresult)
 			node.classed("focused", (d) -> d.style.isFocused)
 			node_t = node.transition().duration(config.transitionTime)
-			node_t.attr(transform: (d) -> "translate(#{d.x} #{d.y})")
+			node_t.attr(transform: (d) -> nodeTransform d)
 			#node_t.style(fill: (d) -> if d.style.hi then "red" else if d.style.lo then "green" else null) # debug @payload
 			node_t.select('text').text (d) -> d.label
 
@@ -416,8 +417,8 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			y_mid = tube.y + length * Math.sin tube.angle
 			x = x_mid + 8 * i * Math.cos tube.angle
 			y = y_mid + 8 * i * Math.sin tube.angle
-			x += 24 * Math.cos tube.angle + 0.5*Math.PI
-			y += 24 * Math.sin tube.angle + 0.5*Math.PI
+			x += (tube.width+5) * Math.cos tube.angle + 0.5*Math.PI
+			y += (tube.width+5) * Math.sin tube.angle + 0.5*Math.PI
 			grad = tube.angle / 2/Math.PI * 360
 			parent.append("text").classed("mini-label", true)
 				.text(rad)
@@ -433,6 +434,9 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 	svgline01 = d3.svg.line()
 		.x( (d) -> d[0])
 		.y( (d) -> d[1])
+	
+	nodeTransform = (d) -> 
+		"translate(#{d.x} #{d.y})"
 
 	endnodeSelectLine = (d) ->
 		selector = ".line_"+d.data.radical
