@@ -166,7 +166,6 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 					stationLabelAngle = 0
 				else
 					stationLabelAngle = 0
-				P edgeAngles , ' ,', stationLabelAngle
 				label_rect = stationLabel.append('rect')
 					.attr(x:24, y:-config.nodeSize-3)
 					.attr(transform: "rotate(#{stationLabelAngle})")
