@@ -1,5 +1,3 @@
-figue.KMEANS_MAX_ITERATIONS = 1
-
 # the global object where we can put stuff into it
 window.my = {
 	kanjis: {} 				# "kanji": { "kanji", "radicals", "stroke_n", "freq", "onyomi", "kunyomi", "meaning"}

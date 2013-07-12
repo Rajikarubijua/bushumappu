@@ -146,7 +146,7 @@ define ['utils'], ({P}) ->
 			else
 				count = "<div> #{arrKanjis.length} kanji have been found. </div>"
 
-			d3.select('#kanjicount')[0][0].innerHTML = count
+			d3.select('#kanjicount')[0][0].innerHTML = count 
 			d3.select('#kanjilist')[0][0].innerHTML = list
 
 		# if flag then fill force
@@ -237,7 +237,8 @@ define ['utils'], ({P}) ->
 
 			resetFilter = () ->
 				filsea.resetFilter(d3.event.srcElement.id)
-				filsea.update()
+				if isInitial 
+					filsea.update()
 
 			resetAll = () ->
 				filsea.resetAll(filsea.view.graph)
@@ -260,12 +261,13 @@ define ['utils'], ({P}) ->
 				d3.selectAll('form input[type=text]').on 'change' , update
 
 		reloadInitialSwitch: (filsea) ->
-
+			me = this
 			switchToMain = () ->
 				#d3.select('#overlay').style 'display', 'none'
 				d3.select('#overlay').remove()
 				strKanji = d3.event.srcElement.innerHTML
 				filsea.view.changeToCentralFromStr(strKanji)
+				setupFilterSearchEvents(filsea, false)
 
 			d3.selectAll('#overlay .searchKanji').on 'click', switchToMain
 

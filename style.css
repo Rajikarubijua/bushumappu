@@ -98,68 +98,6 @@ svg > g * {
 	-webkit-transition: 1s;
 }
 
-#graph {
-}
-
-#bottomBar {
-	border: 1px solid silver;
-	background: white; 
-	bottom: 0px;
-	transition: 1s;
-	position: absolute;
-	width: 100%;
-}
-
-#bottomBar #toggle-bottom-bar{
-	cursor: pointer;
-	background: rgb(220, 220, 220);
-	float: left;
-}
-
-#bottomBar > * {
-}
-#minimap {
-	width: 200px;
-	height: 200px;
-	border: 1px solid silver;
-	text-align: center;
-	display: -webkit-flex;
-	-webkit-justify-content: center;
-	-webkit-align-items: center;
-}
-#details td {
-	white-space:nowrap;
-}
-
-.tablewrapper {
-	overflow-x: scroll;
-	overflow-y: hidden;
-}
-
-#seafil {
-	float: left;
-}
-#seafil table td{
-	padding-bottom: 5px;
-	padding-left: 5px;
-}
-#seafil form .long{
-	width: 10em;
-}
-#seafil form .half{
-	width: 3em;
-}
-#history {
-	margin-top: 10px;
-  margin-right: 10px;
-	float: left;
-	
-}
-
-.no-wrap{
-	white-space: nowrap;
-}
-
 .historylist{
 	list-style: none;
 	padding: 0;
@@ -188,18 +126,3 @@ svg > g * {
 }
 
 
-
-#overlay {
-	display: block;
-	width: 100%;
-	height: 100%;
-	z-index: 100;
-	position: absolute;
-	background-color: white;
-}
-
-#kanjilist{
-	margin: 10px;
-	overflow: auto;
-	resize: both;
-}
