@@ -97,7 +97,7 @@ define ['utils', 'graph'], (utils, { Graph, Node }) ->
 			lines = for line, line_i in d3.values lines
 				angle = someAngle line_i
 				# XXX this puts the radical node next to the central node
-				r = line.hi.length + line.other.length + kanji_offset
+				r = line.hi.length + line.lo.length + kanji_offset
 				r *= radius node_r, angle
 				x = r * Math.cos angle
 				y = r * Math.sin angle
