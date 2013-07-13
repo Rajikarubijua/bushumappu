@@ -104,12 +104,17 @@ svg > g * {
 	margin: 0;
 }
 
+#kanjiresult{
+	height: 45px;
+}
+
 .searchKanji, .hisKanji, .firsthisKanji {
 	cursor: pointer;
 	padding: 3px;
 	margin: 3px;
 	border: 1px solid black;
 	float: left;
+	background-color: #FFF;
 }
 
 .firsthisKanji{
@@ -124,5 +129,4 @@ svg > g * {
 	margin: 3px;
 	float: left;	
 }
-
 

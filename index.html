@@ -94,107 +94,118 @@ var require = {
 	        </div>
 		</div>
 	</div>
-	<svg id="graph"> 
-	</svg>
-	<!--Div containing the Kanji detail table -->
+
+
+	<div id="controlBoard">
+		<div class="toggleArea">
+			<div class="arrowIcon up"></div>
+		</div>
+		<div class="dataFormArea">
+			<div class="formArea">
+
+
+				<div id="seafil">
+				<form id="form2">
+					<table>
+						<tr>
+							<td>Kanji</td>
+							<td><input type="text" id="kanjistring" class="long"></td>
+							<td>Strokecount</td>
+							<td class="no-wrap">
+								<input class="half" id="count_min"> - <input type="text" class="half" id="count_max">
+								<input type="button" value="x" id="btn_clear1" class="btn_clear">
+							</td>
+						</tr>
+						<tr>
+							<td>Onyomi</td>
+							<td><input type="text" id="onyomistring" class="long"></td>
+							<td>Frequency</td>
+							<td class="no-wrap">
+								<input type="text" class="half" id="frq_min"> - <input type="text" class="half" id="frq_max">
+								<input type="button" value="x" id="btn_clear2" class="btn_clear">
+							</td>
+						</tr>
+						<tr>
+							<td>Kunyomi</td>
+							<td><input type="text" id="kunyomistring" class="long"></td>
+							<td>Schoolgrade</td>
+							<td class="no-wrap">
+								<input type="text" class="half" id="grade_min"> - <input type="text" class="half" id="grade_max">
+								<input type="button" value="x" id="btn_clear3" class="btn_clear">
+							</td>
+						</tr>
+						<tr>
+							<td>Meaning</td>
+							<td><input type="text" id="meaningstring" class="long"></td>
+							<td colspan="2"> </td>
+						</tr>
+						<tr>
+							<td colspan="2"></td>
+							<td colspan="2" class="no-wrap actionButtons"> 
+								<input type="button" value="reset" id="btn_reset">
+								<input type="button" value="search" id="btn_search"> 
+								<input type="button" value="filter" id="btn_filter"> 
+								<span id="kanjiresultCount"></span>
+							</td>
+						</tr>
+						<tr>
+							<td colspan="2"></td>
+							<td colspan="2" id="kanjiresult"></td>
+						</tr>
+
+					</table>
+
+				</form>
+				</div>
+				
+
+			</div>
+			<div class="dataArea">
+
+			<div class="tablewrapper">
+				<table id="details" class="pure-table pure-table-striped">					
+					<tbody>
+						<tr>
+							<td> </td>
+							<td class="content"> click Kanjis to see details </td>
+						</tr>
+						<tr>
+							<td>english</td>
+							<td class="content"> </td>
+						</tr>
+						<tr>
+							<td>radicals</td>
+							<td class="content"> </td>
+						</tr>
+						<tr>
+							<td>onyomi</td>
+							<td class="content"> </td>
+						</tr>
+						<tr>
+							<td>kunyomi</td>
+							<td class="content"> </td>
+						</tr>
+					</tbody>
+				</table>
+				</div>
+				
+
+			</div>
+		</div>
+	</div>
+	<!--Div containing the Kanji detail table 
 	<div id="bottomBar">
 		<div id="toggle-bottom-bar">
 			toggle
 		</div>
-		<!--Search and Filter Function -->
-		<div id="seafil">
-			<form id="form2">
-				<table>
-					<tr>
-						<td>Kanji</td>
-						<td><input type="text" id="kanjistring" class="long"></td>
-						<td>Strokecount</td>
-						<td class="no-wrap">
-							<input class="half" id="count_min"> - <input type="text" class="half" id="count_max">
-							<input type="button" value="x" id="btn_clear1" class="btn_clear">
-						</td>
-					</tr>
-					<tr>
-						<td>Onyomi</td>
-						<td><input type="text" id="onyomistring" class="long"></td>
-						<td>Frequency</td>
-						<td class="no-wrap">
-							<input type="text" class="half" id="frq_min"> - <input type="text" class="half" id="frq_max">
-							<input type="button" value="x" id="btn_clear2" class="btn_clear">
-						</td>
-					</tr>
-					<tr>
-						<td>Kunyomi</td>
-						<td><input type="text" id="kunyomistring" class="long"></td>
-						<td>Schoolgrade</td>
-						<td class="no-wrap">
-							<input type="text" class="half" id="grade_min"> - <input type="text" class="half" id="grade_max">
-							<input type="button" value="x" id="btn_clear3" class="btn_clear">
-						</td>
-					</tr>
-					<tr>
-						<td>Meaning</td>
-						<td><input type="text" id="meaningstring" class="long"></td>
-						<td colspan="2"> </td>
-					</tr>
-					<tr>
-						<td colspan="2"></td>
-						<td colspan="2" class="no-wrap actionButtons"> 
-							<input type="button" value="reset" id="btn_reset">
-							<input type="button" value="search" id="btn_search"> 
-							<input type="button" value="filter" id="btn_filter"> 
-							<span id="kanjiresultCount"></span>
-						</td>
-					</tr>
-					<tr>
-						<td colspan="2"></td>
-						<td colspan="2" id="kanjiresult"></td>
-					</tr>
+	</div> 
+	-->
+	<div id="history">
+	</div>
 
-				</table>
 
-			</form>
-		</div>
-		
-		<!--History of focus kanji -->
-		<div id="history">
+	<svg id="graph"> 
+	</svg>
 
-		</div>
-
-		<div class="tablewrapper">
-		<!--Table containing details of selected Kanji-->
-		<table id="details" class="pure-table pure-table-striped">
-			<thead>
-				<tr>
-					<th>Kanji details<th>
-				</tr>
-			</thead>
-			
-			<tbody>
-				<tr>
-					<td> </td>
-					<td class="content"> click Kanjis to see details </td>
-				</tr>
-				<tr>
-					<td>english</td>
-					<td class="content"> </td>
-				</tr>
-				<tr>
-					<td>radicals</td>
-					<td class="content"> </td>
-				</tr>
-				<tr>
-					<td>onyomi</td>
-					<td class="content"> </td>
-				</tr>
-				<tr>
-					<td>kunyomi</td>
-					<td class="content"> </td>
-				</tr>
-			</tbody>
-		</table>
-		</div>
-		
-	</div> <!-- bottomBar div ends here -->
 </body>
 </html>
