@@ -39,6 +39,49 @@ circle, rect {
 	font-size: 0.005em;
 }
 
+.centralStation{
+    width: 240px;
+    border: 2px solid black;
+}
+.centralStation table{
+    margin: 0.2em;  
+    padding: 0.2em;  
+}
+.centralStation tr td:first-child{
+    font-weight: bold;
+    padding-left: 5px;
+}
+.centralStation tr td:last-child{
+    text-align: right;
+}
+
+.firstBlock {
+	min-height: 70px;
+}
+
+.secondBlock{
+    margin: 0.2em;
+}
+
+#kKanji{
+    float:left;
+    margin: 0.2em;
+    margin-bottom: 0;
+    padding: 0.2em;
+    line-height: 1em;
+    font-size: 3em;
+}
+
+#kMeaning, #kOn, #kKun {
+    font-size: 1.3em;
+    padding: 0.2em; 
+}
+#kMeaning{
+    font-size: 1.5em;
+    
+}
+
+
 #details .remove-col-btn{
 	cursor: pointer;
 	width: 20px;
