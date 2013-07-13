@@ -155,7 +155,6 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 			@updateCentralNode central_node
 			nodes = (node for node in nodes when node not in endnodes and node != central_node)
 			table = d3.select('table#details tbody')
-			tablehead = d3.select('thead').selectAll('tr')
 			table_data = [[],[],[],[],[]]
 			
 			# remove minilabels
@@ -269,11 +268,6 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 				
 				table_td.text((d) -> d)
 				
-				tablecontentcols = table.select('tr').selectAll('td')[0].length
-				tableheadcols = tablehead.selectAll('th')[0].length
-				if tableheadcols < tablecontentcols
-					tablehead.append('th')
-				
 				colLabels = d3.select('table#details tbody').select('tr').selectAll('td')
 					.on('mouseenter.hoverLabel', (d) -> 
 						that = this
@@ -293,15 +287,12 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 						break
 					else
 						index++
-				
 				i = 0
 				for row in table_data
 					table_data[i].splice(index,1)
 					if table.selectAll('tr').selectAll('td')[i][index+1]
 						table.selectAll('tr').selectAll('td')[i][index+1].remove()
 					i++
-				if tablehead.selectAll('th')[0][index+1]
-					tablehead.selectAll('th')[0][index+1].remove()
 				table_td = table_tr.selectAll('td.content')
 					.text((d) -> d)
 				
