@@ -42,8 +42,6 @@ require { baseUrl: './' }, ['utils', 'grid', 'graph'], (utils, grid, { Cluster, 
 					[ x, y ] = (+d for d in coord.split 'x')
 					{ b, i } = utils.nearestXY { x, y }, list
 					grid.remove b
-					if x == 0 and y == 0
-						P b.id
 					grid.set [x,y], b
 					list[i..i] = []
 					nodes = [ nodes..., list... ]
@@ -62,8 +60,6 @@ require { baseUrl: './' }, ['utils', 'grid', 'graph'], (utils, grid, { Cluster, 
 			changed_nodes = []
 			for node in nodes
 				moved = @moveNode node, (node) => node.compliant @my_graph
-				if not moved and (node.compliant @my_graph) > 0
-					P '!'
 				if moved
 					changed_nodes.push node
 			
@@ -71,7 +67,6 @@ require { baseUrl: './' }, ['utils', 'grid', 'graph'], (utils, grid, { Cluster, 
 				x: node.x
 				y: node.y
 				id: node.id
-				debug_fill: 'red'
 			postMessage { type: 'nodes', nodes, cb }
 			
 		moveNode: (node, quality) ->

@@ -30,9 +30,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 			@svg.on 'mousemove', =>
 				{ x, y } =  d3.event
 				node = new Node { x, y }
-				window.debug_magic = true
 				node.compliant @graph
-				window.debug_magic = false
 
 			#setup zoom
 			w = new Signal
