@@ -231,6 +231,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 						func d), ms)
 			
 			thisView = this
+			
 			selectKanjiDetail = (d) ->
 				i = 1
 				nothingtodo = false
@@ -279,6 +280,8 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 			
 				
 			removeKanjiDetail = (d) ->
+				table_tr = table.selectAll('tr')
+					.data(table_data)
 				d3.event.stopPropagation()
 				index = 0
 				for label in table_data[0]
