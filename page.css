@@ -7,6 +7,8 @@ body{
 	margin: 0px; 
 }
 
+/*! initialView */
+
 #overlay {
 	display: block;
 	width: 100%;
@@ -16,7 +18,6 @@ body{
 	background-color: white;
 }
 
-/*! h1 in initialView */
 .header{
 	color: #FFF;
 	background-color: #2FA199;
@@ -82,6 +83,75 @@ form table td{
 	resize: both;
 }
 
+/*! new Bar */
+#controlBoard{
+	position: absolute;
+	bottom: 0;
+	width: 100%;
+	z-index: 10;
+}
+
+.toggleArea{
+	height: 30px;
+	background-color: #2FA199;
+	color: #FFF;
+	width: 80%;
+	margin: 0 auto;
+	border-radius: 50px 50px 0 0;
+}
+
+.arrowIcon{
+	width: 0;
+	height: 0;
+	margin: 0 auto;
+	position: relative;
+}
+
+.arrowIcon.up{
+	border-left: 15px solid transparent;
+	border-right: 15px solid transparent;
+	border-bottom: 15px solid #FFF;
+	top: 7px;
+}
+
+.arrowIcon.down{
+	border-left: 15px solid transparent;
+	border-right: 15px solid transparent;
+	border-top: 15px solid #FFF;
+	bottom: 7px;
+}
+
+/*  in DEVELOP MODE its off @Riin
+.toggleArea:hover + .dataFormArea, 
+.dataFormArea:hover{
+	display: table;
+}
+*/
+
+.dataFormArea{
+	background-color: #EEE;
+	width: 100%;
+	padding-top: 10px;
+	padding-left: 10px;
+	/* display: none; */
+	display: table;
+}
+
+.formArea{
+	display: table-cell;
+	width: 250px;
+}
+
+.dataArea{
+	display: table-cell;
+	padding-left: 10px;
+}
+
+#history{
+	display: none;
+}
+
+/*! old Bar */
 
 #bottomBar {
 	border: 1px solid silver;
@@ -110,24 +180,29 @@ form table td{
 	overflow-y: hidden;
 }
 
+/*
 #seafil {
 	float: left;
 }
+*/
+
 #seafil table td{
 	padding-bottom: 5px;
 	padding-left: 5px;
 }
+
 #seafil form .long{
 	width: 10em;
 }
+
 #seafil form .half{
 	width: 3em;
 }
+
 #history {
 	margin-top: 10px;
-  margin-right: 10px;
+  	margin-right: 10px;
 	float: left;
-	
 }
 
 .no-wrap{
@@ -154,14 +229,4 @@ input[type=button].btn_clear{
 	padding: 0;
 }
 
-		colors = [
-				"#E53517", #red
-				"#008BD0", #blue
-				"#97BE0D", #green 
-				"#641F80", #violet
-				"#F07C0D", #orange 
-				"#2FA199", #turquoise
-				"#FFCC00", #yellow
-				"#E2007A", #pink
-				"#290E03"  #brown
-			]
+/* Central station */
