@@ -155,7 +155,6 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 			@updateCentralNode central_node
 			nodes = (node for node in nodes when node not in endnodes and node != central_node)
 			table = d3.select('table#details tbody')
-			tablehead = d3.select('thead').selectAll('tr')
 			table_data = [[],[],[],[],[]]
 			
 			# remove minilabels
@@ -232,6 +231,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 						func d), ms)
 			
 			thisView = this
+			
 			selectKanjiDetail = (d) ->
 				i = 1
 				nothingtodo = false
@@ -269,11 +269,6 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 				
 				table_td.text((d) -> d)
 				
-				tablecontentcols = table.select('tr').selectAll('td')[0].length
-				tableheadcols = tablehead.selectAll('th')[0].length
-				if tableheadcols < tablecontentcols
-					tablehead.append('th')
-				
 				colLabels = d3.select('table#details tbody').select('tr').selectAll('td')
 					.on('mouseenter.hoverLabel', (d) -> 
 						that = this
@@ -285,6 +280,8 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 			
 				
 			removeKanjiDetail = (d) ->
+				table_tr = table.selectAll('tr')
+					.data(table_data)
 				d3.event.stopPropagation()
 				index = 0
 				for label in table_data[0]
@@ -293,15 +290,12 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 						break
 					else
 						index++
-				
 				i = 0
 				for row in table_data
 					table_data[i].splice(index,1)
 					if table.selectAll('tr').selectAll('td')[i][index+1]
 						table.selectAll('tr').selectAll('td')[i][index+1].remove()
 					i++
-				if tablehead.selectAll('th')[0][index+1]
-					tablehead.selectAll('th')[0][index+1].remove()
 				table_td = table_tr.selectAll('td.content')
 					.text((d) -> d)
 				
@@ -446,21 +440,50 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 			update_central_node = @svg.selectAll('#central-node').data([node])
 			enter_central_node = update_central_node.enter()
 			exit_central_node  = update_central_node.exit()
+			P node
 			central_label = node.label
 			central_meaning = node.data.meaning
+			central_freq = node.data.freq
+			central_strokes = node.data.stroke_n
+			central_grade = node.data.grade
 			central_on = node.data.onyomi
 			central_kun = node.data.kunyomi
 			central_radical = node.data.radical
 			
 			central_g = enter_central_node.append('g').attr('id': 'central-node')
 			central_g.append('foreignObject')
-					.attr('width', 200)
-					.attr('height', 200)
-					.attr(x: -100, y: -100)
+					.attr(x: -120, y: -200)
+					.attr(width: 246, height: 400)
+				.append('xhtml:body')
 					.style('background', 'white')
 					.style('border', 'solid black 1px')
-				.append('xhtml:body')
-					.html('<h1> ' + central_label + '</h1>')
+					.html("
+					 <div class='centralStation'>
+						<div class='firstBlock'>
+							<div id='kKanji'>" + central_label + "</div>
+							<table>
+								<tr>
+									<td>Strokecount</td>
+									<td id='kCount'>" + central_strokes + "</td>
+								</tr>
+								<tr>
+									<td>Frequency</td>
+									<td id='kFreqency'>" + central_freq + "</td>
+								</tr>
+								<tr>
+									<td>Schoolgrade</td>
+									<td id='kGrade'>" + central_grade + "</td>
+								</tr>
+							</table>
+						</div> 
+						<div class='secondBlock'>
+							<div id='kMeaning'>" + central_meaning + "</div>
+							<div id='kOn'>" + central_on + "</div>
+							<div id='kKun'>" + central_kun + "</div>
+						</div>
+					</div>
+					 ")
+					
 			exit_central_node.remove()
 			
 			
