@@ -7,6 +7,20 @@ body{
 	margin: 0px; 
 }
 
+::-webkit-scrollbar {
+    width: 10px;
+}
+ 
+::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3); 
+    border-radius: 5px;
+}
+ 
+::-webkit-scrollbar-thumb {
+    border-radius: 5px;
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5); 
+}
+
 /*! initialView */
 
 #overlay {
@@ -83,21 +97,24 @@ form table td{
 	resize: both;
 }
 
-/*! new Bar */
-#controlBoard{
+#bottomBar {
+	background: #EEE; 
+	bottom: 0px;
+	transition: 1s;
 	position: absolute;
-	bottom: 0;
 	width: 100%;
-	z-index: 10;
 }
 
-.toggleArea{
+#bottomBar #toggle-bottom-bar{
+	cursor: pointer;
+	background: rgb(220, 220, 220);
 	height: 30px;
-	background-color: #2FA199;
-	color: #FFF;
 	width: 80%;
 	margin: 0 auto;
 	border-radius: 50px 50px 0 0;
+	background-color: #2FA199;
+	margin-top: -30px;
+	margin-bottom: 10px;
 }
 
 .arrowIcon{
@@ -114,61 +131,37 @@ form table td{
 	top: 7px;
 }
 
-.arrowIcon.down{
-	border-left: 15px solid transparent;
-	border-right: 15px solid transparent;
-	border-top: 15px solid #FFF;
-	bottom: 7px;
-}
-
-/*  in DEVELOP MODE its off @Riin
-.toggleArea:hover + .dataFormArea, 
-.dataFormArea:hover{
-	display: table;
-}
-*/
-
-.dataFormArea{
-	background-color: #EEE;
-	width: 100%;
-	padding-top: 10px;
-	padding-left: 10px;
-	/* display: none; */
-	display: table;
-}
-
-.formArea{
-	display: table-cell;
-	width: 250px;
-}
-
-.dataArea{
-	display: table-cell;
-	padding-left: 10px;
-}
-
-#history{
-	display: none;
-}
-
-/*! old Bar */
-
-#bottomBar {
-	border: 1px solid silver;
-	background: white; 
-	bottom: 0px;
-	transition: 1s;
-	position: absolute;
-	width: 100%;
-}
-
-#bottomBar #toggle-bottom-bar{
-	cursor: pointer;
-	background: rgb(220, 220, 220);
-	float: left;
-}
-
 #bottomBar > * {
+}
+
+#details {
+	margin-left: 10px;
+	border: 0;
+	background-color: #FFF;
+}
+
+
+#details td:first-child{
+	background-color:  #2FA199;
+	color: #FFF;
+}
+
+#details tr:first-child{
+	text-align: center;
+	font-size: 1.5em;
+}
+#details tr:first-child td:first-child{
+	background-color: #EEE;
+}
+
+#details.pure-table td{
+	border-left: 0 solid silver;
+	border-right: 2px solid silver;
+}
+
+#details.pure-table td:first-child{
+	border-left: 0 solid silver;
+	border-right: 0 solid silver;
 }
 
 #details td {
@@ -180,11 +173,9 @@ form table td{
 	overflow-y: hidden;
 }
 
-/*
 #seafil {
 	float: left;
 }
-*/
 
 #seafil table td{
 	padding-bottom: 5px;
@@ -197,12 +188,6 @@ form table td{
 
 #seafil form .half{
 	width: 3em;
-}
-
-#history {
-	margin-top: 10px;
-  	margin-right: 10px;
-	float: left;
 }
 
 .no-wrap{
