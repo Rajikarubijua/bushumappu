@@ -143,11 +143,11 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			for node in nodes
 				node.label ?= node.data.kanji or node.data.radical or "?"
 			endnodes = (node for node in nodes when node.data.radical)
-			#central_node = (node for node in nodes when node.central_node)
-			#central_node = central_node[0]
-			central_node = undefined
+			central_node = (node for node in nodes when node.central_node)
+			central_node = central_node[0]
+			@updateCentralNode central_node
+			#central_node = undefined
 			nodes = (node for node in nodes when node not in endnodes and node != central_node)
-			nodes.push central_node if central_node
 			table = d3.select('table#details tbody')
 			tablehead = d3.select('thead').selectAll('tr')
 			table_data = [[],[],[],[],[]]
@@ -337,14 +337,15 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				.on('mouseleave.resetHoverTimer', (d) ->
 					clearFuncTimer(this))
 				.on('click.displayDetailsOfNode', (d) ->
+					P d , ', ', d.central_node
 					that = this
 					delayDblClick(550, -> selectKanjiDetail.call(that, d))
 					)
 				.on('dblclick.selectnewCentral', (d) -> thisView.changeToCentralFromNode d )
 			stationKanji.append('rect').attr x:-config.nodeSize, y:-config.nodeSize, width:2*config.nodeSize, height:2*config.nodeSize
 			stationKanji.append('text')
-	
-
+			
+			
 			endnode_g = endnode.enter()
 				.append('g')
 				.classed("endnode", true)
@@ -428,6 +429,29 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				.attr
 					fill: "#{color}"
 					transform: "translate(#{x} #{y}) rotate(#{grad}, #{x}, #{y})"
+		
+		updateCentralNode: (node) ->
+			update_central_node = @svg.selectAll('#central-node').data([node])
+			enter_central_node = update_central_node.enter()
+			exit_central_node  = update_central_node.exit()
+			P node
+			central_label = node.label
+			central_meaning = node.data.meaning
+			central_on = node.data.onyomi
+			central_kun = node.data.kunyomi
+			central_radical = node.data.radical
+			
+			central_g = enter_central_node.append('g').attr('id': 'central-node')
+			central_g.append('foreignObject')
+					.attr('width', 200)
+					.attr('height', 200)
+					.attr(x: -100, y: -100)
+					.style('background', 'white')
+					.style('border', 'solid black 1px')
+				.append('xhtml:body')
+					.html('<h1> ' + central_label + '</h1>')
+			exit_central_node.remove()
+			
 			
 	svgline = d3.svg.line()
 		.x(({x}) -> x)
@@ -436,6 +460,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 	svgline01 = d3.svg.line()
 		.x( (d) -> d[0])
 		.y( (d) -> d[1])
+		
 	
 	nodeTransform = (d) -> 
 		"translate(#{d.x} #{d.y})"
