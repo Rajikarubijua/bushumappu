@@ -1,6 +1,6 @@
 define ['utils', 'graph'], ({P, length}, {Graph, Edge, Node, Line}) ->
 
-	cptplaceholder = 3
+	cptplaceholder = 0
 
 	class Tube
 		tube_id = 0

@@ -19,17 +19,22 @@ define [], ->
 			id = @callbacks.id++
 			@callbacks[id] = cb
 			@postMessage { type: 'snapNodes', cb: id }
+		applyRules: (cb) ->
+			id = @callbacks.id++
+			@callbacks[id] = cb
+			@postMessage { type: 'applyRules', cb: id }
 		log:	({ log }) -> console.log log
 		node:	({ node }) ->
 			other = @_graph.nodesById[node.id]
 			other.move node.x, node.y
-			other.style.debug_fill = node.debug_fill
+			console.log other.style.debug_fill = node.debug_fill
 			if not @raf
 				@raf = true
 				requestAnimationFrame =>
 					@raf = false
 					@afterNode? other
 		nodes:	({ nodes, cb }) ->
+			console.log 'nodes', nodes.length
 			@node { node } for node in nodes
 			@callbacks[cb]?()
 			delete @callbacks[cb]
