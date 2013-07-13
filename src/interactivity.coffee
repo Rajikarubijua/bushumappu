@@ -153,7 +153,6 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 			central_node = (node for node in nodes when node.central_node)
 			central_node = central_node[0]
 			@updateCentralNode central_node
-			#central_node = undefined
 			nodes = (node for node in nodes when node not in endnodes and node != central_node)
 			table = d3.select('table#details tbody')
 			tablehead = d3.select('thead').selectAll('tr')
@@ -447,7 +446,6 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 			update_central_node = @svg.selectAll('#central-node').data([node])
 			enter_central_node = update_central_node.enter()
 			exit_central_node  = update_central_node.exit()
-			P node
 			central_label = node.label
 			central_meaning = node.data.meaning
 			central_on = node.data.onyomi
