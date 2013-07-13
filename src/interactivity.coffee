@@ -174,8 +174,6 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 				.data(nodes)
 			endnode = g_endnodes.selectAll('.endnode')
 				.data(endnodes)
-			table_tr = table.selectAll('tr')
-				.data(table_data)
 			colLabels = d3.select('table#details tbody').select('tr').selectAll('td')
 			
 			# enter
@@ -248,7 +246,6 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 						nothingtodo = true;
 						break
 					i++
-
 				radicals = []
 				radicals = (r.radical for r in d.data.radicals)
 				
@@ -258,11 +255,12 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 					table_data[2].push radicals
 					table_data[3].push d.data.onyomi
 					table_data[4].push d.data.kunyomi
-				
 				# enter
+				table_tr = table.selectAll('tr')
+					.data(table_data)
 				table_td = table_tr.selectAll('td.content')
 					.data((d) -> d)
-					
+
 				if(!nothingtodo)
 					table_tr.enter()
 						.append('tr')
@@ -272,13 +270,13 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 						.append('td')
 						.classed("content", true)
 				
+				table_td.text((d) -> d)
+				
 				tablecontentcols = table.select('tr').selectAll('td')[0].length
 				tableheadcols = tablehead.selectAll('th')[0].length
 				if tableheadcols < tablecontentcols
 					tablehead.append('th')
 				
-				# update	
-				table_td.text((d) -> d)
 				colLabels = d3.select('table#details tbody').select('tr').selectAll('td')
 					.on('mouseenter.hoverLabel', (d) -> 
 						that = this
