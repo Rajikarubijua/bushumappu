@@ -200,22 +200,28 @@ define ->
 					result["max_"+key] = element
 		result
 		
-	max = (array, func) ->
+	extremaFunc = (comp) -> (array, func) ->
 		if typeof func == 'string'
 			func = do (func) -> (x) -> x[func]
-		max_value = max_e = undefined
+		ex_value = ex_e = undefined
 		for e in array
 			value = func e
-			if not max_value? or value > max_value
-				max_value = value
-				max_e = e
-		max_e
+			if not max_value? or comp value, max_value
+				ex_value = value
+				ex_e = e
+		ex_e
+		
+	max = extremaFunc ((a,b)->a>b)
+	min = extremaFunc ((a,b)->a<b)
 
 	distanceSqrXY = (a, b) ->
 		Math.pow( b.x - a.x, 2 ) + Math.pow( b.y - a.y, 2 )
 
 	distanceSqr01 = (a, b) ->
 		Math.pow( b[0] - a[0], 2 ) + Math.pow( b[1] - a[1], 2 )
+		
+	distanceXY = (a, b) ->
+		Math.sqrt distanceSqrXY a, b
 
 	nearest = (a, array, distanceFunc) ->
 		min_d = 1/0
@@ -290,8 +296,27 @@ define ->
 				memo = @memo[obj_id] ?= {}
 				value = memo[func_id] ?= func obj
 
+	distToSegmentSqrXY = (p, a, b) ->
+		l2 = distanceSqrXY a, b
+		if l2 == 0
+			return distanceSqrXY p, a
+		vx = b.x - a.x
+		vy = b.y - a.y
+		t = ((p.x - a.x) * vx + (p.y - a.y) * vy) / l2
+		if t <= 0
+			return distanceSqrXY p, a
+		if t >= 1
+			return distanceSqrXY p, b
+		x = a.x + t * vx
+		y = a.y + t * vy
+		distanceSqrXY p, { x, y }
+		
+	distToSegmentXY = (p, a, b) ->
+		Math.sqrt distToSegmentSqrXY p, a, b
+
 	{ copyAttrs, P, PN, PD, W, async, strUnique, expect, somePrettyPrint, length,
-	  sort, styleZoom, sunflower, vecX, vecY, vec, compareNumber, max,
-  	  parseMaybeNumber, equidistantSelection, getMinMax, arrayUnique,
-  	  distanceSqrXY, nearestXY, nearest01, distanceSqr01, nearest, forall,
-  	  rasterCircle, prettyDebug, sortSomewhat, Memo }
+	  sort, styleZoom, sunflower, vecX, vecY, vec, compareNumber, max, min,
+	  parseMaybeNumber, equidistantSelection, getMinMax, arrayUnique,
+	  distanceSqrXY, nearestXY, nearest01, distanceSqr01, nearest, forall,
+	  rasterCircle, prettyDebug, sortSomewhat, Memo, distanceXY,
+	  distToSegmentXY, distToSegmentSqrXY }

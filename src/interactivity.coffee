@@ -1,5 +1,5 @@
-define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'], 
-({ P, compareNumber, styleZoom }, {Tube, createTubes}, {FilterSearch}, {History}, {CentralStationEmbedder}) ->
+define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'graph'], 
+({ P, compareNumber, styleZoom }, {Tube, createTubes}, {FilterSearch}, {History}, {CentralStationEmbedder}, { Node }) ->
 
 	colors = [
 		"#E53517", #red
@@ -26,6 +26,11 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			@history.setup this
 			@embedder = new CentralStationEmbedder { @config }
 			@seaFill = new FilterSearch {}
+
+			@svg.on 'mousemove', =>
+				{ x, y } =  d3.event
+				node = new Node { x, y }
+				node.compliant @graph
 
 			#setup zoom
 			w = new Signal
@@ -90,6 +95,8 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			@optimizer.graph graph
 			@optimizer.snapNodes =>
 				@update graph
+			@optimizer.applyRules =>
+				@update graph
 
 			@update graph
 			@seaFill.setup this, false
@@ -143,11 +150,10 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			for node in nodes
 				node.label ?= node.data.kanji or node.data.radical or "?"
 			endnodes = (node for node in nodes when node.data.radical)
-			#central_node = (node for node in nodes when node.central_node)
-			#central_node = central_node[0]
-			central_node = undefined
+			central_node = (node for node in nodes when node.central_node)
+			central_node = central_node[0]
+			@updateCentralNode central_node
 			nodes = (node for node in nodes when node not in endnodes and node != central_node)
-			nodes.push central_node if central_node
 			table = d3.select('table#details tbody')
 			tablehead = d3.select('thead').selectAll('tr')
 			table_data = [[],[],[],[],[]]
@@ -165,8 +171,6 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				.data(nodes)
 			endnode = g_endnodes.selectAll('.endnode')
 				.data(endnodes)
-			table_tr = table.selectAll('tr')
-				.data(table_data)
 			colLabels = d3.select('table#details tbody').select('tr').selectAll('td')
 			
 			# enter
@@ -239,7 +243,6 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 						nothingtodo = true;
 						break
 					i++
-
 				radicals = []
 				radicals = (r.radical for r in d.data.radicals)
 				
@@ -249,11 +252,12 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 					table_data[2].push radicals
 					table_data[3].push d.data.onyomi
 					table_data[4].push d.data.kunyomi
-				
 				# enter
+				table_tr = table.selectAll('tr')
+					.data(table_data)
 				table_td = table_tr.selectAll('td.content')
 					.data((d) -> d)
-					
+
 				if(!nothingtodo)
 					table_tr.enter()
 						.append('tr')
@@ -263,13 +267,13 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 						.append('td')
 						.classed("content", true)
 				
+				table_td.text((d) -> d)
+				
 				tablecontentcols = table.select('tr').selectAll('td')[0].length
 				tableheadcols = tablehead.selectAll('th')[0].length
 				if tableheadcols < tablecontentcols
 					tablehead.append('th')
 				
-				# update	
-				table_td.text((d) -> d)
 				colLabels = d3.select('table#details tbody').select('tr').selectAll('td')
 					.on('mouseenter.hoverLabel', (d) -> 
 						that = this
@@ -339,14 +343,15 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 				.on('mouseleave.resetHoverTimer', (d) ->
 					clearFuncTimer(this))
 				.on('click.displayDetailsOfNode', (d) ->
+					P d , ', ', d.central_node
 					that = this
 					delayDblClick(550, -> selectKanjiDetail.call(that, d))
 					)
 				.on('dblclick.selectnewCentral', (d) -> thisView.changeToCentralFromNode d )
 			stationKanji.append('rect').attr x:-config.nodeSize, y:-config.nodeSize, width:2*config.nodeSize, height:2*config.nodeSize
 			stationKanji.append('text')
-	
-
+			
+			
 			endnode_g = endnode.enter()
 				.append('g')
 				.classed("endnode", true)
@@ -357,11 +362,17 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			# update
 			radicals = []
 			edge.each (d) ->
-				d3.select(@).attr("class", "edge line_" + d.line.data.radical)
-				radicals.push d.line.data.radical if d.line.data.radical not in radicals
+				{ radical } = d.line.data
+				cls = "line_" + radical
+				d3.select(@).classed(cls, true)
+				radicals.push radical if radical not in radicals
 			for rad in radicals
 				selector = ".line_" + rad
-				d3.selectAll(selector).style("stroke", colors[radicals.indexOf(rad)])
+				d3.selectAll(selector)
+					.style stroke: colors[radicals.indexOf(rad)]
+			edge.each (d) ->
+				if d.style.debug_stroke
+					d3.select(@).style stroke: d.style.debug_stroke
 			i = 0
 			edge.transition().duration(config.transitionTime)
 				.attr d: (d) -> svgline01 createTubes d
@@ -420,12 +431,38 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			x += (tube.width+5) * Math.cos tube.angle + 0.5*Math.PI
 			y += (tube.width+5) * Math.sin tube.angle + 0.5*Math.PI
 			grad = tube.angle / 2/Math.PI * 360
+			grad = if (Math.round grad/45) % 2 == 0 then 0 else -45
 			parent.append("text").classed("mini-label", true)
 				.text(rad)
-				.attr({ x, y })
-				.attr(fill: "#{color}")
-				.attr(style: "font-size: 8px")
-				.attr(transform: "rotate(#{grad}, #{x}, #{y})")
+				.style(
+					"font-size": "8px"
+					"font-anchor": "middle"
+					"alignment-baseline": "central")
+				.attr
+					fill: "#{color}"
+					transform: "translate(#{x} #{y}) rotate(#{grad}, #{x}, #{y})"
+		
+		updateCentralNode: (node) ->
+			update_central_node = @svg.selectAll('#central-node').data([node])
+			enter_central_node = update_central_node.enter()
+			exit_central_node  = update_central_node.exit()
+			central_label = node.label
+			central_meaning = node.data.meaning
+			central_on = node.data.onyomi
+			central_kun = node.data.kunyomi
+			central_radical = node.data.radical
+			
+			central_g = enter_central_node.append('g').attr('id': 'central-node')
+			central_g.append('foreignObject')
+					.attr('width', 200)
+					.attr('height', 200)
+					.attr(x: -100, y: -100)
+					.style('background', 'white')
+					.style('border', 'solid black 1px')
+				.append('xhtml:body')
+					.html('<h1> ' + central_label + '</h1>')
+			exit_central_node.remove()
+			
 			
 	svgline = d3.svg.line()
 		.x(({x}) -> x)
@@ -434,6 +471,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 	svgline01 = d3.svg.line()
 		.x( (d) -> d[0])
 		.y( (d) -> d[1])
+		
 	
 	nodeTransform = (d) -> 
 		"translate(#{d.x} #{d.y})"

@@ -21,7 +21,7 @@ define ['utils', 'graph'], (utils, { Graph, Node }) ->
 		graph: (central_kanji, all_radicals, all_kanjis) ->
 			lines = {}
 			for radical in central_kanji.radicals
-				lines[radical.radical] = { radical, hi: 0, lo: [], other: null }
+				lines[radical.radical] = { radical, hi: [], lo: [], other: [] }
 			
 			related_kanjis =
 				utils.arrayUnique d3.merge (
@@ -55,49 +55,45 @@ define ['utils', 'graph'], (utils, { Graph, Node }) ->
 				else
 					node.style.hi = true
 					hi_nodes.push node
-					
-			### Balancing # XXX not perfect I believe @payload
-			Balancing is done in two phases. First it is counted such that
-			each line gets a balanced amount of hi nodes. Second each node
-			is assigned to a lines hi nodes. This ensures the sorting order
-			of the kanjis which results in a good edge network with minimal
-			connecting nodes. (Connecting nodes are nodes where an edge changes
-			star points.)
-			###
+			
+			lines = d3.values lines		
+
+			# hi nodes, first come, first served
 			for node in hi_nodes
-				min = null
-				for radical in kanjiRelevantRadicals node.data
-					line = lines[radical.radical]
-					if min is null or line.hi < min.hi
-						min = line
-				min.hi++	
-			# setting the balancing result
-			for _, line of lines
-				hi = line.hi
-				a = []
-				b = []
-				for node in hi_nodes
-					if line.radical in node.data.radicals
-						a.push node
-					else
-						b.push node
-				line.hi = a[...hi]
-				hi_nodes = b.concat a[hi..]
-			for _, line_a of lines
-				line_a.other = []
-				for _, line_b of lines
-					for node in line_b.hi
-						if line_a.radical in node.data.radicals
-							line_a.other.push node
+				for line in lines
+					if line.radical in kanjiRelevantRadicals node.data
+						line.hi.push node
+						break
+
+			# balance hi nodes
+			for a in lines
+				for b in lines
+					continue if a == b
+					node_i = -1
+					while ++node_i < a.hi.length
+						break if b.hi.length >= a.hi.length
+						node = a.hi[node_i]
+						continue if b.radical not in node.data.radicals
+						b.hi.push node
+						a.hi[node_i..node_i] = []
+						--node_i
+
+			# other nodes
+			for a in lines
+				for b in lines
+					continue if a == b
+					for node in b.hi
+						if a.radical in node.data.radicals
+							a.other.push node
 		
+			# place nodes
 			node_r = my.config.gridSpacing
 			kanji_offset = 5
 			central_node = kanjiNode central_kanji
 			central_node.central_node = true
 			n = central_kanji.radicals.length
-			lines = for line, line_i in d3.values lines
+			lines = for line, line_i in lines
 				angle = someAngle line_i
-				# XXX this puts the radical node next to the central node
 				r = line.hi.length + line.lo.length + kanji_offset
 				r *= radius node_r, angle
 				x = r * Math.cos angle

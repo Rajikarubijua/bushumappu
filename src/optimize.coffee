@@ -9,10 +9,9 @@ console.debug = console.info = console.log
 self.my = debug: true
 importScripts 'config.js'
 
-require { baseUrl: './' }, ['utils', 'criteria', 'grid', 'graph'], (utils, criteria, grid, { Cluster, Node, Edge, Line, Graph }) ->
+require { baseUrl: './' }, ['utils', 'grid', 'graph'], (utils, grid, { Cluster, Node, Edge, Line, Graph }) ->
 	{ P } = utils
 	{ Grid, GridCoordGenerator } = grid
-	my_criteria = criteria.edgeLength
 	addEventListener 'message', (ev) ->
 		console.log 'worker receive', ev.data.type
 		handler[ev.data.type] ev.data
@@ -43,20 +42,67 @@ require { baseUrl: './' }, ['utils', 'criteria', 'grid', 'graph'], (utils, crite
 					[ x, y ] = (+d for d in coord.split 'x')
 					{ b, i } = utils.nearestXY { x, y }, list
 					grid.remove b
-					if x == 0 and y == 0
-						P b.id
 					grid.set [x,y], b
 					list[i..i] = []
 					nodes = [ nodes..., list... ]
 				if nodes.length >= old_length
 					throw "no progress"
 				old_length = nodes.length
-			nodes = for node in nodes
+			nodes = for node in graph.nodes
 				x: node.x
 				y: node.y
 				id: node.id
-				debug_fill: node.style.debug_fill
-			postMessage { type: 'nodes', nodes: graph.nodes, cb }
+			postMessage { type: 'nodes', nodes, cb }
+			
+		applyRules: ({ cb }) ->
+			{ nodes, edges } = @my_graph
+			
+			changed_nodes = []
+			for node in nodes
+				moved = @moveNode node, (node) => node.compliant @my_graph
+				if moved
+					changed_nodes.push node
+			
+			nodes = for node in changed_nodes
+				x: node.x
+				y: node.y
+				id: node.id
+			postMessage { type: 'nodes', nodes, cb }
+			
+		moveNode: (node, quality) ->
+			copy   = x: node.x, y: node.y
+			coords = @coordsAroundNode node, 50
+			before = quality node
+			min    = value: before, coord: [ node.x, node.y ]
+			for coord in coords
+				node.move coord...
+				value = quality node
+				value = 0 if value < 0.0001
+				if min.value > value
+					min.value = value
+					min.coord = coord
+					break if min.value == 0
+			[ x, y ] = min.coord
+			a.once = false
+			if x != copy.x or y != copy.y
+				node.move x,y
+				@grid.remove copy
+				@grid.set node, node
+				node
+			else
+				node.move copy.x, copy.y
+				null
+			
+		coordsAroundNode: (node, n) ->
+			generator = new GridCoordGenerator
+				x: node.x
+				y: node.y
+				spacing: config.gridSpacing
+				filter: (coord) => not @grid.has coord
+			coords = []
+			while coords.length < n
+				coords = [ coords..., generator.next()... ]
+			coords
 			
 		nearestFreeGrid: ({ x, y }, grid) ->
 			g = config.gridSpacing

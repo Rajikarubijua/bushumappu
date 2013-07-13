@@ -1,4 +1,4 @@
-define ['utils'], (utils) ->
+define ['utils', 'criteria'], (utils, criteria) ->
 	{ P } = utils
 
 	class Node
@@ -14,9 +14,44 @@ define ['utils'], (utils) ->
 		
 		coord: -> @x+"x"+@y
 		
+		deps: (n=0) ->
+			if not n and @_deps?
+				return @_deps
+			deps = @nextNodes()[..]
+			if n == 1
+				deps
+			else
+				for node in @nextNodes()
+					for o in node.deps n+1
+						deps.push o if o not in deps
+				@_deps = deps
+			
+		nextNodes: ->
+			@_nextNodes ?= utils.arrayUnique(
+				@otherNode edge for edge in @edges
+			)
+			
+		compliant: (graph) ->
+			# 0 good, Infinity bad
+			@_compliant ?= d3.sum [
+				criteria.wrongEdgesUnderneath this, graph.edges
+			]
+			
+		critValue: (graph) ->
+			@_critValue ?= d3.sum [
+			]
+		
+		invalidateValues: ->
+			@_critValue = @_compliant = undefined
+			
 		move: (@x, @y) ->
+			@invalidateValues()
+			node.invalidateValues() for node in @deps()
 			
 		moveBy: (x, y) -> @move @x+x, @y+y
+		
+		otherNode: (edge) ->
+			if edge.source == this then edge.target else edge.source
 	
 	class Edge
 		constructor: ({ @source, @target, @line, @radical }={}) ->
@@ -53,6 +88,13 @@ define ['utils'], (utils) ->
 			(Math.pow x, 2) + (Math.pow y, 2)
 			
 		length: -> Math.sqrt @lengthSqr()
+		
+		otherEdge: (edges) ->
+			for other in edges
+				continue if other == this
+				if other.line.id == @line.id
+					return other
+			null
 
 
 	class Line
