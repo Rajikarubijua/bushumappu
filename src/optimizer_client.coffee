@@ -3,27 +3,27 @@ define [], ->
 		constructor: (cb) ->
 			@worker = new Worker "js/optimize.js?"+Date.now()
 			@worker.onmessage = (ev) =>
-				return cb() if ev.data == 'ready'
+				return cb?() if ev.data == 'ready'
 				console.log 'receive', ev.data.type if ev.data.type != 'log'
 				@[ev.data.type] ev.data
-			@callbacks = id: 0
+			@onNodes = null
+			
 		postMessage: (msg) ->
 			console.log 'postMessage', msg.type
 			@worker.postMessage msg
+			
 		graph: 	(graph) ->
 			@_graph = graph
 			@postMessage type: 'graph', graph: @_graph.toPlainLines()
-		optimizeNodes: ->
-			@postMessage type: 'optimizeLoop'
-		snapNodes: (cb) ->
-			id = @callbacks.id++
-			@callbacks[id] = cb
-			@postMessage { type: 'snapNodes', cb: id }
-		applyRules: (cb) ->
-			id = @callbacks.id++
-			@callbacks[id] = cb
-			@postMessage { type: 'applyRules', cb: id }
+			
+		optimize: -> @postMessage type: 'optimize'
+			
+		snapNodes: -> @postMessage type: 'snapNodes'
+			
+		applyRules: -> @postMessage type: 'applyRules'
+						
 		log:	({ log }) -> console.log log
+		
 		node:	({ node }) ->
 			other = @_graph.nodesById[node.id]
 			other.move node.x, node.y
@@ -32,9 +32,9 @@ define [], ->
 				@raf = true
 				requestAnimationFrame =>
 					@raf = false
-					@afterNode? other
-		nodes:	({ nodes, cb }) ->
+					
+		nodes:	({ nodes }) ->
 			@node { node } for node in nodes
-			@callbacks[cb]?()
-			delete @callbacks[cb]
+			@onNodes?()
+			
 	{ Optimizer }

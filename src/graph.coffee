@@ -39,6 +39,8 @@ define ['utils', 'criteria'], (utils, criteria) ->
 			
 		critValue: (graph) ->
 			@_critValue ?= d3.sum [
+				@compliant graph
+				criteria.lineStraightness this
 			]
 		
 		invalidateValues: ->
@@ -52,6 +54,12 @@ define ['utils', 'criteria'], (utils, criteria) ->
 		
 		otherNode: (edge) ->
 			if edge.source == this then edge.target else edge.source
+			
+		tubes: ->
+			tubes = []
+			for edge in @edges
+				tubes.push edge.tube if edge.tube not in tubes
+			tubes
 	
 	class Edge
 		constructor: ({ @source, @target, @line, @radical }={}) ->
@@ -69,12 +77,16 @@ define ['utils', 'criteria'], (utils, criteria) ->
 			[ @target.x - @source.x, @target.y - @source.y ]
 
 		getAngle: (edge) ->
+			throw 'edge is this' if this == edge
 			[ x1, y1 ] = @getVector()
 			[ x2, y2 ] = edge.getVector()
 			scalar = x1 * x2 + y1 * y2 
-			l1 = Math.sqrt( Math.pow( x1, 2 ) + Math.pow( y1, 2) )
-			l2 = Math.sqrt( Math.pow( x2, 2 ) + Math.pow( y2, 2) )
-			angle = Math.acos( scalar / (l1 * l2))
+			l1 = @length()
+			l2 = edge.length()
+			l = l1 * l2
+			if Math.abs(scalar - l) < 0.0001
+				l = scalar
+			angle = Math.acos scalar / l
 			
 		getEdgeAngle: ->
 			[ x1, y1 ] = [@source.x, @source.y]
@@ -155,4 +167,19 @@ define ['utils', 'criteria'], (utils, criteria) ->
 				for node in line.nodes
 					nodes[node.id]
 
-	my.graph = { Node, Edge, Line, Graph }
+	class Cluster
+		constructor: (@nodes) ->
+			@copies = ([n.x,n.y] for n in @nodes)
+		critValue: (graph) ->
+			throw 'graph undefined' if not graph?
+			@_critValue ?= d3.sum (n.critValue graph for n in @nodes)
+		moveBy: (x, y) ->
+			@_critValue = undefined
+			n.moveBy x, y for n in @nodes
+		resetPosition: ->
+			@_critValue = undefined
+			for n, i in @nodes
+				[x,y] = @copies[i]
+				n.move x,y
+
+	my.graph = { Node, Edge, Line, Graph, Cluster }

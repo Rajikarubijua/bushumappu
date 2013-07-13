@@ -11,7 +11,7 @@ config =
 	circularLines:				false
 	gridSpacing:				48 # 0 deactivates snapNodes
 	debugOverlay:				false
-	transitionTime:				2000
+	transitionTime:				0
 	initialScale:				1
 	edgesBeforeSnap:			false
 	timeToOptimize:				3000

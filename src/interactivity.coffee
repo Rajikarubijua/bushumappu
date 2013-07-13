@@ -91,14 +91,15 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 			P "changeToCentral #{kanji.kanji}"
 			@history.addCentral kanji.kanji	
 			graph = @embedder.graph kanji, @radicals, @kanjis
-
-			@optimizer.graph graph
-			@optimizer.snapNodes =>
-				@update graph
-			@optimizer.applyRules =>
-				@update graph
-
+			
 			@update graph
+
+			@optimizer.onNodes = => @update graph
+			@optimizer.graph graph
+			@optimizer.snapNodes()
+			@optimizer.applyRules()
+			@optimizer.optimize()
+
 			@seaFill.setup this, false
 			
 		changeToCentralFromNode: (node) ->	
@@ -386,7 +387,8 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 			node.classed("focused", (d) -> d.style.isFocused)
 			node_t = node.transition().duration(config.transitionTime)
 			node_t.attr(transform: (d) -> nodeTransform d)
-			#node_t.style(fill: (d) -> if d.style.hi then "red" else if d.style.lo then "green" else null) # debug @payload
+			node_t.style fill: (node) ->
+				node.style.debug_fill or null
 			node_t.select('text').text (d) -> d.label
 
 			endnode.transition().duration(config.transitionTime)

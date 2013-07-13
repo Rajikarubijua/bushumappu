@@ -27,7 +27,7 @@ require { baseUrl: './' }, ['utils', 'grid', 'graph'], (utils, grid, { Cluster, 
 			for node in graph.nodes
 				@grid.set node, node
 
-		snapNodes: ({ cb }) ->
+		snapNodes: ->
 			graph = @my_graph
 			grid = @grid
 			nodes = graph.nodes[..]
@@ -48,13 +48,17 @@ require { baseUrl: './' }, ['utils', 'grid', 'graph'], (utils, grid, { Cluster, 
 				if nodes.length >= old_length
 					throw "no progress"
 				old_length = nodes.length
-			nodes = for node in graph.nodes
+			@postNodes nodes
+			
+		postNodes: (nodes) ->
+			nodes = for node in nodes
 				x: node.x
 				y: node.y
 				id: node.id
-			postMessage { type: 'nodes', nodes, cb }
+				debug_fill: node.style.debug_fill
+			postMessage { type: 'nodes', nodes }
 			
-		applyRules: ({ cb }) ->
+		applyRules: ->
 			{ nodes, edges } = @my_graph
 			
 			changed_nodes = []
@@ -63,11 +67,53 @@ require { baseUrl: './' }, ['utils', 'grid', 'graph'], (utils, grid, { Cluster, 
 				if moved
 					changed_nodes.push node
 			
-			nodes = for node in changed_nodes
-				x: node.x
-				y: node.y
-				id: node.id
-			postMessage { type: 'nodes', nodes, cb }
+			@postNodes changed_nodes
+			
+		optimize: ->
+			do foo = =>
+				@optimizeStraightLineClusters ->
+					setTimeout foo, 1000
+
+		optimizeStraightLineClusters: (cb) ->
+			{ nodes } = @my_graph
+			used = {}
+			clusters = for node in nodes
+				continue if node.id of used
+				cluster = @straightLineCluster node
+				continue if not cluster 
+				for node in cluster.nodes
+					if node.id of used
+						cluster = null
+					used[node.id] = true
+				continue if not cluster
+				
+				rnd = -> 128 + Math.floor Math.random() * 127
+				color = "rgb(#{rnd()},#{rnd()},#{rnd()})"
+				for n in cluster.nodes
+					n.style.debug_fill = color
+				
+				cluster
+			clusters.sort (a,b) =>
+				d3.descending a.critValue(@my_graph), b.critValue(@my_graph)
+			do foo = =>
+				return cb?() if not clusters.length
+				cluster = clusters.shift()
+				if cluster.critValue(@my_graph) > 0
+					@moveCluster cluster
+				setTimeout foo, 1
+				
+		moveCluster: (cluster) ->
+			graph = @my_graph
+			min = coord: [0,0], value: cluster.critValue(graph)
+			for coord in @coordsForClusterMovement()
+				cluster.moveBy coord...
+				if cluster.critValue(graph) < min.value
+					min.coord = coord
+					min.value = cluster.critValue(graph)
+				cluster.resetPosition()
+			if not (min.coord[0] == min.coord[1] == 0)
+				cluster.moveBy min.coord...
+				@postNodes cluster.nodes
 			
 		moveNode: (node, quality) ->
 			copy   = x: node.x, y: node.y
@@ -104,6 +150,12 @@ require { baseUrl: './' }, ['utils', 'grid', 'graph'], (utils, grid, { Cluster, 
 				coords = [ coords..., generator.next()... ]
 			coords
 			
+		coordsForClusterMovement: do ->
+			generator = new GridCoordGenerator
+				spacing: config.gridSpacing
+			coords = d3.merge (generator.next() for [1..20])
+			-> coords
+			
 		nearestFreeGrid: ({ x, y }, grid) ->
 			g = config.gridSpacing
 			generator = new GridCoordGenerator {
@@ -116,5 +168,31 @@ require { baseUrl: './' }, ['utils', 'grid', 'graph'], (utils, grid, { Cluster, 
 			coords.push coord if not grid.has coord
 			{ b } = utils.nearest01 [ x, y ], coords
 			return b
+			
+		straightNode: (node) ->
+			okay = false
+			for edge in node.edges
+				other_edge = edge.otherEdge node.edges
+				continue if not other_edge
+				if (edge.getAngle other_edge) != 0
+					return false
+				okay = true
+			okay
+			
+		straightLineCluster: (start) ->
+			if not @straightNode start
+				for start in start.nextNodes()
+					if @straightNode start
+						break
+			cluster = [start]
+			queue = [start]
+			while queue.length
+				node = queue.pop()
+				if @straightNode node
+					next = (n for n in node.nextNodes() when n not in cluster)
+					cluster.push next...
+					queue.push next...
+			cluster
+			new Cluster cluster
 
 	postMessage 'ready'
