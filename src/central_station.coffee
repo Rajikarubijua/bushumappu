@@ -106,20 +106,9 @@ define ['utils', 'graph'], (utils, { Graph, Node }) ->
 					node.y = r*Math.sin angle
 				nodes = [central_node, radical_node, line.hi..., line.other..., line.lo...]
 				nodes.obj = data: line.radical
-				P 'end', notGood [line.hi..., line.other...]
 				nodes
 			
 			new Graph lines
-		
-	notGood = (nodes) ->
-		not_good = 0
-		hah = {}
-		for node in nodes
-			k = node.data.kanji
-			continue if not k
-			not_good++ if k of hah
-			hah[k] = true
-		not_good
 		
 	log2 = (x) -> Math.log(x) / Math.log(2)
    

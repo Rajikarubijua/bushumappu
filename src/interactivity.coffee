@@ -1,5 +1,5 @@
-define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'], 
-({ P, compareNumber, styleZoom }, {Tube, createTubes}, {FilterSearch}, {History}, {CentralStationEmbedder}) ->
+define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'graph'], 
+({ P, compareNumber, styleZoom }, {Tube, createTubes}, {FilterSearch}, {History}, {CentralStationEmbedder}, { Node }) ->
 
 	colors = [
 		"#E53517", #red
@@ -26,6 +26,11 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			@history.setup this
 			@embedder = new CentralStationEmbedder { @config }
 			@seaFill = new FilterSearch {}
+
+			@svg.on 'mousemove', =>
+				{ x, y } =  d3.event
+				node = new Node { x, y }
+				node.compliant @graph
 
 			#setup zoom
 			w = new Signal
@@ -89,6 +94,8 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 
 			@optimizer.graph graph
 			@optimizer.snapNodes =>
+				@update graph
+			@optimizer.applyRules =>
 				@update graph
 
 			@update graph
@@ -356,11 +363,17 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station'],
 			# update
 			radicals = []
 			edge.each (d) ->
-				d3.select(@).attr("class", "edge line_" + d.line.data.radical)
-				radicals.push d.line.data.radical if d.line.data.radical not in radicals
+				{ radical } = d.line.data
+				cls = "line_" + radical
+				d3.select(@).classed(cls, true)
+				radicals.push radical if radical not in radicals
 			for rad in radicals
 				selector = ".line_" + rad
-				d3.selectAll(selector).style("stroke", colors[radicals.indexOf(rad)])
+				d3.selectAll(selector)
+					.style stroke: colors[radicals.indexOf(rad)]
+			edge.each (d) ->
+				if d.style.debug_stroke
+					d3.select(@).style stroke: d.style.debug_stroke
 			i = 0
 			edge.transition().duration(config.transitionTime)
 				.attr d: (d) -> svgline01 createTubes d

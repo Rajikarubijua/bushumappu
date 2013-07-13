@@ -19,6 +19,10 @@ define [], ->
 			id = @callbacks.id++
 			@callbacks[id] = cb
 			@postMessage { type: 'snapNodes', cb: id }
+		applyRules: (cb) ->
+			id = @callbacks.id++
+			@callbacks[id] = cb
+			@postMessage { type: 'applyRules', cb: id }
 		log:	({ log }) -> console.log log
 		node:	({ node }) ->
 			other = @_graph.nodesById[node.id]
