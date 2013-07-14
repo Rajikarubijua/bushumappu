@@ -3,7 +3,7 @@ define ['utils', 'criteria'], (utils, criteria) ->
 
 	class Node
 		next_id = 0
-		constructor: ({ @x, @y, @lines, @edges, @data, @style, @id }={}) ->
+		constructor: ({ @x, @y, @lines, @edges, @data, @style, @id, @fixed }={}) ->
 			@x     ?= 0
 			@y     ?= 0
 			@lines ?= []
@@ -31,24 +31,26 @@ define ['utils', 'criteria'], (utils, criteria) ->
 				@otherNode edge for edge in @edges
 			)
 			
-		compliant: (graph) ->
-			# 0 good, Infinity bad
-			@_compliant ?= d3.sum [
-				criteria.wrongEdgesUnderneath this, graph.edges
-			]
+		ruleViolations: (graph) ->
+			@_ruleViolations ?= do =>
+				throw "graph not a Graph" if graph not instanceof Graph
+				d3.sum [
+					1000*criteria.wrongEdgesUnderneath(this, graph.edges).length
+					criteria.edgeCrossings @edges, graph.edges
+				]
 			
-		critValue: (graph) ->
-			@_critValue ?= d3.sum [
-				@compliant graph
+		critQuality: (graph) ->
+			@_critQuality ?= do =>
+				throw "graph not a Graph" if graph not instanceof Graph
 				criteria.lineStraightness this
-			]
 		
-		invalidateValues: ->
-			@_critValue = @_compliant = undefined
+		_invalidateCache: ->
+			@_critQuality = @_ruleViolations = undefined
 			
 		move: (@x, @y) ->
-			@invalidateValues()
-			node.invalidateValues() for node in @deps()
+			throw "move to undefined" if not (@x? and @y?)
+			@_invalidateCache()
+			node._invalidateCache() for node in @deps()
 			
 		moveBy: (x, y) -> @move @x+x, @y+y
 		
@@ -77,7 +79,6 @@ define ['utils', 'criteria'], (utils, criteria) ->
 			[ @target.x - @source.x, @target.y - @source.y ]
 
 		getAngle: (edge) ->
-			throw 'edge is this' if this == edge
 			[ x1, y1 ] = @getVector()
 			[ x2, y2 ] = edge.getVector()
 			scalar = x1 * x2 + y1 * y2 
@@ -107,7 +108,18 @@ define ['utils', 'criteria'], (utils, criteria) ->
 				if other.line.id == @line.id
 					return other
 			null
-
+			
+		isCrossing: ({ source, target }) ->
+			{ x: x1, y: y1 } = @source
+			{ x: x2, y: y2 } = @target
+			{ x: x3, y: y3 } = source
+			{ x: x4, y: y4 } = target
+			a = (x4 - x3)*(y1 - y3) - (y4 - y3)*(x1 - x3)
+			b = (x2 - x1)*(y1 - y3) - (y2 - y1)*(x1 - x3)
+			c = (y4 - y3)*(x2 - x1) - (x4 - x3)*(y2 - y1)
+			a /= c
+			b /= c
+			0 <= a <= 1 and 0 <= b <= 1
 
 	class Line
 		next_id = 0
@@ -166,18 +178,36 @@ define ['utils', 'criteria'], (utils, criteria) ->
 			lines = for line in @lines
 				for node in line.nodes
 					nodes[node.id]
+					
+		ruleViolations: ->
+			d3.sum (node.ruleViolations this for node in @nodes)
+			
+		critQuality: ->
+			d3.sum [
+				d3.sum (node.critQuality this for node in @nodes)
+				criteria.lengthOfEdges @edges
+			]
 
 	class Cluster
 		constructor: (@nodes) ->
 			@copies = ([n.x,n.y] for n in @nodes)
-		critValue: (graph) ->
-			throw 'graph undefined' if not graph?
-			@_critValue ?= d3.sum (n.critValue graph for n in @nodes)
+			
+		ruleViolations: (graph) ->
+			@_ruleViolations ?= do ->
+				throw "graph not a Graph" if graph not instanceof Graph
+				d3.sum (n.ruleViolations graph for n in @nodes)
+			
+		critQuality: (graph) ->
+			@_critQuality ?= do ->
+				throw "graph not a Graph" if graph not instanceof Graph
+				d3.sum (n.critQuality graph for n in @nodes)
+			
 		moveBy: (x, y) ->
-			@_critValue = undefined
+			@_ruleViolations = @_critQuality = undefined
 			n.moveBy x, y for n in @nodes
+			
 		resetPosition: ->
-			@_critValue = undefined
+			@_ruleViolations = @_critQuality = undefined
 			for n, i in @nodes
 				[x,y] = @copies[i]
 				n.move x,y

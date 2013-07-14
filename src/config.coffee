@@ -20,7 +20,7 @@ config =
 	slideshowSteps:				1
 	nodeSize:					12
 	showInitialMode:			false
-	debugKanji:					'緒'
+	debugKanji:					'総'
 
 window?.config = config
 self?.config = config

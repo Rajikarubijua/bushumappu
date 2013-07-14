@@ -27,11 +27,6 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 			@embedder = new CentralStationEmbedder { @config }
 			@seaFill = new FilterSearch {}
 
-			@svg.on 'mousemove', =>
-				{ x, y } =  d3.event
-				node = new Node { x, y }
-				node.compliant @graph
-
 			#setup zoom
 			w = new Signal
 			h = new Signal
@@ -98,7 +93,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 			@optimizer.graph graph
 			@optimizer.snapNodes()
 			@optimizer.applyRules()
-			@optimizer.optimize()
+			#@optimizer.optimize()
 
 			@seaFill.setup this, false
 			

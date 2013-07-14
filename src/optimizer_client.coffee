@@ -4,7 +4,7 @@ define [], ->
 			@worker = new Worker "js/optimize.js?"+Date.now()
 			@worker.onmessage = (ev) =>
 				return cb?() if ev.data == 'ready'
-				console.log 'receive', ev.data.type if ev.data.type != 'log'
+				#console.log 'receive', ev.data.type if ev.data.type != 'log'
 				@[ev.data.type] ev.data
 			@onNodes = null
 			
@@ -26,6 +26,7 @@ define [], ->
 		
 		node:	({ node }) ->
 			other = @_graph.nodesById[node.id]
+			throw 'fixed node is moved' if other.fixed
 			other.move node.x, node.y
 			other.style.debug_fill = node.debug_fill
 			if not @raf

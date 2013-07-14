@@ -1,12 +1,20 @@
 define ['utils'], (utils) ->
 	{ P } = utils
 	
-	wrongEdgesUnderneath = (node, edges) ->
-		near_edges = edgesUnderneath node, edges
-		for edge in near_edges
-			if edge not in node.edges
-				return Infinity
-		0
+	wrongEdgesUnderneath = (node, edges) -> 
+		wrong = []
+		for edge in edgesUnderneath node, edges
+			if edge not in node.edges and edge.length() < config.gridSpacing * 10
+				wrong.push edge
+		wrong
+		
+	edgeCrossings = (edges_a, edges_b) ->
+		crossings = 0
+		for a in edges_a
+			for b in edges_b
+				if a.isCrossing b
+					crossings++
+		crossings
 		
 	edgesUnderneath = (node, edges) ->
 		underneath = []
@@ -39,5 +47,7 @@ define ['utils'], (utils) ->
 			segment.push other if other
 		d3.values segments
 
+	lengthOfEdges = (edges) ->
+		d3.sum (e.lengthSqr() for e in edges)
 	
-	{ wrongEdgesUnderneath, lineStraightness }
+	{ wrongEdgesUnderneath, lineStraightness, lengthOfEdges, edgeCrossings }
