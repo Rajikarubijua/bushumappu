@@ -1,4 +1,5 @@
-define ['utils', 'graph'], ({P, length}, {Graph, Edge, Node, Line}) ->
+define ['utils'], (utils) ->
+	{ P } = utils
 
 	cptplaceholder = 0
 
@@ -14,8 +15,6 @@ define ['utils', 'graph'], ({P, length}, {Graph, Edge, Node, Line}) ->
 			@minilabel ?= false
 			@id = tube_id++
 	createTubes = (my_edge) ->
-		if my_edge.sourcecoord? and my_edge.targetcoord?
-			return [my_edge.sourcecoord, my_edge.targetcoord]
 		{ source, target } = my_edge
 		tube = new Tube
 		tube.x = source.x

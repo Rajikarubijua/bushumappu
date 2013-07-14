@@ -1,4 +1,4 @@
-define ['utils', 'criteria'], (utils, criteria) ->
+define ['utils', 'criteria', 'tubeEdges'], (utils, criteria, tube) ->
 	{ P } = utils
 
 	class Node
@@ -51,6 +51,7 @@ define ['utils', 'criteria'], (utils, criteria) ->
 			throw "move to undefined" if not (@x? and @y?)
 			@_invalidateCache()
 			node._invalidateCache() for node in @deps()
+			edge._invalidateCache() for edge in @edges
 			
 		moveBy: (x, y) -> @move @x+x, @y+y
 		
@@ -90,17 +91,20 @@ define ['utils', 'criteria'], (utils, criteria) ->
 			angle = Math.acos scalar / l
 			
 		getEdgeAngle: ->
-			[ x1, y1 ] = [@source.x, @source.y]
-			[ x2, y2 ] = [@target.x, @target.y]
-			x = x2 - x1
-			y = y2 - y1
-			angle = Math.atan2(y,x)
+			@_getEdgeAngle ?= do =>
+				[ x1, y1 ] = [@source.x, @source.y]
+				[ x2, y2 ] = [@target.x, @target.y]
+				x = x2 - x1
+				y = y2 - y1
+				angle = Math.atan2(y,x)
 			
 		lengthSqr: ->
-			[ x, y ] = @getVector()
-			(Math.pow x, 2) + (Math.pow y, 2)
+			@_lengthSqr ?= do =>
+				[ x, y ] = @getVector()
+				(Math.pow x, 2) + (Math.pow y, 2)
 			
-		length: -> Math.sqrt @lengthSqr()
+		length: ->
+			@_length ?= Math.sqrt @lengthSqr()
 		
 		otherEdge: (edges) ->
 			for other in edges
@@ -120,6 +124,12 @@ define ['utils', 'criteria'], (utils, criteria) ->
 			a /= c
 			b /= c
 			0 <= a <= 1 and 0 <= b <= 1
+			
+		coords: ->
+			@_coords ?= tube.createTubes this
+			
+		_invalidateCache: ->
+			@_coords = @_lengthSqr = @_length = @_getEdgeAngle = undefined
 
 	class Line
 		next_id = 0

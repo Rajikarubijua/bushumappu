@@ -131,10 +131,6 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 				me.changeToCentral kanji
 				setTimeout slideshow, me.config.transitionTime + 2000
 	
-		invalidateEdgeCoords: (edges) ->
-			for edge in edges
-				edge.sourcecoord = edge.targetcoord = undefined
-	
 		update: (graph) ->
 			@graph = graph if graph
 			{ svg, config, g_edges, g_nodes, g_endnodes, g_stationLabels } = this
@@ -158,8 +154,6 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 			# remove minilabels
 			minilabels = d3.selectAll(".mini-label")
 			minilabels.remove()
-			
-			@invalidateEdgeCoords edges
 
 			# join
 			edge = g_edges.selectAll(".edge")
@@ -371,7 +365,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 					d3.select(@).style stroke: d.style.debug_stroke
 			i = 0
 			edge.transition().duration(config.transitionTime)
-				.attr d: (d) -> svgline01 createTubes d
+				.attr d: (d) -> svgline01 d.coords()
 			that = this
 			edge.each (d) -> 
 				if d.tube.id % 5 == 0
