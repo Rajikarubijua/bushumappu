@@ -220,7 +220,7 @@ define [
 					arrow.classed('up', true)
 					arrow.classed('down', false)
 				else
-					bar.style('max-height', '200px')
+					bar.style('max-height', '250px')
 					arrow.classed('down', true)
 					arrow.classed('up', false)
 		
