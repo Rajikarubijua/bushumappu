@@ -225,6 +225,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 			
 			addKanjiDetail = (d) ->
 				thisView.detailTable.addKanji d.data
+				toggleMenu(true)
 				d3.selectAll('#details td.content').on 'click.hightlightSelected', (d) -> thisView.autoFocus d
 				
 			removeKanjiDetail = (d) ->
@@ -232,7 +233,25 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 				d3.event.stopPropagation()
 				d3.selectAll('#details td.content').on 'click.hightlightSelected', (d) -> thisView.autoFocus d
 
+			toggleMenu = (shouldStayOpen) ->
+				shouldStayOpen ?= false
+				bar = d3.select('#bottomBar')
+				toggleBtn = d3.select('#toggle-bottom-bar')
+				arrow = toggleBtn.select('.arrowIcon')
+
+				if bar.node().clientHeight > 11 and !shouldStayOpen
+					bar.style('max-height', '10px')
+					arrow.classed('up', true)
+					arrow.classed('down', false)
+				else
+					bar.style('max-height', '200px')
+					arrow.classed('down', true)
+					arrow.classed('up', false)
+
+
 			thisView = this
+
+			d3.select('#toggle-bottom-bar').on('mouseenter.bottomBarToggle', toggleMenu)
 
 			edge.enter()
 				#.append("g")
@@ -299,20 +318,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 
 			endnode.transition().duration(config.transitionTime)
 				.attr transform: (d) -> "translate(#{d.x} #{d.y})"
-				
-			toggleBtn = d3.select('#toggle-bottom-bar')
-				.on('mouseenter.bottomBarToggle', (d) ->
-					bar = d3.select('#bottomBar')
-					arrow = toggleBtn.select('.arrowIcon')
-					if bar.node().clientHeight > 11
-						bar.style('max-height', '10px')
-						arrow.classed('up', true)
-						arrow.classed('down', false)
-					else
-						bar.style('max-height', '200px')
-						arrow.classed('down', true)
-						arrow.classed('up', false)
-				)
+
 			# exit
 			edge.exit().remove()
 			node.exit().remove()
