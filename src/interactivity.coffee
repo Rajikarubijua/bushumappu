@@ -356,7 +356,6 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 			enter_central_node = update_central_node.enter()
 			exit_central_node  = update_central_node.exit()
 			central_label = node.label
-			P central_label
 			central_meaning = node.data.meaning
 			central_freq = node.data.freq
 			central_strokes = node.data.stroke_n
@@ -364,7 +363,6 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 			central_on = node.data.onyomi
 			central_kun = node.data.kunyomi
 			central_history = @history.history 
-			
 			central_g = enter_central_node.append('g').attr('id': 'central-node')
 			central_g.append('foreignObject')
 					.attr(x: -120, y: -200)
