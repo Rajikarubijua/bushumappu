@@ -20,7 +20,7 @@ define ['utils'], ({P, cssTranslateXY }) ->
 		
 		updateListener: (stationLabel) ->
 			me = this
-			stationLabelAngle = @calculateLabelAngle(@node.edges)
+			stationLabelAngle = @calculateLabelAngle(@node)
 			label_rect = stationLabel.append('rect')
 					.attr(x:24, y:-config.nodeSize-3)
 					.attr(transform: "rotate(#{stationLabelAngle})")
@@ -33,16 +33,15 @@ define ['utils'], ({P, cssTranslateXY }) ->
 			
 			@node.style.stationLabel = stationLabel
 			
-		calculateLabelAngle: (edges) ->
+		calculateLabelAngle: (node) ->
 			edgeAngles = []
-			for edge in edges
-				a = edge.getEdgeAngle()
+			for edge in node.edges
+				a = edge.firstAngleFromNode node
 				r_a = Math.round(a / (0.25*Math.PI))
 				edgeAngles.push(r_a)
 			stationLabelAngle = 0
-			for a in edgeAngles
-				if a % 4 == 0
-					stationLabelAngle = -45
+			if 0 in edgeAngles
+				stationLabelAngle = -45
 			stationLabelAngle
 
 	{ StationLabel }

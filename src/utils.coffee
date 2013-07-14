@@ -338,11 +338,16 @@ define ->
 			a = b
 		pairs
 
+	angleBetween01 = ([x1,y1], [x2,y2]) ->
+		x = x2 - x1
+		y = y2 - y1
+		angle = Math.atan2(y,x)
 
 	{ copyAttrs, P, PN, PD, W, async, strUnique, expect, somePrettyPrint, length,
 	  sort, styleZoom, sunflower, vecX, vecY, vec, compareNumber, max, min,
 	  parseMaybeNumber, equidistantSelection, getMinMax, arrayUnique,
 	  distanceSqrXY, nearestXY, nearest01, distanceSqr01, nearest, forall,
 	  rasterCircle, prettyDebug, sortSomewhat, Memo, distanceXY, distance01,
-	  distToSegmentXY, distToSegmentSqrXY, cssTranslateXY, consecutivePairs, distToSegment01 }
+	  distToSegmentXY, distToSegmentSqrXY, cssTranslateXY, consecutivePairs,
+	  distToSegment01, angleBetween01 }
 
