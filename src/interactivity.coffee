@@ -196,7 +196,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 				rectLength = label_text.node().getBBox().width + 8
 				label_rect.attr(width: rectLength, height: 2.5*config.nodeSize) # inflating the rectangle
 				node.style.stationLabel = stationLabel
-			
+				
 			# this function sets a timer for the stationlabel to be displayed
 			# this means that after a certain time after the mouse entered the node
 			# the label will be displayed, not right away
@@ -355,7 +355,6 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 			update_central_node = @svg.selectAll('#central-node').data([node])
 			enter_central_node = update_central_node.enter()
 			exit_central_node  = update_central_node.exit()
-			#P node
 			central_label = node.label
 			central_meaning = node.data.meaning
 			central_freq = node.data.freq
@@ -363,8 +362,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 			central_grade = node.data.grade
 			central_on = node.data.onyomi
 			central_kun = node.data.kunyomi
-			central_radical = node.data.radical
-			
+			central_history = @history.history 
 			central_g = enter_central_node.append('g').attr('id': 'central-node')
 			central_g.append('foreignObject')
 					.attr(x: -120, y: -200)
@@ -396,12 +394,19 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 							<div id='kOn'>" + central_on + "</div>
 							<div id='kKun'>" + central_kun + "</div>
 						</div>
+						<hr style='color: silver' />
+						<div class='history'>
+						" + central_history + "
+						</div>
 					</div>
 					 ")
 					
 			exit_central_node.remove()
-			
-			
+		
+		getListHistory = (history) ->
+			P history
+				
+	
 	svgline = d3.svg.line()
 		.x(({x}) -> x)
 		.y(({y}) -> y)
