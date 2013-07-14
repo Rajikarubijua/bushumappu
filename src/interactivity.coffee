@@ -242,9 +242,6 @@ define [
 			
 			{ svg, config, g_edges, g_nodes, g_endnodes, g_stationLabels } = this
 			{ nodes, lines, edges } = @graph
-			r = config.nodeSize
-			
-			that = this
 
 			endnodes = (node for node in nodes when node.data.radical)
 			central_node = (node for node in nodes when node.kind == 'central_node')
@@ -267,9 +264,6 @@ define [
 				.data(endnodes, (node) -> node.key())
 			
 			# enter
-			
-			thisView = this
-
 			d3.select('#toggle-bottom-bar').on('mouseenter.bottomBarToggle', @toggleMenu)
 
 			edge.enter()
@@ -315,18 +309,6 @@ define [
 			# exit
 			edge.exit().remove()
 			endnode.exit().remove()
-
-			if config.forceGraph
-				force = d3.layout.force()
-					.nodes([nodes..., endnodes...])
-					.edges(edges)
-					.edgeStrength(1)
-					.edgeDistance(8*r)
-					.charge(-3000)
-					.gravity(0.001)
-					.start()
-					.on 'tick', -> updatePositions()
-				node.call force.drag
 			
 		createMiniLabel: (edge, dom, radicals) ->
 			parent = d3.select(dom.parentNode)
