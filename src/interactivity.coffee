@@ -270,50 +270,20 @@ define [
 		
 		update: (graph) ->
 			@graph = graph if graph
+			d3.selectAll(".mini-label").remove()
 			@updateNodes @graph
 			@updateEdges @graph
 			
-			{ svg, config, g_edges, g_nodes, g_endnodes, g_stationLabels } = this
-			{ nodes, lines, edges } = @graph
-
-			endnodes = (node for node in nodes when node.data.radical)
+			{ nodes } = @graph
 			central_node = (node for node in nodes when node.kind == 'central_node')
 			if central_node.length > 1
 				throw 'cant handle more than one central node'
 			central_node = central_node[0]
 			@updateCentralNode central_node
-			nodes = (node for node in nodes when node not in endnodes and node != central_node)
-			table = d3.select('table#details tbody')
-			table_data = [[],[],[],[],[]]
 			
-			# remove minilabels
-			minilabels = d3.selectAll(".mini-label")
-			minilabels.remove()
-
-			# join
-			
-			endnode = g_endnodes.selectAll('.endnode')
-				.data(endnodes, (node) -> node.key())
-			
-			# enter
-			d3.select('#toggle-bottom-bar').on('mouseenter.bottomBarToggle', @toggleMenu)
-			
-			endnode_g = endnode.enter()
-				.append('g')
-				.classed("endnode", true)
-				.on('click.selectLine', (d) -> endnodeSelectLine d)
-			endnode_g.append("circle").attr {r : config.nodeSize}
-			endnode_g.append("text").text (d) -> d.label()
-		
-			# update
-			
-
-			endnode.transition().duration(config.transitionTime)
-				.attr transform: (d) -> "translate(#{d.x} #{d.y})"
-
-			# exit
-			endnode.exit().remove()
-			
+			d3.select('#toggle-bottom-bar')
+				.on('mouseenter.bottomBarToggle', @toggleMenu)
+						
 		createMiniLabel: (edge, dom) ->
 			parent = d3.select(dom.parentNode)
 			{ line, tube } = edge 
