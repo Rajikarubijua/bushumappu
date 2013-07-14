@@ -68,6 +68,9 @@ define ['utils', 'criteria', 'tubeEdges'], (utils, criteria, tube) ->
 			
 		key: ->
 			@coord()
+			
+		label: ->
+			@data.kanji or @data.radical or "?"
 	
 	class Edge
 		constructor: ({ @source, @target, @tube, @line, @style }={}) ->
@@ -98,6 +101,20 @@ define ['utils', 'criteria', 'tubeEdges'], (utils, criteria, tube) ->
 				x = x2 - x1
 				y = y2 - y1
 				angle = Math.atan2(y,x)
+				
+		firstAngleFromNode: ({ x, y }) ->
+			p = [x,y]
+			[ a1, b1 ] = @coords()[0..1]
+			[ b2, a2 ] = @coords()[-2..]
+			d1 = utils.distanceSqr01 p, a1
+			d2 = utils.distanceSqr01 p, a2
+			if d1 < d2
+				a = a1
+				b = b1
+			else
+				a = a2
+				b = b2
+			angle = utils.angleBetween01 a, b
 			
 		lengthSqr: ->
 			@_lengthSqr ?= do =>

@@ -69,7 +69,7 @@ define [
 			# This hasn't been reported yet.
 			svg.on('dblclick.zoom', null)
 
-		autoFocus: (kanji) ->
+		autoFocus: (kanji) =>
 			focus = {}
 			for node in @graph.nodes
 				node.style.isFocused = false
@@ -143,16 +143,99 @@ define [
 				me.changeToCentral kanji
 				setTimeout slideshow, me.config.transitionTime + 2000
 	
+	
+	
+	
+	
+		addStationLabel: (node) =>
+			label = new StationLabel { node, @g_stationLabels }
+			label.showStationLabel(node)
+	
+		enterNodes: (enter) ->
+			{ addStationLabel, addKanjiDetail } = this
+			g_node = enter.append('g').classed('node', true)
+			g_station_kanji = g_node.append('g').classed('station-kanji', true)
+				.on('mouseenter.delayed-hover', (node) ->  
+					setFuncTimer(this, 800, -> addStationLabel node)
+				)
+				.on('mouseleave.delayed-hover', (node) ->
+					clearFuncTimer(this)
+				)
+				.on('click.addKanjiDetail', (node) ->
+					delayDblClick(550, -> addKanjiDetail node)
+				)
+				.on('dblclick.changeToCentralFromNode', (node) =>
+					@changeToCentralFromNode node
+				)
+			x = y = -config.nodeSize
+			width = height = 2*config.nodeSize
+			g_station_kanji.append('rect')
+				.attr { x, y, width, height }
+			g_station_kanji.append('text')
+			
+		exitNodes: (exit) ->
+			exit.remove()
+	
+		updateNodes: (graph) ->
+			nodes = (n for n in graph.nodes when \
+				n.kind in ['hi_node','lo_node'])
+			
+			update = @g_nodes.selectAll('g.node')
+				.data(nodes, (node) -> node.key())
+			@enterNodes update.enter()
+			@exitNodes update.exit()
+			
+			update
+				.attr('id', (node) -> "kanji_"+node.data.kanji)
+				.classed("filtered",     (node) -> node.style.filtered)
+				.classed("searchresult", (node) -> node.style.isSearchresult)
+				.classed("focused",      (node) -> node.style.isFocused)
+				.style(fill: (node) -> node.style.debug_fill or null)
+				.select('text')
+					.text (node) -> node.label()
+			update.transition().duration(config.transitionTime)
+				.attr(transform: (node) -> utils.cssTranslateXY node)
+
+		addKanjiDetail: (node) =>
+				@detailTable.addKanji node.data
+				@toggleMenu(true)
+				d3.selectAll('#details td.content')
+					.on 'click.hightlightSelected', (node) =>
+						@autoFocus node
+				
+		removeKanjiDetail: (node) =>
+			@detailTable.removeKanji node.data
+			d3.event.stopPropagation()
+			d3.selectAll('#details td.content')
+				.on 'click.hightlightSelected', (node) =>
+					@autoFocus node
+		
+		toggleMenu: (shouldStayOpen) =>
+				shouldStayOpen ?= false
+				bar = d3.select('#bottomBar')
+				toggleBtn = d3.select('#toggle-bottom-bar')
+				arrow = toggleBtn.select('.arrowIcon')
+				if bar.node().clientHeight > 11 and !shouldStayOpen
+					bar.style('max-height', '10px')
+					arrow.classed('up', true)
+					arrow.classed('down', false)
+				else
+					bar.style('max-height', '200px')
+					arrow.classed('down', true)
+					arrow.classed('up', false)
+		
+		
+		
+		
+		
+		
 		update: (graph) ->
 			@graph = graph if graph
+			@updateNodes @graph
+			
 			{ svg, config, g_edges, g_nodes, g_endnodes, g_stationLabels } = this
 			{ nodes, lines, edges } = @graph
-			r = config.nodeSize
-			
-			that = this
 
-			for node in nodes
-				node.label ?= node.data.kanji or node.data.radical or "?"
 			endnodes = (node for node in nodes when node.data.radical)
 			central_node = (node for node in nodes when node.kind == 'central_node')
 			if central_node.length > 1
@@ -169,71 +252,12 @@ define [
 
 			# join
 			edge = g_edges.selectAll(".edge")
-				.data(edges, (edge) -> edge.key())
-			node = g_nodes.selectAll('.node')
-				.data(nodes, (node) -> node.key())
+				.data(edges)
 			endnode = g_endnodes.selectAll('.endnode')
 				.data(endnodes, (node) -> node.key())
 			
 			# enter
-				
-			# this function sets a timer for the stationlabel to be displayed
-			# this means that after a certain time after the mouse entered the node
-			# the label will be displayed, not right away
-			setFuncTimer = ( obj, ms, func) ->
-				obj.funcTimer = setTimeout(((d) -> func d), ms)
-				
-			
-			clearFuncTimer = (obj) ->	
-				clearTimeout(obj.funcTimer)
-				obj.funcTimer = null
-			
-			# this function delays a double click event and takes the delay in ms as 
-			# well as the function to be called after the timeout as a parameter
-			delayDblClick = (ms, func) ->
-				if that.clickTimer 
-					clearTimeout(that.clickTimer)
-					that.clickTimer = null
-				else 
-					that.clickTimer = setTimeout(((d)-> 
-						that.clickTimer = null
-						func d), ms)
-			
-			thisView = this
-			
-			addKanjiDetail = (d) ->
-				thisView.detailTable.addKanji d.data
-				toggleMenu(true)
-				d3.selectAll('#details td.content').on 'click.hightlightSelected', (d) -> thisView.autoFocus d
-				
-			removeKanjiDetail = (d) ->
-				thisView.detailTable.removeKanji d.data
-				d3.event.stopPropagation()
-				d3.selectAll('#details td.content').on 'click.hightlightSelected', (d) -> thisView.autoFocus d
-
-			toggleMenu = (shouldStayOpen) ->
-				shouldStayOpen ?= false
-				bar = d3.select('#bottomBar')
-				toggleBtn = d3.select('#toggle-bottom-bar')
-				arrow = toggleBtn.select('.arrowIcon')
-
-				if bar.node().clientHeight > 11 and !shouldStayOpen
-					bar.style('max-height', '10px')
-					arrow.classed('up', true)
-					arrow.classed('down', false)
-				else
-					bar.style('max-height', '200px')
-					arrow.classed('down', true)
-					arrow.classed('up', false)
-
-			
-			addStationLabel = (node) ->
-				label = new StationLabel { node, g_stationLabels }
-				label.showStationLabel(node)
-			
-			thisView = this
-
-			d3.select('#toggle-bottom-bar').on('mouseenter.bottomBarToggle', toggleMenu)
+			d3.select('#toggle-bottom-bar').on('mouseenter.bottomBarToggle', @toggleMenu)
 
 			edge.enter()
 				#.append("g")
@@ -241,30 +265,13 @@ define [
 				.classed("edge", true)
 				# for transitions; nodes start at 0,0. so should edges
 				.attr d: (d) -> "M0,0"
-			node_g = node.enter()
-				.append('g')
-				.classed("node", true)
-			stationKanji = node_g.append('g')
-				.classed("station-kanji", true)
-				.attr('id', (d) -> "kanji_"+d.data.kanji)
-				.on('mouseenter.showLabel', (d) ->  
-					that = this
-					setFuncTimer(that, 800, -> addStationLabel.call(that, d)))
-				.on('mouseleave.resetHoverTimer', (d) ->
-					clearFuncTimer(this))
-				.on('click.displayDetailsOfNode', (d) ->
-					delayDblClick(550, -> addKanjiDetail d))
-				.on('dblclick.selectnewCentral', (d) -> thisView.changeToCentralFromNode d )
-			stationKanji.append('rect').attr x:-config.nodeSize, y:-config.nodeSize, width:2*config.nodeSize, height:2*config.nodeSize
-			stationKanji.append('text')
-			
 			
 			endnode_g = endnode.enter()
 				.append('g')
 				.classed("endnode", true)
 				.on('click.selectLine', (d) -> endnodeSelectLine d)
 			endnode_g.append("circle").attr {r : config.nodeSize}
-			endnode_g.append("text").text (d) -> d.label
+			endnode_g.append("text").text (d) -> d.label()
 		
 			# update
 			radicals = []
@@ -288,34 +295,13 @@ define [
 				if d.tube.id % 5 == 0
 					that.createMiniLabel d, this, radicals
 			edge.classed("filtered", (d) -> d.style.filtered)
-			node.classed("filtered", (d) -> d.style.filtered)
-			node.classed("searchresult", (d) -> d.style.isSearchresult)
-			node.classed("focused", (d) -> d.style.isFocused)
-			node_t = node.transition().duration(config.transitionTime)
-			node_t.attr(transform: (d) -> utils.cssTranslateXY d)
-			node_t.style fill: (node) ->
-				node.style.debug_fill or null
-			node_t.select('text').text (d) -> d.label
 
 			endnode.transition().duration(config.transitionTime)
 				.attr transform: (d) -> "translate(#{d.x} #{d.y})"
 
 			# exit
 			edge.exit().remove()
-			node.exit().remove()
 			endnode.exit().remove()
-
-			if config.forceGraph
-				force = d3.layout.force()
-					.nodes([nodes..., endnodes...])
-					.edges(edges)
-					.edgeStrength(1)
-					.edgeDistance(8*r)
-					.charge(-3000)
-					.gravity(0.001)
-					.start()
-					.on 'tick', -> updatePositions()
-				node.call force.drag
 			
 		createMiniLabel: (edge, dom, radicals) ->
 			parent = d3.select(dom.parentNode)
@@ -347,7 +333,7 @@ define [
 			update_central_node = @svg.selectAll('#central-node').data([node])
 			enter_central_node = update_central_node.enter()
 			exit_central_node  = update_central_node.exit()
-			central_label = node.label
+			central_label = node.label()
 			central_meaning = node.data.meaning
 			central_freq = node.data.freq
 			central_strokes = node.data.stroke_n
@@ -409,6 +395,29 @@ define [
 	svgline01 = d3.svg.line()
 		.x( (d) -> d[0])
 		.y( (d) -> d[1])
+
+
+	# this function sets a timer for the stationlabel to be displayed
+	# this means that after a certain time after the mouse entered the node
+	# the label will be displayed, not right away
+	setFuncTimer = ( obj, ms, func) ->
+		obj.funcTimer = setTimeout(((d) -> func d), ms)
+		
+	
+	clearFuncTimer = (obj) ->	
+		clearTimeout(obj.funcTimer)
+		obj.funcTimer = null
+	
+	# this function delays a double click event and takes the delay in ms as 
+	# well as the function to be called after the timeout as a parameter
+	delayDblClick = (ms, func) ->
+		if @clickTimer 
+			clearTimeout(@clickTimer)
+			@clickTimer = null
+		else 
+			@clickTimer = setTimeout(((d)-> 
+				@clickTimer = null
+				func d), ms)
 
 	endnodeSelectLine = (d) ->
 		selector = ".line_"+d.data.radical
