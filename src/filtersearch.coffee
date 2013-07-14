@@ -22,8 +22,12 @@ define ['utils'], ({P}) ->
 			for node in graph.nodes
 				if @isWithinCriteria(node.data, criteria)
 					node.style.filtered = false
+					if node.style.stationLabel
+						node.style.stationLabel.node().style_filtered = false
 				else
 					node.style.filtered = true
+					if node.style.stationLabel
+						node.style.stationLabel.node().style_filtered = true
 
 			for edge in graph.edges
 				nearHidden = edge.source.style.filtered or edge.target.style.filtered 
@@ -62,6 +66,8 @@ define ['utils'], ({P}) ->
 			for node in graph.nodes
 				node.style.isSearchresult = false
 				node.style.filtered = false
+				if node.style.stationLabel
+					node.style.stationLabel.node().style_filtered = false
 			for edge in graph.edges
 				edge.style.isSearchresult = false
 				edge.style.filtered = false

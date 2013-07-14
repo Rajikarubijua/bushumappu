@@ -195,7 +195,7 @@ define [
 					.text (node) -> node.label()
 			update.transition().duration(config.transitionTime)
 				.attr(transform: (node) -> utils.cssTranslateXY node)
-
+			
 		addKanjiDetail: (node) =>
 			@detailTable.addKanji node.data
 			@toggleMenu(true)
@@ -267,11 +267,16 @@ define [
 			
 			update.classed("filtered", (edge) -> edge.style.filtered)
 		
+		updateStationLabels: (graph) ->
+			@g_stationLabels.selectAll(".station-label")
+				.classed("filtered", () -> this.style_filtered)
+		
 		
 		update: (graph) ->
 			@graph = graph if graph
 			@updateNodes @graph
 			@updateEdges @graph
+			@updateStationLabels @graph
 			
 			{ svg, config, g_edges, g_nodes, g_endnodes, g_stationLabels } = this
 			{ nodes, lines, edges } = @graph
