@@ -292,12 +292,13 @@ define [
 			{ line, tube } = edge 
 			i = @graph.radicals().indexOf line.data
 			color = colors[i]
+			space_between = 12
 			i = tube.edges.indexOf(edge) - tube.edges.length/2
 			length = edge.length() / 2
 			x_mid = tube.x + length * Math.cos tube.angle
 			y_mid = tube.y + length * Math.sin tube.angle
-			x = x_mid + 8 * i * Math.cos tube.angle
-			y = y_mid + 8 * i * Math.sin tube.angle
+			x = x_mid + space_between * i * Math.cos tube.angle
+			y = y_mid + space_between * i * Math.sin tube.angle
 			x += (tube.width+5) * Math.cos tube.angle + 0.5*Math.PI
 			y += (tube.width+5) * Math.sin tube.angle + 0.5*Math.PI
 			grad = tube.angle / 2/Math.PI * 360
