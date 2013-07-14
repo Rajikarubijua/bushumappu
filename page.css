@@ -7,6 +7,22 @@ body{
 	margin: 0px; 
 }
 
+::-webkit-scrollbar {
+    width: 10px;
+}
+ 
+::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3); 
+    border-radius: 5px;
+}
+ 
+::-webkit-scrollbar-thumb {
+    border-radius: 5px;
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5); 
+}
+
+/*! initialView */
+
 #overlay {
 	display: block;
 	width: 100%;
@@ -16,7 +32,6 @@ body{
 	background-color: white;
 }
 
-/*! h1 in initialView */
 .header{
 	color: #FFF;
 	background-color: #2FA199;
@@ -82,10 +97,8 @@ form table td{
 	resize: both;
 }
 
-
 #bottomBar {
-	border: 1px solid silver;
-	background: white; 
+	background: #EEE; 
 	bottom: 0px;
 	transition: 1s;
 	position: absolute;
@@ -95,10 +108,60 @@ form table td{
 #bottomBar #toggle-bottom-bar{
 	cursor: pointer;
 	background: rgb(220, 220, 220);
-	float: left;
+	height: 30px;
+	width: 80%;
+	margin: 0 auto;
+	border-radius: 50px 50px 0 0;
+	background-color: #2FA199;
+	margin-top: -30px;
+	margin-bottom: 10px;
+}
+
+.arrowIcon{
+	width: 0;
+	height: 0;
+	margin: 0 auto;
+	position: relative;
+}
+
+.arrowIcon.up{
+	border-left: 15px solid transparent;
+	border-right: 15px solid transparent;
+	border-bottom: 15px solid #FFF;
+	top: 7px;
 }
 
 #bottomBar > * {
+}
+
+#details {
+	margin-left: 10px;
+	border: 0;
+	background-color: #FFF;
+}
+
+
+#details td:first-child{
+	background-color:  #2FA199;
+	color: #FFF;
+}
+
+#details tr:first-child{
+	text-align: center;
+	font-size: 1.5em;
+}
+#details tr:first-child td:first-child{
+	background-color: #EEE;
+}
+
+#details.pure-table td{
+	border-left: 0 solid silver;
+	border-right: 2px solid silver;
+}
+
+#details.pure-table td:first-child{
+	border-left: 0 solid silver;
+	border-right: 0 solid silver;
 }
 
 #details td {
@@ -113,21 +176,18 @@ form table td{
 #seafil {
 	float: left;
 }
+
 #seafil table td{
 	padding-bottom: 5px;
 	padding-left: 5px;
 }
+
 #seafil form .long{
 	width: 10em;
 }
+
 #seafil form .half{
 	width: 3em;
-}
-#history {
-	margin-top: 10px;
-  margin-right: 10px;
-	float: left;
-	
 }
 
 .no-wrap{
@@ -154,14 +214,4 @@ input[type=button].btn_clear{
 	padding: 0;
 }
 
-		colors = [
-				"#E53517", #red
-				"#008BD0", #blue
-				"#97BE0D", #green 
-				"#641F80", #violet
-				"#F07C0D", #orange 
-				"#2FA199", #turquoise
-				"#FFCC00", #yellow
-				"#E2007A", #pink
-				"#290E03"  #brown
-			]
+/* Central station */

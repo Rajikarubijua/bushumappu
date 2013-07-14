@@ -1,5 +1,5 @@
-define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'graph'], 
-({ P, compareNumber, styleZoom }, {Tube, createTubes}, {FilterSearch}, {History}, {CentralStationEmbedder}, { Node }) ->
+define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'graph', 'detail_table'], 
+({ P, compareNumber, styleZoom }, {Tube, createTubes}, {FilterSearch}, {History}, {CentralStationEmbedder}, { Node }, {DetailTable}) ->
 
 	colors = [
 		"#E53517", #red
@@ -23,6 +23,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 			@g_stationLabels = @svg.append('g').attr('id': 'stationLabel_')
 			@zoom = d3.behavior.zoom()
 			@history = new History {}
+			@detailTable = new DetailTable {}
 			@history.setup this
 			@embedder = new CentralStationEmbedder { @config }
 			@seaFill = new FilterSearch {}
@@ -142,13 +143,11 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 			for node in nodes
 				node.label ?= node.data.kanji or node.data.radical or "?"
 			endnodes = (node for node in nodes when node.data.radical)
-			#central_node = (node for node in nodes when node.central_node)
-			#central_node = central_node[0]
-			central_node = undefined
+			central_node = (node for node in nodes when node.central_node)
+			central_node = central_node[0]
+			@updateCentralNode central_node
 			nodes = (node for node in nodes when node not in endnodes and node != central_node)
-			nodes.push central_node if central_node
 			table = d3.select('table#details tbody')
-			tablehead = d3.select('thead').selectAll('tr')
 			table_data = [[],[],[],[],[]]
 			
 			# remove minilabels
@@ -162,7 +161,6 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 				.data(nodes)
 			endnode = g_endnodes.selectAll('.endnode')
 				.data(endnodes)
-			colLabels = d3.select('table#details tbody').select('tr').selectAll('td')
 			
 			# enter
 			closeStationLabel = (d) ->
@@ -223,95 +221,15 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 						func d), ms)
 			
 			thisView = this
-			selectKanjiDetail = (d) ->
-				i = 1
-				nothingtodo = false
-				for k in colLabels[0]
-					item = colLabels[0][i]
-					if item == undefined
-						break
-					if item.textContent == d.label
-						nothingtodo = true;
-						break
-					i++
-				radicals = []
-				radicals = (r.radical for r in d.data.radicals)
-				
-				if(!nothingtodo)
-					table_data[0].push d.label
-					table_data[1].push d.data.meaning
-					table_data[2].push radicals
-					table_data[3].push d.data.onyomi
-					table_data[4].push d.data.kunyomi
-				# enter
-				table_tr = table.selectAll('tr')
-					.data(table_data)
-				table_td = table_tr.selectAll('td.content')
-					.data((d) -> d)
-
-				if(!nothingtodo)
-					table_tr.enter()
-						.append('tr')
-						.classed('content', true) # xxx
-					
-					table_td.enter()
-						.append('td')
-						.classed("content", true)
-				
-				table_td.text((d) -> d)
-				
-				tablecontentcols = table.select('tr').selectAll('td')[0].length
-				tableheadcols = tablehead.selectAll('th')[0].length
-				if tableheadcols < tablecontentcols
-					tablehead.append('th')
-				
-				colLabels = d3.select('table#details tbody').select('tr').selectAll('td')
-					.on('mouseenter.hoverLabel', (d) -> 
-						that = this
-						setFuncTimer(that, 1000, -> displayDeleteTableCol.call(that, d)))
-					.on('mouseleave.resetHoverLabel', (d) ->
-						clearFuncTimer(this)
-						d3.select(d3.event.srcElement.childNodes[1]).remove())
- 					.on('click.hightlightSelected', (d) -> thisView.autoFocus d)
 			
+			addKanjiDetail = (d) ->
+				thisView.detailTable.addKanji d.data
+				d3.selectAll('#details td.content').on 'click.hightlightSelected', (d) -> thisView.autoFocus d
 				
 			removeKanjiDetail = (d) ->
+				thisView.detailTable.removeKanji d.data
 				d3.event.stopPropagation()
-				index = 0
-				for label in table_data[0]
-					item = table_data[0][index]
-					if item == d
-						break
-					else
-						index++
-				
-				i = 0
-				for row in table_data
-					table_data[i].splice(index,1)
-					if table.selectAll('tr').selectAll('td')[i][index+1]
-						table.selectAll('tr').selectAll('td')[i][index+1].remove()
-					i++
-				if tablehead.selectAll('th')[0][index+1]
-					tablehead.selectAll('th')[0][index+1].remove()
-				table_td = table_tr.selectAll('td.content')
-					.text((d) -> d)
-				
-					
-			displayDeleteTableCol = (d) ->
-				# do not display this for the very first column 
-				# that contains description text
-				return if d == undefined
-				# we only need 1 button
-				return if d3.select(this).selectAll('g')[0].length != 0
-				
-				removeBtn = d3.select(this).append('g').classed('remove-col-btn', true)
-				removeBtn.append('text').text('x')
-				removeBtn.on('click.removeTableCol', (d) -> removeKanjiDetail(d))
-				this.removeBtn = removeBtn
-			
-			removeDeleteTableCol = (d) ->
-				return if not this.removeBtn
-				this.removeBtn.remove()
+				d3.selectAll('#details td.content').on 'click.hightlightSelected', (d) -> thisView.autoFocus d
 
 			thisView = this
 
@@ -334,14 +252,15 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 				.on('mouseleave.resetHoverTimer', (d) ->
 					clearFuncTimer(this))
 				.on('click.displayDetailsOfNode', (d) ->
+					#P d , ', ', d.central_node
 					that = this
-					delayDblClick(550, -> selectKanjiDetail.call(that, d))
+					delayDblClick(550, -> addKanjiDetail.call(that, d))
 					)
 				.on('dblclick.selectnewCentral', (d) -> thisView.changeToCentralFromNode d )
 			stationKanji.append('rect').attr x:-config.nodeSize, y:-config.nodeSize, width:2*config.nodeSize, height:2*config.nodeSize
 			stationKanji.append('text')
-	
-
+			
+			
 			endnode_g = endnode.enter()
 				.append('g')
 				.classed("endnode", true)
@@ -432,6 +351,57 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 				.attr
 					fill: "#{color}"
 					transform: "translate(#{x} #{y}) rotate(#{grad}, #{x}, #{y})"
+		
+		updateCentralNode: (node) ->
+			update_central_node = @svg.selectAll('#central-node').data([node])
+			enter_central_node = update_central_node.enter()
+			exit_central_node  = update_central_node.exit()
+			#P node
+			central_label = node.label
+			central_meaning = node.data.meaning
+			central_freq = node.data.freq
+			central_strokes = node.data.stroke_n
+			central_grade = node.data.grade
+			central_on = node.data.onyomi
+			central_kun = node.data.kunyomi
+			central_radical = node.data.radical
+			
+			central_g = enter_central_node.append('g').attr('id': 'central-node')
+			central_g.append('foreignObject')
+					.attr(x: -120, y: -200)
+					.attr(width: 246, height: 400)
+				.append('xhtml:body')
+					.style('background', 'white')
+					.style('border', 'solid black 1px')
+					.html("
+					 <div class='centralStation'>
+						<div class='firstBlock'>
+							<div id='kKanji'>" + central_label + "</div>
+							<table>
+								<tr>
+									<td>Strokecount</td>
+									<td id='kCount'>" + central_strokes + "</td>
+								</tr>
+								<tr>
+									<td>Frequency</td>
+									<td id='kFreqency'>" + central_freq + "</td>
+								</tr>
+								<tr>
+									<td>Schoolgrade</td>
+									<td id='kGrade'>" + central_grade + "</td>
+								</tr>
+							</table>
+						</div> 
+						<div class='secondBlock'>
+							<div id='kMeaning'>" + central_meaning + "</div>
+							<div id='kOn'>" + central_on + "</div>
+							<div id='kKun'>" + central_kun + "</div>
+						</div>
+					</div>
+					 ")
+					
+			exit_central_node.remove()
+			
 			
 	svgline = d3.svg.line()
 		.x(({x}) -> x)
@@ -440,6 +410,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 	svgline01 = d3.svg.line()
 		.x( (d) -> d[0])
 		.y( (d) -> d[1])
+		
 	
 	nodeTransform = (d) -> 
 		"translate(#{d.x} #{d.y})"
