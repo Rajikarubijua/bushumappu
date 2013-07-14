@@ -65,6 +65,9 @@ define ['utils', 'criteria', 'tubeEdges'], (utils, criteria, tube) ->
 			for edge in @edges
 				tubes.push edge.tube if edge.tube not in tubes
 			tubes
+			
+		key: ->
+			@coord()
 	
 	class Edge
 		constructor: ({ @source, @target, @tube, @line, @style }={}) ->
@@ -132,6 +135,8 @@ define ['utils', 'criteria', 'tubeEdges'], (utils, criteria, tube) ->
 			
 		_invalidateCache: ->
 			@_coords = @_lengthSqr = @_length = @_getEdgeAngle = undefined
+
+		key: -> @source.key()+" "+@target.key()
 
 	class Line
 		next_id = 0
