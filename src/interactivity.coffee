@@ -121,16 +121,9 @@ define [
 
 		changeToCentralFromStr: (strKanji) ->
 			strKanji = strKanji.trim()
-			central = {}
-			for k in @kanjis
-				if k.kanji == strKanji
-					central = k
-
-			if central.kanji == undefined or strKanji == ''
-				P "cannot set central (#{strKanji}) that is not in kanjis"
-				P @kanjis
-				return
-	
+			central = my.kanjis[strKanji]
+			if not central?
+				throw "central undefined"
 			@changeToCentral central
 
 		doInitial: () ->
@@ -218,20 +211,18 @@ define [
 					@autoFocus node
 		
 		toggleMenu: (shouldStayOpen) =>
-			shouldStayOpen ?= false
-			bar = d3.select('#bottomBar')
-			toggleBtn = d3.select('#toggle-bottom-bar')
-			arrow = toggleBtn.select('.arrowIcon')
-			if bar.node().clientHeight > 11 and !shouldStayOpen
-				bar.style('max-height', '10px')
-				arrow.classed('up', true)
-				arrow.classed('down', false)
-			else
-				bar.style('max-height', '200px')
-				arrow.classed('down', true)
-				arrow.classed('up', false)
-	
-	
+				shouldStayOpen ?= false
+				bar = d3.select('#bottomBar')
+				toggleBtn = d3.select('#toggle-bottom-bar')
+				arrow = toggleBtn.select('.arrowIcon')
+				if bar.node().clientHeight > 11 and !shouldStayOpen
+					bar.style('max-height', '10px')
+					arrow.classed('up', true)
+					arrow.classed('down', false)
+				else
+					bar.style('max-height', '250px')
+					arrow.classed('down', true)
+					arrow.classed('up', false)
 		
 
 		enterEdges: (enter) ->
@@ -354,13 +345,13 @@ define [
 			enter_central_node = update_central_node.enter()
 			exit_central_node  = update_central_node.exit()
 			central_label = node.label()
-			central_meaning = node.data.meaning
-			central_freq = node.data.freq
-			central_strokes = node.data.stroke_n
-			central_grade = node.data.grade
-			central_on = node.data.onyomi
-			central_kun = node.data.kunyomi
-			central_history = @history.render()
+			central_meaning = node.data.meaning or "–"
+			central_freq = node.data.freq or "–"
+			central_strokes = node.data.stroke_n or "–"
+			central_grade = node.data.grade or "–"
+			central_on = node.data.onyomi or "–"
+			central_kun = node.data.kunyomi or "–"
+			central_history = @history.render() or "–"
 			central_g = enter_central_node.append('g').attr('id': 'central-node')
 			central_g.append('foreignObject')
 					.attr(x: -120, y: -200)
@@ -399,6 +390,13 @@ define [
 					 ")
 					
 			exit_central_node.remove()
+
+			me = this
+			onClick = () ->
+				kanji = this.innerHTML
+				me.changeToCentralFromStr kanji
+
+			d3.selectAll(".#{@history.nclass}").on 'click.history', onClick
 				
 	
 	svgline = d3.svg.line()

@@ -166,13 +166,17 @@ form table td{
 	border-right: 2px solid silver;
 }
 
+#details td {
+	min-width: 250px;
+	width: 250px;
+	max-width: 250px;
+}
+
 #details.pure-table td:first-child{
 	border-left: 0 solid silver;
 	border-right: 0 solid silver;
-}
-
-#details td {
-	white-space:nowrap;
+	min-width: 100px;
+	width: 100px;
 }
 
 .tablewrapper {
