@@ -142,7 +142,9 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 			for node in nodes
 				node.label ?= node.data.kanji or node.data.radical or "?"
 			endnodes = (node for node in nodes when node.data.radical)
-			central_node = (node for node in nodes when node.central_node)
+			central_node = (node for node in nodes when node.kind == 'central_node')
+			if central_node.length > 1
+				throw 'cant handle more than one central node'
 			central_node = central_node[0]
 			@updateCentralNode central_node
 			nodes = (node for node in nodes when node not in endnodes and node != central_node)
@@ -251,9 +253,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 				.on('mouseleave.resetHoverTimer', (d) ->
 					clearFuncTimer(this))
 				.on('click.displayDetailsOfNode', (d) ->
-					#P d , ', ', d.central_node
-					that = this
-					delayDblClick(550, -> addKanjiDetail.call(that, d))
+					delayDblClick(550, => @addKanjiDetail d)
 					)
 				.on('dblclick.selectnewCentral', (d) -> thisView.changeToCentralFromNode d )
 			stationKanji.append('rect').attr x:-config.nodeSize, y:-config.nodeSize, width:2*config.nodeSize, height:2*config.nodeSize

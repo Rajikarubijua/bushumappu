@@ -4,7 +4,7 @@ define ['utils'], (utils) ->
 	wrongEdgesUnderneath = (node, edges) -> 
 		wrong = []
 		for edge in edgesUnderneath node, edges
-			if edge not in node.edges# and edge.length() >= config.overlengthEdge
+			if edge not in node.edges
 				wrong.push edge
 		wrong
 		
