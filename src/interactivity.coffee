@@ -352,6 +352,7 @@ define [
 					transform: "translate(#{x} #{y}) rotate(#{grad}, #{x}, #{y})"
 		
 		updateCentralNode: (node) ->
+			d3.select('#central-node').remove()
 			update_central_node = @svg.selectAll('#central-node').data([node])
 			enter_central_node = update_central_node.enter()
 			exit_central_node  = update_central_node.exit()
@@ -362,7 +363,7 @@ define [
 			central_grade = node.data.grade
 			central_on = node.data.onyomi
 			central_kun = node.data.kunyomi
-			central_history = @history.history 
+			central_history = @history.render()
 			central_g = enter_central_node.append('g').attr('id': 'central-node')
 			central_g.append('foreignObject')
 					.attr(x: -120, y: -200)
@@ -394,17 +395,13 @@ define [
 							<div id='kOn'>" + central_on + "</div>
 							<div id='kKun'>" + central_kun + "</div>
 						</div>
-						<hr style='color: silver' />
-						<div class='history'>
+						<div id='history'>
 						" + central_history + "
 						</div>
 					</div>
 					 ")
 					
 			exit_central_node.remove()
-		
-		getListHistory = (history) ->
-			P history
 				
 	
 	svgline = d3.svg.line()
