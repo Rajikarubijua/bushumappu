@@ -195,7 +195,7 @@ define ['utils', 'criteria', 'tubeEdges'], (utils, criteria, tube) ->
 			d3.sum (node.ruleViolations this for node in @nodes when node.kind == 'hi_node')
 			
 		critQuality: ->
-			d3.sum [
+			Math.ceil d3.sum [
 				d3.sum (node.critQuality this for node in @nodes when node.kind == 'hi_node')
 				criteria.lengthOfEdges @edges
 			]

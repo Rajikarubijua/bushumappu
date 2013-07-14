@@ -1,6 +1,23 @@
-define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'graph', 'detail_table', 'station_label'], 
-( utils, {Tube, createTubes}, {FilterSearch}, {History}, {CentralStationEmbedder}, { Node }, {DetailTable}, {StationLabel}) ->
-	
+define [
+	'utils',
+	'tubeEdges',
+	'filtersearch',
+	'history',
+	'central_station',
+	'graph',
+	'detail_table',
+	'station_label',
+	'optimizer_client'], (
+		utils,
+		{Tube, createTubes},
+		{FilterSearch},
+		{History},
+		{CentralStationEmbedder},
+		{ Node },
+		{DetailTable},
+		{ StationLabel },
+		{ Optimizer }
+) ->
 	{P, compareNumber, styleZoom} = utils
 	
 	colors = [
@@ -16,7 +33,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 	]
 
 	class View
-		constructor: ({ svg, @config, @kanjis, @radicals, @optimizer }) ->
+		constructor: ({ svg, @config, @kanjis, @radicals }) ->
 			@svg = svg.g
 			@parent = svg
 			@g_edges = @svg.append('g').attr('id': 'edge_')
@@ -90,12 +107,12 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 			@history.addCentral kanji.kanji	
 			graph = @embedder.graph kanji, @radicals, @kanjis
 			
-			@update graph
-
-			@optimizer.onNodes = => @update graph
-			@optimizer.graph graph
-			@optimizer.snapNodes()
-			@optimizer.applyRules()
+			@optimizer?.worker.terminate()
+			@optimizer = new Optimizer =>
+				@optimizer.onNodes = => @update graph
+				@optimizer.graph graph
+				@optimizer.snapNodes()
+				@optimizer.applyRules()
 
 			@seaFill.setup this, false
 			
