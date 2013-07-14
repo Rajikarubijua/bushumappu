@@ -357,7 +357,7 @@ define [
 					 ")
 					
 			exit_central_node.remove()
-			P height = (((@history.history.length % 7)-1) *35)
+			height = ((Math.round(@history.history.length / 7)+1) *35)
 			d3.select('#history').style 'height' , "#{height}px"
 
 			me = this

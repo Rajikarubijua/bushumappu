@@ -9,7 +9,7 @@ define ['utils'], ({P, arrayUnique}) ->
 		# add a string
 		addCentral: (central) ->
 			@history.unshift central
-			#@history = arrayUnique @history
+			@history = arrayUnique @history
 
 		render: () ->
 			list = '<ul class=historylist>'
