@@ -1,9 +1,9 @@
-define ['utils', 'criteria'], (utils, criteria) ->
+define ['utils', 'criteria', 'tubeEdges'], (utils, criteria, tube) ->
 	{ P } = utils
 
 	class Node
 		next_id = 0
-		constructor: ({ @x, @y, @lines, @edges, @data, @style, @id }={}) ->
+		constructor: ({ @x, @y, @lines, @edges, @data, @style, @id, @fixed }={}) ->
 			@x     ?= 0
 			@y     ?= 0
 			@lines ?= []
@@ -31,39 +31,47 @@ define ['utils', 'criteria'], (utils, criteria) ->
 				@otherNode edge for edge in @edges
 			)
 			
-		compliant: (graph) ->
-			# 0 good, Infinity bad
-			@_compliant ?= d3.sum [
-				criteria.wrongEdgesUnderneath this, graph.edges
-			]
+		ruleViolations: (graph) ->
+			@_ruleViolations ?= do =>
+				throw "graph not a Graph" if graph not instanceof Graph
+				d3.sum [
+					1000*criteria.wrongEdgesUnderneath(this, graph.edges).length
+					criteria.edgeCrossings @edges, graph.edges
+					100*criteria.tooNearCentralNode this
+				]
 			
-		critValue: (graph) ->
-			@_critValue ?= d3.sum [
-			]
+		critQuality: (graph) ->
+			@_critQuality ?= do =>
+				throw "graph not a Graph" if graph not instanceof Graph
+				criteria.lineStraightness this
 		
-		invalidateValues: ->
-			@_critValue = @_compliant = undefined
+		_invalidateCache: ->
+			@_critQuality = @_ruleViolations = undefined
 			
 		move: (@x, @y) ->
-			@invalidateValues()
-			node.invalidateValues() for node in @deps()
+			throw "move to undefined" if not (@x? and @y?)
+			@_invalidateCache()
+			node._invalidateCache() for node in @deps()
+			edge._invalidateCache() for edge in @edges
 			
 		moveBy: (x, y) -> @move @x+x, @y+y
 		
 		otherNode: (edge) ->
 			if edge.source == this then edge.target else edge.source
+			
+		tubes: ->
+			tubes = []
+			for edge in @edges
+				tubes.push edge.tube if edge.tube not in tubes
+			tubes
 	
 	class Edge
-		constructor: ({ @source, @target, @line, @radical }={}) ->
-			throw @radical if @radical
+		constructor: ({ @source, @target, @tube, @line, @style }={}) ->
 			@source ?= null
 			@target ?= null
-			@sourcecoord ?= []
-			@targetcoord ?= []
-			@tube ?= null
+			@tube   ?= null
 			@line   ?= null
-			@style ?= {}
-			@calc ?= false
+			@style  ?= {}
 		
 		getVector: ->
 			[ @target.x - @source.x, @target.y - @source.y ]
@@ -72,22 +80,28 @@ define ['utils', 'criteria'], (utils, criteria) ->
 			[ x1, y1 ] = @getVector()
 			[ x2, y2 ] = edge.getVector()
 			scalar = x1 * x2 + y1 * y2 
-			l1 = Math.sqrt( Math.pow( x1, 2 ) + Math.pow( y1, 2) )
-			l2 = Math.sqrt( Math.pow( x2, 2 ) + Math.pow( y2, 2) )
-			angle = Math.acos( scalar / (l1 * l2))
+			l1 = @length()
+			l2 = edge.length()
+			l = l1 * l2
+			if Math.abs(scalar - l) < 0.0001
+				l = scalar
+			angle = Math.acos scalar / l
 			
 		getEdgeAngle: ->
-			[ x1, y1 ] = [@source.x, @source.y]
-			[ x2, y2 ] = [@target.x, @target.y]
-			x = x2 - x1
-			y = y2 - y1
-			angle = Math.atan2(y,x)
+			@_getEdgeAngle ?= do =>
+				[ x1, y1 ] = [@source.x, @source.y]
+				[ x2, y2 ] = [@target.x, @target.y]
+				x = x2 - x1
+				y = y2 - y1
+				angle = Math.atan2(y,x)
 			
 		lengthSqr: ->
-			[ x, y ] = @getVector()
-			(Math.pow x, 2) + (Math.pow y, 2)
+			@_lengthSqr ?= do =>
+				[ x, y ] = @getVector()
+				(Math.pow x, 2) + (Math.pow y, 2)
 			
-		length: -> Math.sqrt @lengthSqr()
+		length: ->
+			@_length ?= Math.sqrt @lengthSqr()
 		
 		otherEdge: (edges) ->
 			for other in edges
@@ -95,7 +109,28 @@ define ['utils', 'criteria'], (utils, criteria) ->
 				if other.line.id == @line.id
 					return other
 			null
-
+			
+		isCrossing: ({ source, target }) ->
+			{ x: x1, y: y1 } = @source
+			{ x: x2, y: y2 } = @target
+			{ x: x3, y: y3 } = source
+			{ x: x4, y: y4 } = target
+			a = (x4 - x3)*(y1 - y3) - (y4 - y3)*(x1 - x3)
+			b = (x2 - x1)*(y1 - y3) - (y2 - y1)*(x1 - x3)
+			c = (y4 - y3)*(x2 - x1) - (x4 - x3)*(y2 - y1)
+			a /= c
+			b /= c
+			0 <= a <= 1 and 0 <= b <= 1
+			
+		setCoords: (coords) ->
+			@_coords = coords
+			
+		coords: ->
+			tube.createTubes this if not @_coords?
+			@_coords
+			
+		_invalidateCache: ->
+			@_coords = @_lengthSqr = @_length = @_getEdgeAngle = undefined
 
 	class Line
 		next_id = 0
@@ -154,5 +189,38 @@ define ['utils', 'criteria'], (utils, criteria) ->
 			lines = for line in @lines
 				for node in line.nodes
 					nodes[node.id]
+					
+		ruleViolations: ->
+			d3.sum (node.ruleViolations this for node in @nodes)
+			
+		critQuality: ->
+			d3.sum [
+				d3.sum (node.critQuality this for node in @nodes)
+				criteria.lengthOfEdges @edges
+			]
 
-	my.graph = { Node, Edge, Line, Graph }
+	class Cluster
+		constructor: (@nodes) ->
+			@copies = ([n.x,n.y] for n in @nodes)
+			
+		ruleViolations: (graph) ->
+			@_ruleViolations ?= do ->
+				throw "graph not a Graph" if graph not instanceof Graph
+				d3.sum (n.ruleViolations graph for n in @nodes)
+			
+		critQuality: (graph) ->
+			@_critQuality ?= do ->
+				throw "graph not a Graph" if graph not instanceof Graph
+				d3.sum (n.critQuality graph for n in @nodes)
+			
+		moveBy: (x, y) ->
+			@_ruleViolations = @_critQuality = undefined
+			n.moveBy x, y for n in @nodes
+			
+		resetPosition: ->
+			@_ruleViolations = @_critQuality = undefined
+			for n, i in @nodes
+				[x,y] = @copies[i]
+				n.move x,y
+
+	my.graph = { Node, Edge, Line, Graph, Cluster }

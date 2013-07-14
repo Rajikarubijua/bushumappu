@@ -9,7 +9,7 @@ config =
 	kmeansClustersN:			-1 # 0 rule of thumb, -1 vector.length
 	forceGraph:					false
 	circularLines:				false
-	gridSpacing:				48 # 0 deactivates snapNodes
+	gridSpacing:				gridSpacing = 48
 	debugOverlay:				false
 	transitionTime:				2000
 	initialScale:				1
@@ -20,7 +20,9 @@ config =
 	slideshowSteps:				1
 	nodeSize:					12
 	showInitialMode:			false
-	debugKanji:					'緒'
+	debugKanji:					'総'
+	overlengthEdge:				gridSpacing * 10
+	kanjiOffset:				8
 
 window?.config = config
 self?.config = config

@@ -88,9 +88,10 @@ define ['utils', 'graph'], (utils, { Graph, Node }) ->
 		
 			# place nodes
 			node_r = my.config.gridSpacing
-			kanji_offset = 5
+			kanji_offset = config.kanjiOffset
 			central_node = kanjiNode central_kanji
 			central_node.central_node = true
+			central_node.fixed = true
 			n = central_kanji.radicals.length
 			lines = for line, line_i in lines
 				angle = someAngle line_i
@@ -99,12 +100,14 @@ define ['utils', 'graph'], (utils, { Graph, Node }) ->
 				x = r * Math.cos angle
 				y = r * Math.sin angle
 				radical_node = new Node { x, y, data: line.radical }
+				radical_node.fixed = true
 				for node, node_i in [ line.hi..., line.lo... ]
 					r = node_i + kanji_offset
 					r *= radius node_r, angle
 					node.x = r*Math.cos angle
 					node.y = r*Math.sin angle
-				nodes = [central_node, radical_node, line.hi..., line.other..., line.lo...]
+				#nodes = [central_node, line.hi..., line.other..., line.lo..., radical_node]
+				nodes = [central_node, line.hi..., line.other..., line.lo...]
 				nodes.obj = data: line.radical
 				nodes
 			

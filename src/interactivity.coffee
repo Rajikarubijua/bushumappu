@@ -28,11 +28,6 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 			@embedder = new CentralStationEmbedder { @config }
 			@seaFill = new FilterSearch {}
 
-			@svg.on 'mousemove', =>
-				{ x, y } =  d3.event
-				node = new Node { x, y }
-				node.compliant @graph
-
 			#setup zoom
 			w = new Signal
 			h = new Signal
@@ -92,14 +87,14 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 			P "changeToCentral #{kanji.kanji}"
 			@history.addCentral kanji.kanji	
 			graph = @embedder.graph kanji, @radicals, @kanjis
-
-			@optimizer.graph graph
-			@optimizer.snapNodes =>
-				@update graph
-			@optimizer.applyRules =>
-				@update graph
-
+			
 			@update graph
+
+			@optimizer.onNodes = => @update graph
+			@optimizer.graph graph
+			@optimizer.snapNodes()
+			@optimizer.applyRules()
+
 			@seaFill.setup this, false
 			
 		changeToCentralFromNode: (node) ->	
@@ -136,10 +131,6 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 				me.changeToCentral kanji
 				setTimeout slideshow, me.config.transitionTime + 2000
 	
-		invalidateEdgeCoords: (edges) ->
-			for edge in edges
-				edge.sourcecoord = edge.targetcoord = undefined
-	
 		update: (graph) ->
 			@graph = graph if graph
 			{ svg, config, g_edges, g_nodes, g_endnodes, g_stationLabels } = this
@@ -161,8 +152,6 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 			# remove minilabels
 			minilabels = d3.selectAll(".mini-label")
 			minilabels.remove()
-			
-			@invalidateEdgeCoords edges
 
 			# join
 			edge = g_edges.selectAll(".edge")
@@ -248,7 +237,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 				.append("path")
 				.classed("edge", true)
 				# for transitions; nodes start at 0,0. so should edges
-				.attr d: (d) -> svgline [ {x:0,y:0}, {x:0,y:0} ]
+				.attr d: (d) -> "M0,0"
 			node_g = node.enter()
 				.append('g')
 				.classed("node", true)
@@ -294,7 +283,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 					d3.select(@).style stroke: d.style.debug_stroke
 			i = 0
 			edge.transition().duration(config.transitionTime)
-				.attr d: (d) -> svgline01 createTubes d
+				.attr d: (d) -> svgline01 d.coords()
 			that = this
 			edge.each (d) -> 
 				if d.tube.id % 5 == 0
@@ -305,7 +294,8 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 			node.classed("focused", (d) -> d.style.isFocused)
 			node_t = node.transition().duration(config.transitionTime)
 			node_t.attr(transform: (d) -> nodeTransform d)
-			#node_t.style(fill: (d) -> if d.style.hi then "red" else if d.style.lo then "green" else null) # debug @payload
+			node_t.style fill: (node) ->
+				node.style.debug_fill or null
 			node_t.select('text').text (d) -> d.label
 
 			endnode.transition().duration(config.transitionTime)

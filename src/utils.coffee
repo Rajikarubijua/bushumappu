@@ -222,6 +222,9 @@ define ->
 		
 	distanceXY = (a, b) ->
 		Math.sqrt distanceSqrXY a, b
+		
+	distance01 = (a, b) ->
+		Math.sqrt distanceSqr01 a, b
 
 	nearest = (a, array, distanceFunc) ->
 		min_d = 1/0
@@ -297,6 +300,9 @@ define ->
 				value = memo[func_id] ?= func obj
 
 	distToSegmentSqrXY = (p, a, b) ->
+		throw "p wrong" if not (p.x? and p.y?)
+		throw "a wrong" if not (a.x? and a.y?)
+		throw "b wrong" if not (b.x? and b.y?)
 		l2 = distanceSqrXY a, b
 		if l2 == 0
 			return distanceSqrXY p, a
@@ -318,5 +324,5 @@ define ->
 	  sort, styleZoom, sunflower, vecX, vecY, vec, compareNumber, max, min,
 	  parseMaybeNumber, equidistantSelection, getMinMax, arrayUnique,
 	  distanceSqrXY, nearestXY, nearest01, distanceSqr01, nearest, forall,
-	  rasterCircle, prettyDebug, sortSomewhat, Memo, distanceXY,
+	  rasterCircle, prettyDebug, sortSomewhat, Memo, distanceXY, distance01
 	  distToSegmentXY, distToSegmentSqrXY }
