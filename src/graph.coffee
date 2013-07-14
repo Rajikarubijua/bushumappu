@@ -65,16 +65,12 @@ define ['utils', 'criteria', 'tubeEdges'], (utils, criteria, tube) ->
 			tubes
 	
 	class Edge
-		constructor: ({ @source, @target, @line, @radical }={}) ->
-			throw @radical if @radical
+		constructor: ({ @source, @target, @tube, @line, @style }={}) ->
 			@source ?= null
 			@target ?= null
-			@sourcecoord ?= []
-			@targetcoord ?= []
-			@tube ?= null
+			@tube   ?= null
 			@line   ?= null
-			@style ?= {}
-			@calc ?= false
+			@style  ?= {}
 		
 		getVector: ->
 			[ @target.x - @source.x, @target.y - @source.y ]
@@ -125,8 +121,12 @@ define ['utils', 'criteria', 'tubeEdges'], (utils, criteria, tube) ->
 			b /= c
 			0 <= a <= 1 and 0 <= b <= 1
 			
+		setCoords: (coords) ->
+			@_coords = coords
+			
 		coords: ->
-			@_coords ?= tube.createTubes this
+			tube.createTubes this if not @_coords?
+			@_coords
 			
 		_invalidateCache: ->
 			@_coords = @_lengthSqr = @_length = @_getEdgeAngle = undefined

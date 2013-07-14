@@ -41,10 +41,8 @@ define ['utils'], (utils) ->
 			y1 = source.y + r * sin_angle
 			x2 = target.x + r * cos_angle
 			y2 = target.y + r * sin_angle
-			edge.sourcecoord = [ x1, y1 ]
-			edge.targetcoord = [ x2, y2 ]
+			edge.setCoords [[ x1, y1 ], [ x2, y2 ]]
 			edge.tube = tube
-		return [my_edge.sourcecoord, my_edge.targetcoord]
 			
 	getStrokeWidth = (edge) ->
 		selector = ".line_"+ edge.line.data.radical
