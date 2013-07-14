@@ -27,12 +27,6 @@ circle, rect {
 	text-anchor: middle;
 }
 
-.remove-col-btn > text {
-	alignment-baseline: central;
-	text-anchor: middle;
-	padding-left: 7px;
-}
-
 .mini-label > text{
 	alignment-baseline: central;
 	text-anchor: middle;
@@ -83,13 +77,18 @@ circle, rect {
 }
 
 #details .remove-col-btn{
+	margin-left: 7px;
+	font-size: 0.6em;
 	cursor: pointer;
-	width: 20px;
-	height: 20px;
-	margin-left: 10px;
-	border-radius: 3px;
-	position: absolute;
-	background-color: rgb(220,220,220);
+	width: 1.3em;
+	border-radius: 1em;
+	border-width: 0;
+	color: #FFF;
+	font-weight: bold;
+	background-color: #2FA199;
+	padding: 0.1em 0.5em;
+	box-shadow: 1px 1px 3px #333;
+	background-image: -webkit-linear-gradient(#2FA199 0%, #2e7a74 100%);
 }
 
 path {
