@@ -178,14 +178,14 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 					r_a = Math.round(a / (0.25*Math.PI))
 					edgeAngles.push(r_a)
 					index++
-				if 0 in edgeAngles and -1 in edgeAngles
+				P edgeAngles
+				if -1 in edgeAngles
 					stationLabelAngle = 0
 				else if 0 in edgeAngles or 4 in edgeAngles
 					stationLabelAngle = -45
-				else if -2 in edgeAngles or 0 in edgeAngles
-					stationLabelAngle = 0
 				else
 					stationLabelAngle = 0
+				P 'angle set to ', stationLabelAngle
 				label_rect = stationLabel.append('rect')
 					.attr(x:24, y:-config.nodeSize-3)
 					.attr(transform: "rotate(#{stationLabelAngle})")
