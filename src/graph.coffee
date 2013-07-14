@@ -187,8 +187,12 @@ define ['utils', 'criteria', 'tubeEdges'], (utils, criteria, tube) ->
 					id: node.id,
 					fixed: node.fixed
 			lines = for line in @lines
-				for node in line.nodes
+				plain_line = for node in line.nodes
 					nodes[node.id]
+				{ data, id } = line
+				plain_line.obj = { data, id }
+				plain_line
+			lines
 					
 		ruleViolations: ->
 			d3.sum (node.ruleViolations this for node in @nodes)

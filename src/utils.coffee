@@ -319,10 +319,25 @@ define ->
 		
 	distToSegmentXY = (p, a, b) ->
 		Math.sqrt distToSegmentSqrXY p, a, b
+		
+	distToSegment01 = (p, a, b) ->
+		p = x: p[0], y: p[1]
+		a = x: a[0], y: a[1]
+		b = x: b[0], y: b[1]
+		Math.sqrt distToSegmentSqrXY p, a, b
+		
+	consecutivePairs = (array) ->
+		throw 'array.length < 2' if array.length < 2
+		pairs = []
+		a = array[0]
+		for b in array[1..]
+			pairs.push [a, b]
+			a = b
+		pairs
 
 	{ copyAttrs, P, PN, PD, W, async, strUnique, expect, somePrettyPrint, length,
 	  sort, styleZoom, sunflower, vecX, vecY, vec, compareNumber, max, min,
 	  parseMaybeNumber, equidistantSelection, getMinMax, arrayUnique,
 	  distanceSqrXY, nearestXY, nearest01, distanceSqr01, nearest, forall,
 	  rasterCircle, prettyDebug, sortSomewhat, Memo, distanceXY, distance01
-	  distToSegmentXY, distToSegmentSqrXY }
+	  distToSegmentXY, distToSegmentSqrXY, consecutivePairs, distToSegment01 }

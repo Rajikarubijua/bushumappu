@@ -8,11 +8,9 @@ window.my = {
 	config }
 
 define ['utils', 'load_data', 
-	'interactivity', 'routing', 'prepare_data',
-	'test_routing', 'test_bench', 'tests', 'optimizer_client'], (
+	'interactivity', 'routing', 'prepare_data', 'optimizer_client'], (
 	{ P, somePrettyPrint, styleZoom, async, prettyDebug, copyAttrs },
-	loadData, { View }, { MetroMapLayout }, prepare,
-	testRouting, testBench, tests, { Optimizer }
+	loadData, { View }, { MetroMapLayout }, prepare, { Optimizer }
 	) ->
 
 	main = () ->
@@ -41,7 +39,7 @@ define ['utils', 'load_data',
 	showDebugOverlay = (el) ->
 		el.append('pre').attr(id:'my').text somePrettyPrint my
 
-	all_tests = copyAttrs {}, testRouting.tests, testBench.tests
+	#all_tests = copyAttrs {}, testRouting.tests, testBench.tests
 	#tests.run all_tests, []
 	console.info 'end of tests'
 	loadData main

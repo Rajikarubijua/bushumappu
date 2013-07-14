@@ -4,7 +4,7 @@ define ['utils'], (utils) ->
 	wrongEdgesUnderneath = (node, edges) -> 
 		wrong = []
 		for edge in edgesUnderneath node, edges
-			if edge not in node.edges and edge.length() < config.gridSpacing * 10
+			if edge not in node.edges# and edge.length() >= config.overlengthEdge
 				wrong.push edge
 		wrong
 		
@@ -19,8 +19,9 @@ define ['utils'], (utils) ->
 	edgesUnderneath = (node, edges) ->
 		underneath = []
 		for edge in edges
-			d = utils.distToSegmentXY node, edge.source, edge.target
-			if d < config.gridSpacing
+			dists = for pair in utils.consecutivePairs edge.coords()
+				utils.distToSegment01 [node.x, node.y], pair...
+			if config.gridSpacing*0.9 > d3.min dists
 				underneath.push edge
 		underneath
 		

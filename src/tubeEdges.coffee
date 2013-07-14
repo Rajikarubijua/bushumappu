@@ -57,6 +57,8 @@ define ['utils'], (utils) ->
 			
 	getStrokeWidth = (edge) ->
 		selector = ".line_"+ edge.line.data.radical
-		stroke_width = parseInt d3.selectAll(selector).style("stroke-width")		
+		try stroke_width = parseInt d3.selectAll(selector).style("stroke-width")
+		catch e
+			stroke_width = 1
 	
 	{Tube, createTubes}
