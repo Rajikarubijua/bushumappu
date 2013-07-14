@@ -75,7 +75,7 @@ define ['utils'], ({P, arrayUnique}) ->
 				return if d3.select(this).selectAll('g')[0].length != 0
 				
 				removeBtn = d3.select(this).append('g').classed('remove-col-btn', true)
-				removeBtn.append('text').text('x')
+				removeBtn.append('text').text('X')
 				removeBtn.on('click.removeTableCol', (d) -> 
 					me.removeKanji d
 					d3.event.stopPropagation() 
