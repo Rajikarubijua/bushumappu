@@ -27,10 +27,11 @@ circle, rect {
 	text-anchor: middle;
 }
 
-.mini-label > text{
+text.mini-label {
 	alignment-baseline: central;
 	text-anchor: middle;
-	font-size: 0.005em;
+	font-size: 6pt;
+	stroke: none;
 }
 
 .centralStation{

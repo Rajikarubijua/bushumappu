@@ -288,9 +288,9 @@ define [
 				.on('mouseenter.bottomBarToggle', @toggleMenu)
 						
 		createMiniLabel: (edge, dom) ->
-			parent = d3.select(dom.parentNode)
+			dom = d3.select(dom)
 			{ line, tube } = edge 
-			i = @graph.radicals().indexOf line.data.radical 
+			i = @graph.radicals().indexOf line.data
 			color = colors[i]
 			i = tube.edges.indexOf(edge) - tube.edges.length/2
 			length = edge.length() / 2
@@ -302,14 +302,10 @@ define [
 			y += (tube.width+5) * Math.sin tube.angle + 0.5*Math.PI
 			grad = tube.angle / 2/Math.PI * 360
 			grad = if (Math.round grad/45) % 2 == 0 then 0 else -45
-			parent.append("text").classed("mini-label", true)
+			dom.append("text").classed("mini-label", true)
 				.text(line.data.radical)
-				.style(
-					"font-size": "8px"
-					"font-anchor": "middle"
-					"alignment-baseline": "central")
+				.style(fill: "#{color}")
 				.attr
-					fill: "#{color}"
 					transform: "translate(#{x} #{y}) rotate(#{grad}, #{x}, #{y})"
 		
 		updateCentralNode: (node) ->
