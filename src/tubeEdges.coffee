@@ -32,7 +32,7 @@ define ['utils'], (utils) ->
 		normal = tube.angle + 0.5*Math.PI
 		cos_angle = Math.cos normal
 		sin_angle = Math.sin normal
-		edges_n = tube.edges.length
+		edges_n = tube.edges.length 
 		for edge, edge_i in tube.edges
 			{ source, target, line } = edge
 			width = cptplaceholder + getStrokeWidth edge
@@ -54,11 +54,13 @@ define ['utils'], (utils) ->
 				coords = [[ x1, y1 ], [ x05, y05 ], [ x2, y2 ]]
 			edge.setCoords coords
 			edge.tube = tube
+		undefined
 			
 	getStrokeWidth = (edge) ->
-		selector = ".line_"+ edge.line.data.radical
-		try stroke_width = parseInt d3.selectAll(selector).style("stroke-width")
-		catch e
-			stroke_width = 1
+		# XXX
+		#selector = ".line_"+ edge.line.data.radical
+		#try stroke_width = parseInt d3.selectAll(selector).style("stroke-width")
+		#catch e
+		stroke_width = 5
 	
 	{Tube, createTubes}

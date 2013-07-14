@@ -204,11 +204,11 @@ define [
 				.attr(transform: (node) -> utils.cssTranslateXY node)
 
 		addKanjiDetail: (node) =>
-				@detailTable.addKanji node.data
-				@toggleMenu(true)
-				d3.selectAll('#details td.content')
-					.on 'click.hightlightSelected', (node) =>
-						@autoFocus node
+			@detailTable.addKanji node.data
+			@toggleMenu(true)
+			d3.selectAll('#details td.content')
+				.on 'click.hightlightSelected', (node) =>
+					@autoFocus node
 				
 		removeKanjiDetail: (node) =>
 			@detailTable.removeKanji node.data
@@ -218,27 +218,69 @@ define [
 					@autoFocus node
 		
 		toggleMenu: (shouldStayOpen) =>
-				shouldStayOpen ?= false
-				bar = d3.select('#bottomBar')
-				toggleBtn = d3.select('#toggle-bottom-bar')
-				arrow = toggleBtn.select('.arrowIcon')
-				if bar.node().clientHeight > 11 and !shouldStayOpen
-					bar.style('max-height', '10px')
-					arrow.classed('up', true)
-					arrow.classed('down', false)
-				else
-					bar.style('max-height', '200px')
-					arrow.classed('down', true)
-					arrow.classed('up', false)
+			shouldStayOpen ?= false
+			bar = d3.select('#bottomBar')
+			toggleBtn = d3.select('#toggle-bottom-bar')
+			arrow = toggleBtn.select('.arrowIcon')
+			if bar.node().clientHeight > 11 and !shouldStayOpen
+				bar.style('max-height', '10px')
+				arrow.classed('up', true)
+				arrow.classed('down', false)
+			else
+				bar.style('max-height', '200px')
+				arrow.classed('down', true)
+				arrow.classed('up', false)
+	
+	
 		
+
+		enterEdges: (enter) ->
+			enter.append('g').classed('edge', true)
+				# for transitions; nodes start at 0,0. so should edges
+				.attr(d: (d) -> "M0,0")
+				.append('path')
 		
+		exitEdges: (exit) ->
+			exit.remove()
 		
+		updateEdges: (graph) ->
+			{ edges } = graph
+			update = @g_edges.selectAll("g.edge")
+				.data(edges)
+			@enterEdges update.enter()
+			@exitEdges update.exit()
 		
+			update.each (edge) ->
+				{ radical } = edge.line.data
+				cls = "line_" + radical
+				d3.select(@).classed(cls, true)
+				
+			for radical, i in graph.radicals()
+				selector = ".edge.line_" + radical.radical
+				d3.selectAll(selector)
+					.style stroke: colors[i]
+
+			update.each (edge) ->
+				if edge.style.debug_stroke
+					d3.select(@).style stroke: edge.style.debug_stroke
+
+			update.transition().duration(config.transitionTime)
+				.select('path')
+					.attr d: (edge) ->
+						svgline01 edge.coords()
+			
+			that = this
+			update.each (edge) -> 
+				if edge.tube.id % 5 == 0
+					that.createMiniLabel edge, this
+			
+			update.classed("filtered", (edge) -> edge.style.filtered)
 		
 		
 		update: (graph) ->
 			@graph = graph if graph
 			@updateNodes @graph
+			@updateEdges @graph
 			
 			{ svg, config, g_edges, g_nodes, g_endnodes, g_stationLabels } = this
 			{ nodes, lines, edges } = @graph
@@ -258,20 +300,12 @@ define [
 			minilabels.remove()
 
 			# join
-			edge = g_edges.selectAll(".edge")
-				.data(edges)
+			
 			endnode = g_endnodes.selectAll('.endnode')
 				.data(endnodes, (node) -> node.key())
 			
 			# enter
 			d3.select('#toggle-bottom-bar').on('mouseenter.bottomBarToggle', @toggleMenu)
-
-			edge.enter()
-				#.append("g")
-				.append("path")
-				.classed("edge", true)
-				# for transitions; nodes start at 0,0. so should edges
-				.attr d: (d) -> "M0,0"
 			
 			endnode_g = endnode.enter()
 				.append('g')
@@ -281,40 +315,19 @@ define [
 			endnode_g.append("text").text (d) -> d.label()
 		
 			# update
-			radicals = []
-			edge.each (d) ->
-				{ radical } = d.line.data
-				cls = "line_" + radical
-				d3.select(@).classed(cls, true)
-				radicals.push radical if radical not in radicals
-			for rad in radicals
-				selector = ".line_" + rad
-				d3.selectAll(selector)
-					.style stroke: colors[radicals.indexOf(rad)]
-			edge.each (d) ->
-				if d.style.debug_stroke
-					d3.select(@).style stroke: d.style.debug_stroke
-			i = 0
-			edge.transition().duration(config.transitionTime)
-				.attr d: (d) -> svgline01 d.coords()
-			that = this
-			edge.each (d) -> 
-				if d.tube.id % 5 == 0
-					that.createMiniLabel d, this, radicals
-			edge.classed("filtered", (d) -> d.style.filtered)
+			
 
 			endnode.transition().duration(config.transitionTime)
 				.attr transform: (d) -> "translate(#{d.x} #{d.y})"
 
 			# exit
-			edge.exit().remove()
 			endnode.exit().remove()
 			
-		createMiniLabel: (edge, dom, radicals) ->
+		createMiniLabel: (edge, dom) ->
 			parent = d3.select(dom.parentNode)
 			{ line, tube } = edge 
-			rad = line.data.radical 
-			color = colors[radicals.indexOf(rad)]
+			i = @graph.radicals().indexOf line.data.radical 
+			color = colors[i]
 			i = tube.edges.indexOf(edge) - tube.edges.length/2
 			length = edge.length() / 2
 			x_mid = tube.x + length * Math.cos tube.angle
@@ -326,7 +339,7 @@ define [
 			grad = tube.angle / 2/Math.PI * 360
 			grad = if (Math.round grad/45) % 2 == 0 then 0 else -45
 			parent.append("text").classed("mini-label", true)
-				.text(rad)
+				.text(line.data.radical)
 				.style(
 					"font-size": "8px"
 					"font-anchor": "middle"

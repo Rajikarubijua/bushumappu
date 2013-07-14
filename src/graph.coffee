@@ -200,6 +200,9 @@ define ['utils', 'criteria', 'tubeEdges'], (utils, criteria, tube) ->
 		kanjis: ->
 			node.data for node in @nodes when node.data.kanji
 			
+		radicals: ->
+			line.data for line in @lines
+			
 		toPlainLines: ->
 			nodes = {}
 			for node in @nodes
