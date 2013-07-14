@@ -27,13 +27,6 @@ define ['utils'], ({P, arrayUnique}) ->
 
 			list = "#{list} </ul>"
 			#d3.select('#history')[0][0].innerHTML = list
-
-			me = this
-			onClick = () ->
-				kanji = this.innerHTML
-				me.target.changeToCentralFromStr kanji
-
-			d3.select(".#{@nclass}").on 'click.history', onClick
 			
 			list
 

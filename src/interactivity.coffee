@@ -121,16 +121,9 @@ define [
 
 		changeToCentralFromStr: (strKanji) ->
 			strKanji = strKanji.trim()
-			central = {}
-			for k in @kanjis
-				if k.kanji == strKanji
-					central = k
-
-			if central.kanji == undefined or strKanji == ''
-				P "cannot set central (#{strKanji}) that is not in kanjis"
-				P @kanjis
-				return
-	
+			central = my.kanjis[strKanji]
+			if not central?
+				throw "central undefined"
 			@changeToCentral central
 
 		doInitial: () ->
@@ -400,6 +393,13 @@ define [
 					 ")
 					
 			exit_central_node.remove()
+
+			me = this
+			onClick = () ->
+				kanji = this.innerHTML
+				me.changeToCentralFromStr kanji
+
+			d3.selectAll(".#{@history.nclass}").on 'click.history', onClick
 				
 	
 	svgline = d3.svg.line()
