@@ -176,11 +176,11 @@ define [
 
 			# join
 			edge = g_edges.selectAll(".edge")
-				.data(edges)
+				.data(edges, (edge) -> edge.key())
 			node = g_nodes.selectAll('.node')
-				.data(nodes)
+				.data(nodes, (node) -> node.key())
 			endnode = g_endnodes.selectAll('.endnode')
-				.data(endnodes)
+				.data(endnodes, (node) -> node.key())
 			
 			# enter
 				
