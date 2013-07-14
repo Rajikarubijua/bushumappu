@@ -150,6 +150,8 @@ define [
 				me.changeToCentral kanji
 				setTimeout slideshow, me.config.transitionTime + 2000
 	
+	
+		
 		update: (graph) ->
 			@graph = graph if graph
 			{ svg, config, g_edges, g_nodes, g_endnodes, g_stationLabels } = this
@@ -176,7 +178,7 @@ define [
 
 			# join
 			edge = g_edges.selectAll(".edge")
-				.data(edges, (edge) -> edge.key())
+				.data(edges)
 			node = g_nodes.selectAll('.node')
 				.data(nodes, (node) -> node.key())
 			endnode = g_endnodes.selectAll('.endnode')
