@@ -198,7 +198,7 @@ define [
 					.text (node) -> node.label()
 			update.transition().duration(config.transitionTime)
 				.attr(transform: (node) -> utils.cssTranslateXY node)
-
+			
 		addKanjiDetail: (node) =>
 			@detailTable.addKanji node.data
 			@toggleMenu(true)
@@ -296,10 +296,15 @@ define [
 						colors[i]
 					)
 		
+		updateStationLabels: (graph) ->
+			@g_stationLabels.selectAll(".station-label")
+				.classed("filtered", () -> this.style_filtered)
+		
 		update: (graph) ->
 			@graph = graph if graph
 			@updateNodes @graph
 			@updateEdges @graph
+			@updateStationLabels @graph
 			
 			{ nodes } = @graph
 			central_node = (node for node in nodes when node.kind == 'central_node')
@@ -348,11 +353,9 @@ define [
 			central_history = @history.render() or "–"
 			central_g = enter_central_node.append('g').attr('id': 'central-node')
 			central_g.append('foreignObject')
-					.attr(x: -120, y: -200)
-					.attr(width: 246, height: 400)
+					.attr(x: -120, y: -150)
+					.attr(width: 230, height: 400)
 				.append('xhtml:body')
-					.style('background', 'white')
-					.style('border', 'solid black 1px')
 					.html("
 					 <div class='centralStation'>
 						<div class='firstBlock'>
@@ -376,14 +379,16 @@ define [
 							<div id='kMeaning'>" + central_meaning + "</div>
 							<div id='kOn'>" + central_on + "</div>
 							<div id='kKun'>" + central_kun + "</div>
-						</div>
-						<div id='history'>
-						" + central_history + "
+							<div id='history'>
+							" + central_history + "
+							</div>
 						</div>
 					</div>
 					 ")
 					
 			exit_central_node.remove()
+			height = ((Math.round(@history.history.length / 7)+1) *35)
+			d3.select('#history').style 'height' , "#{height}px"
 
 			me = this
 			onClick = () ->

@@ -1,8 +1,9 @@
 define ['utils'], ({P, cssTranslateXY }) ->
 	class StationLabel
-		constructor: ({ @node, @g_stationLabels }) ->
+		constructor: ({ @node, @g_stationLabels, @style }) ->
 			@node
 			@g_stationLabels
+			@style ?= {}
 		
 		closeStationLabel : () ->
 			me = this
@@ -31,7 +32,8 @@ define ['utils'], ({P, cssTranslateXY }) ->
 			rectLength = label_text.node().getBBox().width + 8
 			label_rect.attr(width: rectLength, height: 2.5*config.nodeSize) # inflating the rectangle
 			
-			@node.style.stationLabel = stationLabel
+			me.node.style.stationLabel = stationLabel
+			
 			
 		calculateLabelAngle: (node) ->
 			edgeAngles = []
