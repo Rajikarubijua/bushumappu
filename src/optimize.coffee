@@ -63,17 +63,14 @@ require { baseUrl: './' }, ['utils', 'grid', 'graph'], (utils, grid, { Cluster, 
 			{ nodes, edges } = @my_graph
 			queue = nodes[..]
 			no_move_since = 0
-			
 			changed_nodes = []
-			done = false
-			do foo = =>
-				P changed_nodes.length
+			do postNodes = =>
 				if changed_nodes.length
 					@postNodes changed_nodes
 					changed_nodes.pop() while changed_nodes.length
 				if no_move_since++ < queue.length * 2
-					setTimeout foo, 500
-			do bar = =>
+					setTimeout postNodes, config.transitionTime
+			do optimizeNode = =>
 				if not (no_move_since++ < queue.length * 2)
 					return
 				node = queue.shift()
@@ -83,9 +80,7 @@ require { baseUrl: './' }, ['utils', 'grid', 'graph'], (utils, grid, { Cluster, 
 						no_move_since = 0
 						changed_nodes.push node
 					queue.push node
-				setTimeout bar, 1
-			
-			#@postNodes changed_nodes
+				setTimeout optimizeNode, 1
 			
 		optimize: ->
 			do foo = =>

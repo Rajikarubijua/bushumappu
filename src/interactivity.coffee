@@ -94,7 +94,6 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 			@optimizer.graph graph
 			@optimizer.snapNodes()
 			@optimizer.applyRules()
-			#@optimizer.optimize()
 
 			@seaFill.setup this, false
 			

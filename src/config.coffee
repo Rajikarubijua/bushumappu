@@ -11,7 +11,7 @@ config =
 	circularLines:				false
 	gridSpacing:				gridSpacing = 48
 	debugOverlay:				false
-	transitionTime:				0
+	transitionTime:				2000
 	initialScale:				1
 	edgesBeforeSnap:			false
 	timeToOptimize:				3000
