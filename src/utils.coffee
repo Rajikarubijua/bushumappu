@@ -222,6 +222,9 @@ define ->
 		
 	distanceXY = (a, b) ->
 		Math.sqrt distanceSqrXY a, b
+		
+	distance01 = (a, b) ->
+		Math.sqrt distanceSqr01 a, b
 
 	nearest = (a, array, distanceFunc) ->
 		min_d = 1/0
@@ -321,5 +324,5 @@ define ->
 	  sort, styleZoom, sunflower, vecX, vecY, vec, compareNumber, max, min,
 	  parseMaybeNumber, equidistantSelection, getMinMax, arrayUnique,
 	  distanceSqrXY, nearestXY, nearest01, distanceSqr01, nearest, forall,
-	  rasterCircle, prettyDebug, sortSomewhat, Memo, distanceXY,
+	  rasterCircle, prettyDebug, sortSomewhat, Memo, distanceXY, distance01
 	  distToSegmentXY, distToSegmentSqrXY }

@@ -41,7 +41,18 @@ define ['utils'], (utils) ->
 			y1 = source.y + r * sin_angle
 			x2 = target.x + r * cos_angle
 			y2 = target.y + r * sin_angle
-			edge.setCoords [[ x1, y1 ], [ x2, y2 ]]
+			coords = [[ x1, y1 ], [ x2, y2 ]]
+			if utils.distance01(coords...) >= config.overlengthEdge
+				dx = Math.abs x2 - x1
+				dy = Math.abs y2 - y1
+				if dx >= dy
+					x05 = x2
+					y05 = y1
+				else
+					x05 = x1
+					y05 = y2
+				coords = [[ x1, y1 ], [ x05, y05 ], [ x2, y2 ]]
+			edge.setCoords coords
 			edge.tube = tube
 			
 	getStrokeWidth = (edge) ->
