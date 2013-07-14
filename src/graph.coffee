@@ -68,6 +68,9 @@ define ['utils', 'criteria', 'tubeEdges'], (utils, criteria, tube) ->
 			
 		key: ->
 			@coord()
+			
+		label: ->
+			@data.kanji or @data.radical or "?"
 	
 	class Edge
 		constructor: ({ @source, @target, @tube, @line, @style }={}) ->
