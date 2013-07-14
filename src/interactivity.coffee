@@ -334,13 +334,13 @@ define [
 			enter_central_node = update_central_node.enter()
 			exit_central_node  = update_central_node.exit()
 			central_label = node.label()
-			central_meaning = node.data.meaning
-			central_freq = node.data.freq
-			central_strokes = node.data.stroke_n
-			central_grade = node.data.grade
-			central_on = node.data.onyomi
-			central_kun = node.data.kunyomi
-			central_history = @history.render()
+			central_meaning = node.data.meaning or "–"
+			central_freq = node.data.freq or "–"
+			central_strokes = node.data.stroke_n or "–"
+			central_grade = node.data.grade or "–"
+			central_on = node.data.onyomi or "–"
+			central_kun = node.data.kunyomi or "–"
+			central_history = @history.render() or "–"
 			central_g = enter_central_node.append('g').attr('id': 'central-node')
 			central_g.append('foreignObject')
 					.attr(x: -120, y: -200)
