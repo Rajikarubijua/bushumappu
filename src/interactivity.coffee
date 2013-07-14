@@ -1,6 +1,25 @@
-define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'graph', 'detail_table', 'optimizer_client'], 
-({ P, compareNumber, styleZoom }, {Tube, createTubes}, {FilterSearch}, {History}, {CentralStationEmbedder}, { Node }, {DetailTable}, { Optimizer }) ->
-
+define [
+	'utils',
+	'tubeEdges',
+	'filtersearch',
+	'history',
+	'central_station',
+	'graph',
+	'detail_table',
+	'station_label',
+	'optimizer_client'], (
+		utils,
+		{Tube, createTubes},
+		{FilterSearch},
+		{History},
+		{CentralStationEmbedder},
+		{ Node },
+		{DetailTable},
+		{ StationLabel },
+		{ Optimizer }
+) ->
+	{P, compareNumber, styleZoom} = utils
+	
 	colors = [
 		"#E53517", #red
 		"#008BD0", #blue
@@ -164,40 +183,6 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 				.data(endnodes)
 			
 			# enter
-			closeStationLabel = (d) ->
-				d.style.stationLabel.remove()
-				d.style.stationLabel = undefined
-			
-			showStationLabel = (node, edges) ->
-				return if node.style.stationLabel
-				stationLabel = g_stationLabels.append('g').classed("station-label", true)
-					.attr(transform: nodeTransform node)
-					.on('click.closeLabel', (d) -> closeStationLabel node)
-				edgeAngles = []
-				index = 0
-				for e in edges[0][0]
-					a = edges[0][0][index].getEdgeAngle()
-					r_a = Math.round(a / (0.25*Math.PI))
-					edgeAngles.push(r_a)
-					index++
-				if 0 in edgeAngles and -1 in edgeAngles
-					stationLabelAngle = 0
-				else if 0 in edgeAngles or 4 in edgeAngles
-					stationLabelAngle = -45
-				else if -2 in edgeAngles or 0 in edgeAngles
-					stationLabelAngle = 0
-				else
-					stationLabelAngle = 0
-				label_rect = stationLabel.append('rect')
-					.attr(x:24, y:-config.nodeSize-3)
-					.attr(transform: "rotate(#{stationLabelAngle})")
-				label_text = stationLabel.append('text')
-					.text((d) -> node.data.meaning or '?')
-					.attr(x:28, y:-config.nodeSize/2+4)
-					.attr(transform: "rotate(#{stationLabelAngle})")
-				rectLength = label_text.node().getBBox().width + 8
-				label_rect.attr(width: rectLength, height: 2.5*config.nodeSize) # inflating the rectangle
-				node.style.stationLabel = stationLabel
 				
 			# this function sets a timer for the stationlabel to be displayed
 			# this means that after a certain time after the mouse entered the node
@@ -231,7 +216,11 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 				thisView.detailTable.removeKanji d.data
 				d3.event.stopPropagation()
 				d3.selectAll('#details td.content').on 'click.hightlightSelected', (d) -> thisView.autoFocus d
-
+			
+			addStationLabel = (node) ->
+				label = new StationLabel { node, g_stationLabels }
+				label.showStationLabel(node)
+			
 			thisView = this
 
 			edge.enter()
@@ -247,9 +236,8 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 				.classed("station-kanji", true)
 				.attr('id', (d) -> "kanji_"+d.data.kanji)
 				.on('mouseenter.showLabel', (d) ->  
-					edges = d3.select(this.parentNode.__data__.edges)
 					that = this
-					setFuncTimer(that, 800, -> showStationLabel.call(that, d, edges)))
+					setFuncTimer(that, 800, -> addStationLabel.call(that, d)))
 				.on('mouseleave.resetHoverTimer', (d) ->
 					clearFuncTimer(this))
 				.on('click.displayDetailsOfNode', (d) ->
@@ -292,7 +280,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 			node.classed("searchresult", (d) -> d.style.isSearchresult)
 			node.classed("focused", (d) -> d.style.isFocused)
 			node_t = node.transition().duration(config.transitionTime)
-			node_t.attr(transform: (d) -> nodeTransform d)
+			node_t.attr(transform: (d) -> utils.cssTranslateXY d)
 			node_t.style fill: (node) ->
 				node.style.debug_fill or null
 			node_t.select('text').text (d) -> d.label
@@ -418,10 +406,6 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 	svgline01 = d3.svg.line()
 		.x( (d) -> d[0])
 		.y( (d) -> d[1])
-		
-	
-	nodeTransform = (d) -> 
-		"translate(#{d.x} #{d.y})"
 
 	endnodeSelectLine = (d) ->
 		selector = ".line_"+d.data.radical

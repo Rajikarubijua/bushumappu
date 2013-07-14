@@ -319,6 +319,9 @@ define ->
 		
 	distToSegmentXY = (p, a, b) ->
 		Math.sqrt distToSegmentSqrXY p, a, b
+	
+	cssTranslateXY = ({ x, y }) ->
+		"translate(#{x} #{y})"
 		
 	distToSegment01 = (p, a, b) ->
 		p = x: p[0], y: p[1]
@@ -335,9 +338,11 @@ define ->
 			a = b
 		pairs
 
+
 	{ copyAttrs, P, PN, PD, W, async, strUnique, expect, somePrettyPrint, length,
 	  sort, styleZoom, sunflower, vecX, vecY, vec, compareNumber, max, min,
 	  parseMaybeNumber, equidistantSelection, getMinMax, arrayUnique,
 	  distanceSqrXY, nearestXY, nearest01, distanceSqr01, nearest, forall,
-	  rasterCircle, prettyDebug, sortSomewhat, Memo, distanceXY, distance01
-	  distToSegmentXY, distToSegmentSqrXY, consecutivePairs, distToSegment01 }
+	  rasterCircle, prettyDebug, sortSomewhat, Memo, distanceXY, distance01,
+	  distToSegmentXY, distToSegmentSqrXY, cssTranslateXY, consecutivePairs, distToSegment01 }
+
