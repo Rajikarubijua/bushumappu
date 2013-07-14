@@ -131,6 +131,13 @@ form table td{
 	top: 7px;
 }
 
+.arrowIcon.down{
+	border-left: 15px solid transparent;
+	border-right: 15px solid transparent;
+	border-top: 15px solid #FFF;
+	top: 7px;
+}
+
 #bottomBar > * {
 }
 

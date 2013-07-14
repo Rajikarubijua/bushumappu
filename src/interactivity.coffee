@@ -303,12 +303,17 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 				
 			toggleBtn = d3.select('#toggle-bottom-bar')
 				.on('mouseenter.bottomBarToggle', (d) ->
-					if d3.select('#bottomBar')[0][0].clientHeight > 11
-						d3.select('#bottomBar').style('max-height', '10px')
+					bar = d3.select('#bottomBar')
+					arrow = toggleBtn.select('.arrowIcon')
+					if bar.node().clientHeight > 11
+						bar.style('max-height', '10px')
+						arrow.classed('up', true)
+						arrow.classed('down', false)
 					else
-						d3.select('#bottomBar').style('max-height', '200px')
-						
-					)
+						bar.style('max-height', '200px')
+						arrow.classed('down', true)
+						arrow.classed('up', false)
+				)
 			# exit
 			edge.exit().remove()
 			node.exit().remove()
