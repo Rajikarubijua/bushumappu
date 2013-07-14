@@ -1,7 +1,5 @@
 config =
 	showLines: 					false
-	fixedEndstation:			false
-	fixedStation:				false
 	filterRadicals:				(radicals) -> radicals[...14]
 	filterLinkedRadicals:		(radicals) -> radicals
 	sunflowerKanjis:			true

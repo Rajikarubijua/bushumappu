@@ -26,7 +26,6 @@ define [], ->
 		
 		node:	({ node }) ->
 			other = @_graph.nodesById[node.id]
-			throw 'fixed node is moved' if other.fixed
 			other.move node.x, node.y
 			other.style.debug_fill = node.debug_fill
 			if not @raf

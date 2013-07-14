@@ -35,7 +35,7 @@ require { baseUrl: './' }, ['utils', 'grid', 'graph'], (utils, grid, { Cluster, 
 			while nodes.length > 0
 				toMove = {}
 				for node in nodes
-					continue if node.fixed
+					continue if not toOptimize node
 					[ x, y ] = @nearestFreeGrid node, grid
 					(toMove[x+"x"+y] ?= []).push node
 				nodes = []
@@ -64,6 +64,7 @@ require { baseUrl: './' }, ['utils', 'grid', 'graph'], (utils, grid, { Cluster, 
 			queue = nodes[..]
 			no_move_since = 0
 			changed_nodes = []
+			before = @my_graph.ruleViolations()
 			do postNodes = =>
 				if changed_nodes.length
 					@postNodes changed_nodes
@@ -72,9 +73,11 @@ require { baseUrl: './' }, ['utils', 'grid', 'graph'], (utils, grid, { Cluster, 
 					setTimeout postNodes, config.transitionTime
 			do optimizeNode = =>
 				if not (no_move_since++ < queue.length * 2)
+					now = @my_graph.ruleViolations()
+					P 'optimization done. ruleViolations from', before, 'to', now
 					return
 				node = queue.shift()
-				if not node.fixed
+				if toOptimize node
 					moved = @moveNode node
 					if moved
 						no_move_since = 0
@@ -103,7 +106,7 @@ require { baseUrl: './' }, ['utils', 'grid', 'graph'], (utils, grid, { Cluster, 
 			{ nodes } = @my_graph
 			used = {}
 			clusters = for node in nodes
-				continue if node.fixed
+				continue if not toOptimize node
 				continue if node.id of used
 				cluster = @straightLineCluster node
 				continue if not cluster 
@@ -142,7 +145,7 @@ require { baseUrl: './' }, ['utils', 'grid', 'graph'], (utils, grid, { Cluster, 
 			
 		moveNode: (node) ->
 			copy   = x: node.x, y: node.y
-			coords = @coordsAroundNode node, 10
+			coords = @coordsAroundNode node, 4
 			quality = => { rule: @my_graph.ruleViolations(), crit: @my_graph.critQuality() } 
 			gt = (a, b) ->
 				a.rule > b.rule or (a.rule == b.rule and a.crit > b.crit)
@@ -211,7 +214,7 @@ require { baseUrl: './' }, ['utils', 'grid', 'graph'], (utils, grid, { Cluster, 
 		straightLineCluster: (start) ->
 			if not @straightNode start
 				for start in start.nextNodes()
-					continue if start.fixed
+					continue if not toOptimize start
 					if @straightNode start
 						break
 			cluster = [start]
@@ -219,10 +222,12 @@ require { baseUrl: './' }, ['utils', 'grid', 'graph'], (utils, grid, { Cluster, 
 			while queue.length
 				node = queue.pop()
 				if @straightNode node
-					next = (n for n in node.nextNodes() when n not in cluster and not n.fixed)
+					next = (n for n in node.nextNodes() when n not in cluster and toOptimize n)
 					cluster.push next...
 					queue.push next...
 			cluster
 			new Cluster cluster
+			
+	toOptimize = (node) -> node.kind == 'hi_node'
 
 	postMessage 'ready'

@@ -3,7 +3,7 @@ define ['utils', 'criteria', 'tubeEdges'], (utils, criteria, tube) ->
 
 	class Node
 		next_id = 0
-		constructor: ({ @x, @y, @lines, @edges, @data, @style, @id, @fixed }={}) ->
+		constructor: ({ @x, @y, @lines, @edges, @data, @style, @id, @kind }={}) ->
 			@x     ?= 0
 			@y     ?= 0
 			@lines ?= []
@@ -11,6 +11,7 @@ define ['utils', 'criteria', 'tubeEdges'], (utils, criteria, tube) ->
 			@data  ?= {}
 			@style ?= {}
 			@id    ?= next_id++
+			@kind  ?= ''
 		
 		coord: -> @x+"x"+@y
 		
@@ -180,22 +181,22 @@ define ['utils', 'criteria', 'tubeEdges'], (utils, criteria, tube) ->
 		toPlainLines: ->
 			nodes = {}
 			for node in @nodes
-				nodes[node.id] =
-					x: node.x,
-					y: node.y,
-					data: node.data,
-					id: node.id,
-					fixed: node.fixed
+				{ x, y, data, id, kind } = node
+				nodes[node.id] = { x, y, data, id, kind }
 			lines = for line in @lines
-				for node in line.nodes
+				plain_line = for node in line.nodes
 					nodes[node.id]
+				{ data, id } = line
+				plain_line.obj = { data, id }
+				plain_line
+			lines
 					
 		ruleViolations: ->
-			d3.sum (node.ruleViolations this for node in @nodes)
+			d3.sum (node.ruleViolations this for node in @nodes when node.kind == 'hi_node')
 			
 		critQuality: ->
 			d3.sum [
-				d3.sum (node.critQuality this for node in @nodes)
+				d3.sum (node.critQuality this for node in @nodes when node.kind == 'hi_node')
 				criteria.lengthOfEdges @edges
 			]
 
