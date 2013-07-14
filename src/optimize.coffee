@@ -71,17 +71,18 @@ require { baseUrl: './' }, ['utils', 'grid', 'graph'], (utils, grid, { Cluster, 
 				if no_move_since < queue.length * 2
 					setTimeout postNodes, config.transitionTime
 			do optimizeNode = =>
-				if not (no_move_since[0]++ < queue.length * 2)
-					now = @my_graph.ruleViolations()
-					P 'optimization done. ruleViolations from', before, 'to', now
-					return
-				node = queue.shift()
-				moved = @moveNode node
-				if moved
-					no_move_since[0] = 0
-					changed_nodes.push node
-				queue.push node
-				setTimeout optimizeNode, 1
+				for [1..10]
+					if not (no_move_since[0]++ < queue.length * 2)
+						now = @my_graph.ruleViolations()
+						P 'optimization done. ruleViolations from', before, 'to', now
+						return
+					node = queue.shift()
+					moved = @moveNode node
+					if moved
+						no_move_since[0] = 0
+						changed_nodes.push node
+					queue.push node
+				setTimeout optimizeNode, 100
 
 		optimizeNodes: (nodes) ->
 			P 'optimize', nodes.length, 'nodes'

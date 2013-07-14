@@ -108,11 +108,14 @@ define [
 			graph = @embedder.graph kanji, @radicals, @kanjis
 			
 			@optimizer?.worker.terminate()
-			@optimizer = new Optimizer =>
-				@optimizer.onNodes = => @update graph
-				@optimizer.graph graph
-				@optimizer.snapNodes()
-				@optimizer.applyRules()
+			if config.optimizer
+				@optimizer = new Optimizer =>
+					@optimizer.onNodes = => @update graph
+					@optimizer.graph graph
+					@optimizer.snapNodes()
+					@optimizer.applyRules()
+			else
+				@update graph
 
 			@seaFill.setup this, false
 			
@@ -274,55 +277,25 @@ define [
 		
 		update: (graph) ->
 			@graph = graph if graph
+			d3.selectAll(".mini-label").remove()
 			@updateNodes @graph
 			@updateEdges @graph
 			@updateStationLabels @graph
 			
-			{ svg, config, g_edges, g_nodes, g_endnodes, g_stationLabels } = this
-			{ nodes, lines, edges } = @graph
-
-			endnodes = (node for node in nodes when node.data.radical)
+			{ nodes } = @graph
 			central_node = (node for node in nodes when node.kind == 'central_node')
 			if central_node.length > 1
 				throw 'cant handle more than one central node'
 			central_node = central_node[0]
 			@updateCentralNode central_node
-			nodes = (node for node in nodes when node not in endnodes and node != central_node)
-			table = d3.select('table#details tbody')
-			table_data = [[],[],[],[],[]]
 			
-			# remove minilabels
-			minilabels = d3.selectAll(".mini-label")
-			minilabels.remove()
-
-			# join
-			
-			endnode = g_endnodes.selectAll('.endnode')
-				.data(endnodes, (node) -> node.key())
-			
-			# enter
-			d3.select('#toggle-bottom-bar').on('mouseenter.bottomBarToggle', @toggleMenu)
-			
-			endnode_g = endnode.enter()
-				.append('g')
-				.classed("endnode", true)
-				.on('click.selectLine', (d) -> endnodeSelectLine d)
-			endnode_g.append("circle").attr {r : config.nodeSize}
-			endnode_g.append("text").text (d) -> d.label()
-		
-			# update
-			
-
-			endnode.transition().duration(config.transitionTime)
-				.attr transform: (d) -> "translate(#{d.x} #{d.y})"
-
-			# exit
-			endnode.exit().remove()
-			
+			d3.select('#toggle-bottom-bar')
+				.on('mouseenter.bottomBarToggle', @toggleMenu)
+						
 		createMiniLabel: (edge, dom) ->
-			parent = d3.select(dom.parentNode)
+			dom = d3.select(dom)
 			{ line, tube } = edge 
-			i = @graph.radicals().indexOf line.data.radical 
+			i = @graph.radicals().indexOf line.data
 			color = colors[i]
 			i = tube.edges.indexOf(edge) - tube.edges.length/2
 			length = edge.length() / 2
@@ -334,14 +307,10 @@ define [
 			y += (tube.width+5) * Math.sin tube.angle + 0.5*Math.PI
 			grad = tube.angle / 2/Math.PI * 360
 			grad = if (Math.round grad/45) % 2 == 0 then 0 else -45
-			parent.append("text").classed("mini-label", true)
+			dom.append("text").classed("mini-label", true)
 				.text(line.data.radical)
-				.style(
-					"font-size": "8px"
-					"font-anchor": "middle"
-					"alignment-baseline": "central")
+				.style(fill: "#{color}")
 				.attr
-					fill: "#{color}"
 					transform: "translate(#{x} #{y}) rotate(#{grad}, #{x}, #{y})"
 		
 		updateCentralNode: (node) ->
@@ -359,11 +328,9 @@ define [
 			central_history = @history.render() or "–"
 			central_g = enter_central_node.append('g').attr('id': 'central-node')
 			central_g.append('foreignObject')
-					.attr(x: -120, y: -200)
-					.attr(width: 246, height: 400)
+					.attr(x: -120, y: -150)
+					.attr(width: 230, height: 400)
 				.append('xhtml:body')
-					.style('background', 'white')
-					.style('border', 'solid black 1px')
 					.html("
 					 <div class='centralStation'>
 						<div class='firstBlock'>
@@ -387,14 +354,16 @@ define [
 							<div id='kMeaning'>" + central_meaning + "</div>
 							<div id='kOn'>" + central_on + "</div>
 							<div id='kKun'>" + central_kun + "</div>
-						</div>
-						<div id='history'>
-						" + central_history + "
+							<div id='history'>
+							" + central_history + "
+							</div>
 						</div>
 					</div>
 					 ")
 					
 			exit_central_node.remove()
+			height = ((Math.round(@history.history.length / 7)+1) *35)
+			d3.select('#history').style 'height' , "#{height}px"
 
 			me = this
 			onClick = () ->

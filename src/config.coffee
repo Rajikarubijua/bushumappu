@@ -18,9 +18,10 @@ config =
 	slideshowSteps:				1
 	nodeSize:					12
 	showInitialMode:			false
-	debugKanji:					'総'
+	debugKanji:					'類'
 	overlengthEdge:				gridSpacing * 10
 	kanjiOffset:				8
+	optimizer:					false
 
 window?.config = config
 self?.config = config
