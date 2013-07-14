@@ -108,11 +108,14 @@ define [
 			graph = @embedder.graph kanji, @radicals, @kanjis
 			
 			@optimizer?.worker.terminate()
-			@optimizer = new Optimizer =>
-				@optimizer.onNodes = => @update graph
-				@optimizer.graph graph
-				@optimizer.snapNodes()
-				@optimizer.applyRules()
+			if config.optimizer
+				@optimizer = new Optimizer =>
+					@optimizer.onNodes = => @update graph
+					@optimizer.graph graph
+					@optimizer.snapNodes()
+					@optimizer.applyRules()
+			else
+				@update graph
 
 			@seaFill.setup this, false
 			

@@ -21,6 +21,7 @@ config =
 	debugKanji:					'総'
 	overlengthEdge:				gridSpacing * 10
 	kanjiOffset:				8
+	optimizer:					false
 
 window?.config = config
 self?.config = config
