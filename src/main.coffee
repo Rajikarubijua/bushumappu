@@ -8,10 +8,9 @@ window.my = {
 	config }
 
 define ['utils', 'load_data', 
-	'interactivity', 'routing', 'prepare_data', 'optimizer_client'], (
+	'interactivity', 'routing', 'prepare_data'], (
 	{ P, somePrettyPrint, styleZoom, async, prettyDebug, copyAttrs },
-	loadData, { View }, { MetroMapLayout }, prepare, { Optimizer }
-	) ->
+	loadData, { View }, { MetroMapLayout }, prepare) ->
 
 	main = () ->
 		body = my.body = d3.select 'body'
@@ -28,13 +27,11 @@ define ['utils', 'load_data',
 		radicals = prepare.getRadicals()
 		kanjis = prepare.getKanjis radicals
 
-		optimizer = new Optimizer ->
-			view = new View { svg, config, kanjis, radicals, optimizer }
-
-			if config.showInitialMode
-				view.doInitial()
-			else
-				view.doSlideshow()
+		view = my.view = new View { svg, config, kanjis, radicals }
+		if config.showInitialMode
+			view.doInitial()
+		else
+			view.doSlideshow()
 			
 	showDebugOverlay = (el) ->
 		el.append('pre').attr(id:'my').text somePrettyPrint my

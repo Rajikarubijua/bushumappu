@@ -15,7 +15,6 @@ require { baseUrl: './' }, ['utils', 'grid', 'graph'], (utils, grid, { Cluster, 
 	addEventListener 'message', (ev) ->
 		console.log 'worker receive', ev.data.type
 		handler[ev.data.type] ev.data
-	a = once: true
 	
 	handler =
 		my_graph:	null
@@ -61,34 +60,28 @@ require { baseUrl: './' }, ['utils', 'grid', 'graph'], (utils, grid, { Cluster, 
 			
 		applyRules: ->
 			{ nodes, edges } = @my_graph
-			queue = nodes[..]
-			no_move_since = 0
+			queue = (n for n in nodes when toOptimize n)
+			no_move_since = [0]
 			changed_nodes = []
 			before = @my_graph.ruleViolations()
 			do postNodes = =>
 				if changed_nodes.length
 					@postNodes changed_nodes
 					changed_nodes.pop() while changed_nodes.length
-				if no_move_since++ < queue.length * 2
+				if no_move_since < queue.length * 2
 					setTimeout postNodes, config.transitionTime
 			do optimizeNode = =>
-				if not (no_move_since++ < queue.length * 2)
+				if not (no_move_since[0]++ < queue.length * 2)
 					now = @my_graph.ruleViolations()
 					P 'optimization done. ruleViolations from', before, 'to', now
 					return
 				node = queue.shift()
-				if toOptimize node
-					moved = @moveNode node
-					if moved
-						no_move_since = 0
-						changed_nodes.push node
-					queue.push node
+				moved = @moveNode node
+				if moved
+					no_move_since[0] = 0
+					changed_nodes.push node
+				queue.push node
 				setTimeout optimizeNode, 1
-			
-		optimize: ->
-			do foo = =>
-				@optimizeStraightLineClusters ->
-					setTimeout foo, 1000
 
 		optimizeNodes: (nodes) ->
 			P 'optimize', nodes.length, 'nodes'
@@ -145,7 +138,7 @@ require { baseUrl: './' }, ['utils', 'grid', 'graph'], (utils, grid, { Cluster, 
 			
 		moveNode: (node) ->
 			copy   = x: node.x, y: node.y
-			coords = @coordsAroundNode node, 4
+			coords = @coordsAroundNode node, 18
 			quality = => { rule: @my_graph.ruleViolations(), crit: @my_graph.critQuality() } 
 			gt = (a, b) ->
 				a.rule > b.rule or (a.rule == b.rule and a.crit > b.crit)
@@ -161,7 +154,6 @@ require { baseUrl: './' }, ['utils', 'grid', 'graph'], (utils, grid, { Cluster, 
 					min.coord = coord
 					break if perfect min.value
 			[ x, y ] = min.coord
-			a.once = false
 			if x != copy.x or y != copy.y
 				node.move x,y
 				@grid.remove copy
