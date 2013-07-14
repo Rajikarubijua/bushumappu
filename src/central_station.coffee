@@ -88,7 +88,7 @@ define ['utils', 'graph'], (utils, { Graph, Node }) ->
 		
 			# place nodes
 			node_r = my.config.gridSpacing
-			kanji_offset = 15
+			kanji_offset = config.kanjiOffset
 			central_node = kanjiNode central_kanji
 			central_node.central_node = true
 			central_node.fixed = true

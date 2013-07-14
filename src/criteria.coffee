@@ -49,5 +49,10 @@ define ['utils'], (utils) ->
 
 	lengthOfEdges = (edges) ->
 		d3.sum (e.lengthSqr() for e in edges)
+		
+	tooNearCentralNode = (node) ->
+		r = config.kanjiOffset * config.gridSpacing
+		r > utils.distanceXY node, { x:0, y:0 }
 	
-	{ wrongEdgesUnderneath, lineStraightness, lengthOfEdges, edgeCrossings }
+	{ wrongEdgesUnderneath, lineStraightness, lengthOfEdges, edgeCrossings,
+	  tooNearCentralNode }

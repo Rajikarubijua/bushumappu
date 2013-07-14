@@ -37,6 +37,7 @@ define ['utils', 'criteria', 'tubeEdges'], (utils, criteria, tube) ->
 				d3.sum [
 					1000*criteria.wrongEdgesUnderneath(this, graph.edges).length
 					criteria.edgeCrossings @edges, graph.edges
+					100*criteria.tooNearCentralNode this
 				]
 			
 		critQuality: (graph) ->
