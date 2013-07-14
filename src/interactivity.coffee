@@ -229,10 +229,11 @@ define [
 		
 
 		enterEdges: (enter) ->
-			enter.append('g').classed('edge', true)
+			g_edge = enter.append('g').classed('edge', true)
 				# for transitions; nodes start at 0,0. so should edges
 				.attr(d: (d) -> "M0,0")
-				.append('path')
+			g_edge.append('path')
+			g_edge.append('text').classed('mini-label', true)
 		
 		exitEdges: (exit) ->
 			exit.remove()
@@ -257,23 +258,46 @@ define [
 			update.each (edge) ->
 				if edge.style.debug_stroke
 					d3.select(@).style stroke: edge.style.debug_stroke
-
-			update.transition().duration(config.transitionTime)
-				.select('path')
-					.attr d: (edge) ->
-						svgline01 edge.coords()
+					
+			trans = update.transition().duration(config.transitionTime)
+			trans.select('path')
+				.attr(d: (edge) ->
+					svgline01 edge.coords())
+			trans.select('text.mini-label')
+				.attr(transform: (edge) ->
+					{ x, y, width } = edge.tube
+					a = angle = edge.firstAngleFromNode { x, y }
+					r = utils.distance01 edge.coords()[0..1]...
+					r /= 2
+					i = edge.tube.edges.indexOf edge
+					i -= edge.tube.edges.length/2
+					space_between = 16
+					x = x + r * Math.cos angle
+					y = y + r * Math.sin angle
+					x += (space_between * i) * Math.cos angle
+					y += (space_between * i) * Math.sin angle
+					turn = 0.5*Math.PI
+					if 0.55*Math.PI < Math.abs a
+						turn = -turn
+					a += turn
+					x += (width+5) * Math.cos a
+					y += (width+5) * Math.sin a
+					grad = angle / 2/Math.PI * 360
+					grad = if (Math.round grad/45) % 2 == 0 then 0 else -45
+					"translate(#{x} #{y})"# rotate(#{grad}, #{x}, #{y})"
+				)
 			
-			that = this
-			update.each (edge) -> 
-				if edge.tube.id % 5 == 0
-					that.createMiniLabel edge, this
-			
-			update.classed("filtered", (edge) -> edge.style.filtered)
-		
+			update
+				.classed("filtered", (edge) -> edge.style.filtered)
+				.select('text.mini-label')
+					.text((edge) -> edge.line.data.radical)
+					.style(fill: (edge) =>
+						i = @graph.radicals().indexOf edge.line.data
+						colors[i]
+					)
 		
 		update: (graph) ->
 			@graph = graph if graph
-			d3.selectAll(".mini-label").remove()
 			@updateNodes @graph
 			@updateEdges @graph
 			

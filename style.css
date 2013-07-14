@@ -30,9 +30,10 @@ circle, rect {
 text.mini-label {
 	alignment-baseline: central;
 	text-anchor: middle;
-	font-size: 8pt;
+	font-size: 14pt;
 	stroke: white;
-	stroke-width: 0.1pt;
+	stroke-width: 0.5pt;
+	font-weight: 900;
 }
 
 .centralStation{
