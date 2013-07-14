@@ -139,7 +139,7 @@ require { baseUrl: './' }, ['utils', 'grid', 'graph'], (utils, grid, { Cluster, 
 			
 		moveNode: (node) ->
 			copy   = x: node.x, y: node.y
-			coords = @coordsAroundNode node, 18
+			coords = @coordsAroundNode node, 8
 			quality = => { rule: @my_graph.ruleViolations(), crit: @my_graph.critQuality() } 
 			gt = (a, b) ->
 				a.rule > b.rule or (a.rule == b.rule and a.crit > b.crit)
