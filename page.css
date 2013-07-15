@@ -151,11 +151,13 @@ form table td{
 #details td:first-child{
 	background-color:  #2FA199;
 	color: #FFF;
+	cursor: default;
 }
 
 #details tr:first-child{
 	text-align: center;
 	font-size: 1.5em;
+	cursor: pointer;
 }
 #details tr:first-child td:first-child{
 	background-color: #EEE;
