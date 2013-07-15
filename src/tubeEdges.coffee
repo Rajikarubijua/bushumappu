@@ -1,8 +1,10 @@
-define ['utils', 'graph'], ({P, length}, {Graph, Edge, Node, Line}) ->
+define ['utils'], (utils) ->
+	{ P } = utils
 
-	cptplaceholder = 5
+	cptplaceholder = 0
 
 	class Tube
+		tube_id = 0
 		constructor: ({ @radicals, @width, @angle, @x, @y, @edges}={}) ->
 			@radicals     ?= []
 			@width     ?= 0
@@ -10,67 +12,55 @@ define ['utils', 'graph'], ({P, length}, {Graph, Edge, Node, Line}) ->
 			@x ?= 0
 			@y ?= 0
 			@edges ?= []
-
-	createTubes = (edge) ->
-		return [edge.sourcecoord, edge.targetcoord] if edge.calc
-		edge.sourcecoord = [edge.source.x, edge.source.y]
-		edge.targetcoord = [edge.target.x, edge.target.y]
-		node = edge.source
-		edges = []
-		for edge in node.edges
-			if edge.source is node and edge.calc is false
-				edges.push edge
-		targets = []
-		for edge in edges
-			if edge.target not in targets
-				targets.push edge.target
-		for target in targets
-			tube = new Tube {}
-			tube.x = node.x
-			tube.y = node.y
-			tube.width = 0
-			for edge in node.edges
-				if target == edge.target
-					tube.edges.push edge
-					tube.radicals.push edge.line.data.radical
-			i = 0
-			for edge in tube.edges
-				selector = ".line_"+ edge.line.data.radical
-				if i is 0
-					tube.width += (parseInt d3.selectAll(selector).style("stroke-width")) / 2
-					tube.width += cptplaceholder
-					tube.angle = edge.getEdgeAngle() + Math.PI/2
-					tube.width = 0 if tube.edges.length is 1
+			@minilabel ?= false
+			@id = tube_id++
+	createTubes = (my_edge) ->
+		{ source, target } = my_edge
+		tube = new Tube
+		tube.x = source.x
+		tube.y = source.y
+		tube.angle = my_edge.getEdgeAngle()
+		for edge in source.edges
+			continue if not (
+				edge.source in [ source, target ] and
+				edge.target in [ source, target ])
+			tube.edges.push edge
+			tube.width += getStrokeWidth edge
+			{ radical } = edge.line.data
+			tube.radicals.push radical if radical not in tube.radicals
+		# layout tube
+		normal = tube.angle + 0.5*Math.PI
+		cos_angle = Math.cos normal
+		sin_angle = Math.sin normal
+		edges_n = tube.edges.length 
+		for edge, edge_i in tube.edges
+			{ source, target, line } = edge
+			width = cptplaceholder + getStrokeWidth edge
+			r = (edge_i - edges_n/2 + 0.5) * width
+			x1 = source.x + r * cos_angle
+			y1 = source.y + r * sin_angle
+			x2 = target.x + r * cos_angle
+			y2 = target.y + r * sin_angle
+			coords = [[ x1, y1 ], [ x2, y2 ]]
+			if utils.distance01(coords...) >= config.overlengthEdge
+				dx = Math.abs x2 - x1
+				dy = Math.abs y2 - y1
+				if dx >= dy
+					x05 = x2
+					y05 = y1
 				else
-					if i is (tube.edges.length - 1)
-						tube.width += (parseInt d3.selectAll(selector).style("stroke-width")) / 2
-					else
-						tube.width += parseInt d3.selectAll(selector).style("stroke-width")
-						tube.width += cptplaceholder
-				i++
-			layoutTube tube
-		return [edge.sourcecoord, edge.targetcoord]
-					
-	
-	layoutTube = (tube) ->
-		cosAngle = Math.cos(tube.angle)
-		sinAngle = Math.sin(tube.angle)
-		drawx = (tube.width / 2) * cosAngle
-		drawy = (tube.width / 2) * sinAngle
-		tube.edges.sort()
-		nextx = 0
-		nexty = 0
-		i = 0
-		for edge in tube.edges
-			[vecx, vecy] = edge.getVector()
-			edge.sourcecoord = [edge.source.x + drawx - nextx, edge.source.y + drawy - nexty]
-			edge.targetcoord = [edge.target.x + drawx - nextx, edge.target.y + drawy - nexty]
-			edge.calc = true if tube.edges.length > 1
-			selector = ".line_"+ edge.line.data.radical
-			placeholder = (parseInt d3.selectAll(selector).style("stroke-width")) + cptplaceholder
-			nextx += (placeholder) * cosAngle
-			nexty += (placeholder) * sinAngle
-			i++
+					x05 = x1
+					y05 = y2
+				coords = [[ x1, y1 ], [ x05, y05 ], [ x2, y2 ]]
+			edge.setCoords coords
+			edge.tube = tube
+		undefined
 			
-
-	{createTubes, layoutTube}
+	getStrokeWidth = (edge) ->
+		# XXX
+		#selector = ".line_"+ edge.line.data.radical
+		#try stroke_width = parseInt d3.selectAll(selector).style("stroke-width")
+		#catch e
+		stroke_width = 5
+	
+	{Tube, createTubes}

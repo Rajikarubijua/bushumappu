@@ -5,7 +5,7 @@
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   define(function() {
-    var Memo, P, PD, PN, W, arrayUnique, async, compareNumber, copyAttrs, distanceSqr01, distanceSqrXY, equidistantSelection, expect, forall, getMinMax, groupBy, length, max, nearest, nearest01, nearestXY, parseMaybeNumber, prettyDebug, rasterCircle, somePrettyPrint, sort, sortSomewhat, strUnique, styleZoom, sunflower, svgline, svgline01, vec, vecX, vecY;
+    var Memo, P, PD, PN, W, angleBetween01, arrayUnique, async, compareNumber, consecutivePairs, copyAttrs, cssTranslateXY, distToSegment01, distToSegmentSqrXY, distToSegmentXY, distance01, distanceSqr01, distanceSqrXY, distanceXY, equidistantSelection, expect, extremaFunc, forall, getMinMax, groupBy, length, max, min, nearest, nearest01, nearestXY, parseMaybeNumber, prettyDebug, rasterCircle, somePrettyPrint, sort, sortSomewhat, strUnique, styleZoom, sunflower, vec, vecX, vecY;
 
     copyAttrs = function() {
       var a, b, bs, k, v, _i, _len;
@@ -289,12 +289,11 @@
       var func;
 
       func = function() {
-        var t;
+        var t, z;
 
         t = zoom.translate();
-        return el.style({
-          "-webkit-transform": "				translate(" + t[0] + "px, " + t[1] + "px)				scale(" + (zoom.scale()) + ")"
-        });
+        z = zoom.scale();
+        return el.attr('style', "-webkit-transform:				translate(" + t[0] + "px, " + t[1] + "px)				scale(" + z + ")");
       };
       if (!dontCall) {
         func();
@@ -398,32 +397,46 @@
       }
       return result;
     };
-    max = function(array, func) {
-      var e, max_e, max_value, value, _i, _len;
+    extremaFunc = function(comp) {
+      return function(array, func) {
+        var e, ex_e, ex_value, value, _i, _len;
 
-      if (typeof func === 'string') {
-        func = (function(func) {
-          return function(x) {
-            return x[func];
-          };
-        })(func);
-      }
-      max_value = max_e = void 0;
-      for (_i = 0, _len = array.length; _i < _len; _i++) {
-        e = array[_i];
-        value = func(e);
-        if ((max_value == null) || value > max_value) {
-          max_value = value;
-          max_e = e;
+        if (typeof func === 'string') {
+          func = (function(func) {
+            return function(x) {
+              return x[func];
+            };
+          })(func);
         }
-      }
-      return max_e;
+        ex_value = ex_e = void 0;
+        for (_i = 0, _len = array.length; _i < _len; _i++) {
+          e = array[_i];
+          value = func(e);
+          if ((typeof max_value === "undefined" || max_value === null) || comp(value, max_value)) {
+            ex_value = value;
+            ex_e = e;
+          }
+        }
+        return ex_e;
+      };
     };
+    max = extremaFunc((function(a, b) {
+      return a > b;
+    }));
+    min = extremaFunc((function(a, b) {
+      return a < b;
+    }));
     distanceSqrXY = function(a, b) {
       return Math.pow(b.x - a.x, 2) + Math.pow(b.y - a.y, 2);
     };
     distanceSqr01 = function(a, b) {
       return Math.pow(b[0] - a[0], 2) + Math.pow(b[1] - a[1], 2);
+    };
+    distanceXY = function(a, b) {
+      return Math.sqrt(distanceSqrXY(a, b));
+    };
+    distance01 = function(a, b) {
+      return Math.sqrt(distanceSqr01(a, b));
     };
     nearest = function(a, array, distanceFunc) {
       var b, d, i, min_d, min_i, _i, _len;
@@ -483,7 +496,7 @@
       return pxs = pxs.concat([[x0 + x, y0 + y], [x0 - x, y0 + y], [x0 + x, y0 - y], [x0 - x, y0 - y], [x0 + y, y0 + x], [x0 - y, y0 + x], [x0 + y, y0 - x], [x0 - y, y0 - x]]);
     };
     sortSomewhat = function(xs, cmp) {
-      var a, b, i, l, min, sorted, x, _i, _j, _len, _ref, _ref1, _ref2;
+      var a, b, i, l, sorted, x, _i, _j, _len, _ref, _ref1, _ref2;
 
       xs = xs.slice(0);
       min = {
@@ -549,22 +562,87 @@
       return Memo;
 
     })();
-    svgline = d3.svg.line().x(function(_arg) {
-      var x;
+    distToSegmentSqrXY = function(p, a, b) {
+      var l2, t, vx, vy, x, y;
 
-      x = _arg.x;
-      return x;
-    }).y(function(_arg) {
-      var y;
+      if (!((p.x != null) && (p.y != null))) {
+        throw "p wrong";
+      }
+      if (!((a.x != null) && (a.y != null))) {
+        throw "a wrong";
+      }
+      if (!((b.x != null) && (b.y != null))) {
+        throw "b wrong";
+      }
+      l2 = distanceSqrXY(a, b);
+      if (l2 === 0) {
+        return distanceSqrXY(p, a);
+      }
+      vx = b.x - a.x;
+      vy = b.y - a.y;
+      t = ((p.x - a.x) * vx + (p.y - a.y) * vy) / l2;
+      if (t <= 0) {
+        return distanceSqrXY(p, a);
+      }
+      if (t >= 1) {
+        return distanceSqrXY(p, b);
+      }
+      x = a.x + t * vx;
+      y = a.y + t * vy;
+      return distanceSqrXY(p, {
+        x: x,
+        y: y
+      });
+    };
+    distToSegmentXY = function(p, a, b) {
+      return Math.sqrt(distToSegmentSqrXY(p, a, b));
+    };
+    cssTranslateXY = function(_arg) {
+      var x, y;
 
-      y = _arg.y;
-      return y;
-    });
-    svgline01 = d3.svg.line().x(function(d) {
-      return d[0];
-    }).y(function(d) {
-      return d[1];
-    });
+      x = _arg.x, y = _arg.y;
+      return "translate(" + x + " " + y + ")";
+    };
+    distToSegment01 = function(p, a, b) {
+      p = {
+        x: p[0],
+        y: p[1]
+      };
+      a = {
+        x: a[0],
+        y: a[1]
+      };
+      b = {
+        x: b[0],
+        y: b[1]
+      };
+      return Math.sqrt(distToSegmentSqrXY(p, a, b));
+    };
+    consecutivePairs = function(array) {
+      var a, b, pairs, _i, _len, _ref;
+
+      if (array.length < 2) {
+        throw 'array.length < 2';
+      }
+      pairs = [];
+      a = array[0];
+      _ref = array.slice(1);
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        b = _ref[_i];
+        pairs.push([a, b]);
+        a = b;
+      }
+      return pairs;
+    };
+    angleBetween01 = function(_arg, _arg1) {
+      var angle, x, x1, x2, y, y1, y2;
+
+      x1 = _arg[0], y1 = _arg[1];
+      x2 = _arg1[0], y2 = _arg1[1];
+      x = x2 - x1;
+      y = y2 - y1;
+      return angle = Math.atan2(y, x);
+    };
     return {
       copyAttrs: copyAttrs,
       P: P,
@@ -584,6 +662,7 @@
       vec: vec,
       compareNumber: compareNumber,
       max: max,
+      min: min,
       parseMaybeNumber: parseMaybeNumber,
       equidistantSelection: equidistantSelection,
       getMinMax: getMinMax,
@@ -598,8 +677,14 @@
       prettyDebug: prettyDebug,
       sortSomewhat: sortSomewhat,
       Memo: Memo,
-      svgline: svgline,
-      svgline01: svgline01
+      distanceXY: distanceXY,
+      distance01: distance01,
+      distToSegmentXY: distToSegmentXY,
+      distToSegmentSqrXY: distToSegmentSqrXY,
+      cssTranslateXY: cssTranslateXY,
+      consecutivePairs: consecutivePairs,
+      distToSegment01: distToSegment01,
+      angleBetween01: angleBetween01
     };
   });
 

@@ -2,17 +2,20 @@
 (function() {
   var __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-  define(['utils', 'graph'], function(_arg, _arg1) {
-    var Edge, Graph, Line, Node, P, Tube, cptplaceholder, createTubes, layoutTube, length;
+  define(['utils'], function(utils) {
+    var P, Tube, cptplaceholder, createTubes, getStrokeWidth;
 
-    P = _arg.P, length = _arg.length;
-    Graph = _arg1.Graph, Edge = _arg1.Edge, Node = _arg1.Node, Line = _arg1.Line;
-    cptplaceholder = 5;
+    P = utils.P;
+    cptplaceholder = 0;
     Tube = (function() {
-      function Tube(_arg2) {
-        var _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6;
+      var tube_id;
 
-        _ref = _arg2 != null ? _arg2 : {}, this.radicals = _ref.radicals, this.width = _ref.width, this.angle = _ref.angle, this.x = _ref.x, this.y = _ref.y, this.edges = _ref.edges;
+      tube_id = 0;
+
+      function Tube(_arg) {
+        var _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7;
+
+        _ref = _arg != null ? _arg : {}, this.radicals = _ref.radicals, this.width = _ref.width, this.angle = _ref.angle, this.x = _ref.x, this.y = _ref.y, this.edges = _ref.edges;
         if ((_ref1 = this.radicals) == null) {
           this.radicals = [];
         }
@@ -31,107 +34,76 @@
         if ((_ref6 = this.edges) == null) {
           this.edges = [];
         }
+        if ((_ref7 = this.minilabel) == null) {
+          this.minilabel = false;
+        }
+        this.id = tube_id++;
       }
 
       return Tube;
 
     })();
-    createTubes = function(edge) {
-      var edges, i, node, selector, target, targets, tube, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _m, _ref, _ref1, _ref2, _ref3;
+    createTubes = function(my_edge) {
+      var coords, cos_angle, dx, dy, edge, edge_i, edges_n, line, normal, r, radical, sin_angle, source, target, tube, width, x05, x1, x2, y05, y1, y2, _i, _j, _len, _len1, _ref, _ref1, _ref2, _ref3;
 
-      if (edge.calc) {
-        return [edge.sourcecoord, edge.targetcoord];
-      }
-      edge.sourcecoord = [edge.source.x, edge.source.y];
-      edge.targetcoord = [edge.target.x, edge.target.y];
-      node = edge.source;
-      edges = [];
-      _ref = node.edges;
+      source = my_edge.source, target = my_edge.target;
+      tube = new Tube;
+      tube.x = source.x;
+      tube.y = source.y;
+      tube.angle = my_edge.getEdgeAngle();
+      _ref = source.edges;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         edge = _ref[_i];
-        if (edge.source === node && edge.calc === false) {
-          edges.push(edge);
+        if (!(((_ref1 = edge.source) === source || _ref1 === target) && ((_ref2 = edge.target) === source || _ref2 === target))) {
+          continue;
+        }
+        tube.edges.push(edge);
+        tube.width += getStrokeWidth(edge);
+        radical = edge.line.data.radical;
+        if (__indexOf.call(tube.radicals, radical) < 0) {
+          tube.radicals.push(radical);
         }
       }
-      targets = [];
-      for (_j = 0, _len1 = edges.length; _j < _len1; _j++) {
-        edge = edges[_j];
-        if (_ref1 = edge.target, __indexOf.call(targets, _ref1) < 0) {
-          targets.push(edge.target);
-        }
-      }
-      for (_k = 0, _len2 = targets.length; _k < _len2; _k++) {
-        target = targets[_k];
-        tube = new Tube({});
-        tube.x = node.x;
-        tube.y = node.y;
-        tube.width = 0;
-        _ref2 = node.edges;
-        for (_l = 0, _len3 = _ref2.length; _l < _len3; _l++) {
-          edge = _ref2[_l];
-          if (target === edge.target) {
-            tube.edges.push(edge);
-            tube.radicals.push(edge.line.data.radical);
-          }
-        }
-        i = 0;
-        _ref3 = tube.edges;
-        for (_m = 0, _len4 = _ref3.length; _m < _len4; _m++) {
-          edge = _ref3[_m];
-          selector = ".line_" + edge.line.data.radical;
-          if (i === 0) {
-            tube.width += (parseInt(d3.selectAll(selector).style("stroke-width"))) / 2;
-            tube.width += cptplaceholder;
-            tube.angle = edge.getEdgeAngle() + Math.PI / 2;
-            if (tube.edges.length === 1) {
-              tube.width = 0;
-            }
+      normal = tube.angle + 0.5 * Math.PI;
+      cos_angle = Math.cos(normal);
+      sin_angle = Math.sin(normal);
+      edges_n = tube.edges.length;
+      _ref3 = tube.edges;
+      for (edge_i = _j = 0, _len1 = _ref3.length; _j < _len1; edge_i = ++_j) {
+        edge = _ref3[edge_i];
+        source = edge.source, target = edge.target, line = edge.line;
+        width = cptplaceholder + getStrokeWidth(edge);
+        r = (edge_i - edges_n / 2 + 0.5) * width;
+        x1 = source.x + r * cos_angle;
+        y1 = source.y + r * sin_angle;
+        x2 = target.x + r * cos_angle;
+        y2 = target.y + r * sin_angle;
+        coords = [[x1, y1], [x2, y2]];
+        if (utils.distance01.apply(utils, coords) >= config.overlengthEdge) {
+          dx = Math.abs(x2 - x1);
+          dy = Math.abs(y2 - y1);
+          if (dx >= dy) {
+            x05 = x2;
+            y05 = y1;
           } else {
-            if (i === (tube.edges.length - 1)) {
-              tube.width += (parseInt(d3.selectAll(selector).style("stroke-width"))) / 2;
-            } else {
-              tube.width += parseInt(d3.selectAll(selector).style("stroke-width"));
-              tube.width += cptplaceholder;
-            }
+            x05 = x1;
+            y05 = y2;
           }
-          i++;
+          coords = [[x1, y1], [x05, y05], [x2, y2]];
         }
-        layoutTube(tube);
+        edge.setCoords(coords);
+        edge.tube = tube;
       }
-      return [edge.sourcecoord, edge.targetcoord];
+      return void 0;
     };
-    layoutTube = function(tube) {
-      var cosAngle, drawx, drawy, edge, i, nextx, nexty, placeholder, selector, sinAngle, vecx, vecy, _i, _len, _ref, _ref1, _results;
+    getStrokeWidth = function(edge) {
+      var stroke_width;
 
-      cosAngle = Math.cos(tube.angle);
-      sinAngle = Math.sin(tube.angle);
-      drawx = (tube.width / 2) * cosAngle;
-      drawy = (tube.width / 2) * sinAngle;
-      tube.edges.sort();
-      nextx = 0;
-      nexty = 0;
-      i = 0;
-      _ref = tube.edges;
-      _results = [];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        edge = _ref[_i];
-        _ref1 = edge.getVector(), vecx = _ref1[0], vecy = _ref1[1];
-        edge.sourcecoord = [edge.source.x + drawx - nextx, edge.source.y + drawy - nexty];
-        edge.targetcoord = [edge.target.x + drawx - nextx, edge.target.y + drawy - nexty];
-        if (tube.edges.length > 1) {
-          edge.calc = true;
-        }
-        selector = ".line_" + edge.line.data.radical;
-        placeholder = (parseInt(d3.selectAll(selector).style("stroke-width"))) + cptplaceholder;
-        nextx += placeholder * cosAngle;
-        nexty += placeholder * sinAngle;
-        _results.push(i++);
-      }
-      return _results;
+      return stroke_width = 5;
     };
     return {
-      createTubes: createTubes,
-      layoutTube: layoutTube
+      Tube: Tube,
+      createTubes: createTubes
     };
   });
 

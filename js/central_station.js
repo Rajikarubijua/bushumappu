@@ -4,7 +4,7 @@
     __slice = [].slice;
 
   define(['utils', 'graph'], function(utils, _arg) {
-    var CentralStationEmbedder, Graph, Node, P;
+    var CentralStationEmbedder, Graph, Node, P, log2, radius, someAngle;
 
     Graph = _arg.Graph, Node = _arg.Node;
     P = utils.P;
@@ -29,7 +29,7 @@
       }
 
       CentralStationEmbedder.prototype.graph = function(central_kanji, all_radicals, all_kanjis) {
-        var angle, central_node, hi, hi_nodes, i, kanji, kanjiDegree, kanjiIsRelated, kanjiNode, kanjiRelevantRadicals, kanji_offset, line, line_i, lines, memo, min, n, node, node_i, node_r, nodes, r, radical, radical_node, related_kanjis, x, y, _, _i, _j, _k, _l, _len, _len1, _len2, _len3, _ref, _ref1, _ref2, _ref3;
+        var a, angle, b, central_node, hi_nodes, i, kanji, kanjiDegree, kanjiIsRelated, kanjiNode, kanjiRelevantRadicals, kanji_offset, line, line_i, lines, memo, n, node, node_i, node_r, nodes, r, radical, radical_node, related_kanjis, x, y, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _len6, _len7, _len8, _m, _n, _o, _p, _q, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6;
 
         lines = {};
         _ref = central_kanji.radicals;
@@ -37,9 +37,9 @@
           radical = _ref[_i];
           lines[radical.radical] = {
             radical: radical,
-            hi: 0,
+            hi: [],
             lo: [],
-            other: null
+            other: []
           };
         }
         related_kanjis = utils.arrayUnique(d3.merge((function() {
@@ -93,48 +93,69 @@
             hi_nodes.push(node);
           }
         }
-        /* Balancing # XXX not perfect I believe @payload
-        			Balancing is done in two phases. First it is counted such that
-        			each line gets a balanced amount of hi nodes. Second each node
-        			is assigned to a lines hi nodes. This ensures the sorting order
-        			of the kanjis which results in a good edge network with minimal
-        			connecting nodes. (Connecting nodes are nodes where an edge changes
-        			star points.)
-        */
-
+        lines = d3.values(lines);
         for (_k = 0, _len2 = hi_nodes.length; _k < _len2; _k++) {
           node = hi_nodes[_k];
-          min = null;
-          _ref2 = kanjiRelevantRadicals(node.data);
-          for (_l = 0, _len3 = _ref2.length; _l < _len3; _l++) {
-            radical = _ref2[_l];
-            line = lines[radical.radical];
-            if (min === null || line.hi < min.hi) {
-              min = line;
+          for (_l = 0, _len3 = lines.length; _l < _len3; _l++) {
+            line = lines[_l];
+            if (_ref2 = line.radical, __indexOf.call(kanjiRelevantRadicals(node.data), _ref2) >= 0) {
+              line.hi.push(node);
+              break;
             }
           }
-          min.hi++;
         }
-        for (_ in lines) {
-          line = lines[_];
-          hi = line.hi;
-          line.hi = hi_nodes.slice(0, hi);
-          line.other = hi_nodes.slice(hi);
-          [].splice.apply(hi_nodes, [0, hi - 0].concat(_ref3 = [])), _ref3;
+        for (_m = 0, _len4 = lines.length; _m < _len4; _m++) {
+          a = lines[_m];
+          for (_n = 0, _len5 = lines.length; _n < _len5; _n++) {
+            b = lines[_n];
+            if (a === b) {
+              continue;
+            }
+            node_i = -1;
+            while (++node_i < a.hi.length) {
+              if (b.hi.length >= a.hi.length) {
+                break;
+              }
+              node = a.hi[node_i];
+              if (_ref3 = b.radical, __indexOf.call(node.data.radicals, _ref3) < 0) {
+                continue;
+              }
+              b.hi.push(node);
+              [].splice.apply(a.hi, [node_i, node_i - node_i + 1].concat(_ref4 = [])), _ref4;
+              --node_i;
+            }
+          }
         }
-        node_r = my.config.gridSpacing * 4;
-        kanji_offset = 5;
+        for (_o = 0, _len6 = lines.length; _o < _len6; _o++) {
+          a = lines[_o];
+          for (_p = 0, _len7 = lines.length; _p < _len7; _p++) {
+            b = lines[_p];
+            if (a === b) {
+              continue;
+            }
+            _ref5 = b.hi;
+            for (_q = 0, _len8 = _ref5.length; _q < _len8; _q++) {
+              node = _ref5[_q];
+              if (_ref6 = a.radical, __indexOf.call(node.data.radicals, _ref6) >= 0) {
+                a.other.push(node);
+              }
+            }
+          }
+        }
+        node_r = my.config.gridSpacing;
+        kanji_offset = config.kanjiOffset;
         central_node = kanjiNode(central_kanji);
+        central_node.kind = 'central_node';
         n = central_kanji.radicals.length;
         lines = (function() {
-          var _len4, _len5, _m, _n, _ref4, _ref5, _results;
+          var _len10, _len11, _len12, _len9, _r, _ref7, _ref8, _ref9, _results, _s, _t, _u;
 
-          _ref4 = d3.values(lines);
           _results = [];
-          for (line_i = _m = 0, _len4 = _ref4.length; _m < _len4; line_i = ++_m) {
-            line = _ref4[line_i];
-            angle = line_i / n * Math.PI * 2;
-            r = node_r;
+          for (line_i = _r = 0, _len9 = lines.length; _r < _len9; line_i = ++_r) {
+            line = lines[line_i];
+            angle = someAngle(line_i);
+            r = line.hi.length + line.lo.length + kanji_offset;
+            r *= radius(node_r, angle);
             x = r * Math.cos(angle);
             y = r * Math.sin(angle);
             radical_node = new Node({
@@ -142,14 +163,26 @@
               y: y,
               data: line.radical
             });
-            _ref5 = __slice.call(line.hi).concat(__slice.call(line.lo));
-            for (node_i = _n = 0, _len5 = _ref5.length; _n < _len5; node_i = ++_n) {
-              node = _ref5[node_i];
-              r = (node_i + kanji_offset) * node_r;
+            radical_node.kind = 'radical_node';
+            _ref7 = __slice.call(line.hi).concat(__slice.call(line.lo));
+            for (node_i = _s = 0, _len10 = _ref7.length; _s < _len10; node_i = ++_s) {
+              node = _ref7[node_i];
+              r = node_i + kanji_offset;
+              r *= radius(node_r, angle);
               node.x = r * Math.cos(angle);
               node.y = r * Math.sin(angle);
             }
-            nodes = [central_node, radical_node].concat(__slice.call(line.hi), __slice.call(line.other), __slice.call(line.lo));
+            _ref8 = line.hi;
+            for (_t = 0, _len11 = _ref8.length; _t < _len11; _t++) {
+              n = _ref8[_t];
+              n.kind = 'hi_node';
+            }
+            _ref9 = line.lo;
+            for (_u = 0, _len12 = _ref9.length; _u < _len12; _u++) {
+              n = _ref9[_u];
+              n.kind = 'lo_node';
+            }
+            nodes = [central_node].concat(__slice.call(line.hi), __slice.call(line.other), __slice.call(line.lo));
             nodes.obj = {
               data: line.radical
             };
@@ -163,6 +196,29 @@
       return CentralStationEmbedder;
 
     })();
+    log2 = function(x) {
+      return Math.log(x) / Math.log(2);
+    };
+    radius = function(base, angle) {
+      if ((Math.round(angle / 0.25 / Math.PI)) % 2 === 0) {
+        return base;
+      } else {
+        return Math.sqrt(2 * Math.pow(base, 2));
+      }
+    };
+    someAngle = function(i) {
+      var a, angle, b, c, exp;
+
+      if (i <= 1) {
+        return angle = i * Math.PI;
+      } else {
+        exp = Math.floor(log2(i));
+        a = Math.pow(2, exp);
+        b = Math.pow(2, exp - 1);
+        c = 1 + i % a;
+        return angle = (1 / a + c / b) * Math.PI;
+      }
+    };
     return {
       CentralStationEmbedder: CentralStationEmbedder
     };

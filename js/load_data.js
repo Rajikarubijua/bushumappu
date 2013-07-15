@@ -154,6 +154,11 @@
               kanji = my.kanjis[obj];
               continue;
             }
+            if (name === "MEAN") {
+              if (obj[obj.length - 1] === ',') {
+                obj = obj.slice(0, +(obj.length - 2) + 1 || 9e9);
+              }
+            }
             map = {
               STROKECOUNT: 'stroke_n',
               FREQ: 'freq',
