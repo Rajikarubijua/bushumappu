@@ -116,7 +116,7 @@ define ['utils'], ({P}) ->
 
 			for item in arrFieldData
 				for value in arrValueData
-					if item != '' and value.indexOf item
+					if value == item and item != ''
 						return true
 			false
 
