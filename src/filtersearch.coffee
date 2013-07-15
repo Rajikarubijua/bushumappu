@@ -3,9 +3,11 @@ define ['utils'], ({P}) ->
 	class FilterSearch
 
 		setup: (view, isInitial) ->
+			#kanjis ?= @view.graph 
 			@view = view
 			if @view.graph == undefined or isInitial
-				@kanjis = @view.kanjis
+				jouyou = (my.kanjis[k] for k in my.jouyou)
+				@kanjis = jouyou
 			else
 				@kanjis = @view.graph.kanjis()
 
