@@ -266,14 +266,13 @@ define ['utils'], ({P}) ->
 				# initial view
 				d3.selectAll('form input[type=text]').on 'change' , update
 
-		reloadInitialSwitch: (filsea) ->
-			me = this
-			switchToMain = () ->
+		reloadInitialSwitch: (filsea) =>
+			switchToMain = () =>
 				#d3.select('#overlay').style 'display', 'none'
 				d3.select('#overlay').remove()
 				strKanji = d3.event.srcElement.innerHTML
 				filsea.view.changeToCentralFromStr(strKanji)
-				setupFilterSearchEvents(filsea, false)
+				@setupFilterSearchEvents(filsea, false)
 
 			d3.selectAll('#overlay .searchKanji').on 'click', switchToMain
 

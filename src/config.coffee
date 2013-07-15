@@ -17,7 +17,7 @@ config =
 	optimizeMaxLoops:			0
 	optimizeMaxSteps:			0
 	slideshowSteps:				1
-	showInitialMode:			false
+	showInitialMode:			true
 	debugKanji:					'類'
 	overlengthEdge:				gridSpacing * 3
 	kanjiOffset:				4
