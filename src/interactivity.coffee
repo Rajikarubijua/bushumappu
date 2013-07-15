@@ -264,13 +264,16 @@ define [
 				.attr(d: (edge) ->
 					svgline01 edge.coords())
 			trans.select('text.mini-label')
-				.attr(transform: (edge) ->
+				.attr(transform: (edge, edge_i) =>
+					distance_to_central =
+						edge.distanceToNode graph.centralNode()
+					return if distance_to_central % 5 != 0
 					{ x, y, width } = edge.tube
 					a = angle = edge.firstAngleFromNode { x, y }
 					r = utils.distance01 edge.coords()[0..1]...
 					r /= 2
 					i = edge.tube.edges.indexOf edge
-					i -= edge.tube.edges.length/2
+					i -= edge.tube.edges.length/2 - 0.5
 					space_between = 16
 					x = x + r * Math.cos angle
 					y = y + r * Math.sin angle

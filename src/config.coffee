@@ -7,7 +7,8 @@ config =
 	kmeansClustersN:			-1 # 0 rule of thumb, -1 vector.length
 	forceGraph:					false
 	circularLines:				false
-	gridSpacing:				gridSpacing = 48
+	nodeSize:					nodeSize = 12
+	gridSpacing:				gridSpacing = nodeSize * 8
 	debugOverlay:				false
 	transitionTime:				2000
 	initialScale:				1
@@ -16,11 +17,10 @@ config =
 	optimizeMaxLoops:			0
 	optimizeMaxSteps:			0
 	slideshowSteps:				1
-	nodeSize:					12
 	showInitialMode:			false
 	debugKanji:					'類'
-	overlengthEdge:				gridSpacing * 10
-	kanjiOffset:				8
+	overlengthEdge:				gridSpacing * 3
+	kanjiOffset:				4
 	optimizer:					true
 
 window?.config = config

@@ -154,6 +154,22 @@ define ['utils', 'criteria', 'tubeEdges'], (utils, criteria, tube) ->
 			@_coords = @_lengthSqr = @_length = @_getEdgeAngle = undefined
 
 		key: -> @source.key()+" "+@target.key()
+		
+		distanceToNode: (node) =>
+			@_distanceToNode ?= {}
+			@_distanceToNode[node.id] ?= do =>
+				visited = [node]
+				queue = [node]
+				while queue.length
+					node = queue.pop()
+					if this in node.edges
+						return visited.length-1
+					next = node.nextNodes()
+					for n in next
+						if n not in visited
+							visited.push n
+							queue.push n
+				Infinity
 
 	class Line
 		next_id = 0
@@ -196,6 +212,12 @@ define ['utils', 'criteria', 'tubeEdges'], (utils, criteria, tube) ->
 				@nodesById[node.id] = node
 				if node.edges.length > 10
 					P "node with many edges", node
+					
+		centralNode: ->
+			ns = (n for n in @nodes when n.kind == 'central_node')
+			throw "no central ndoe" if ns.length == 0
+			throw "more than one central node" if ns.length > 1
+			ns[0]
 					
 		kanjis: ->
 			node.data for node in @nodes when node.data.kanji
