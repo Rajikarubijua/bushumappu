@@ -6,33 +6,29 @@ Kanji bestehen aus einzelnen Elementen, sogenannten Radikalen, die nach gewissen
 Tube Maps oder Transit Maps (deutsch: Liniennetzplan) sind eine Form der Visualisierung, die für Linien öffentlichen Nahverkehrs - also Busse, U- und Straßenbahnen - verwendet wird. Bisher werden Tube Maps nur von Menschen gefertigt, da viele verschiedene Faktoren das Aussehen und die Eigenschaften der Map beeinflusen.  
 \subsubsection{Eigeschaften}
 \begin{itemize}
-\item Es existieren \emph{Stationen}, die verschiedene Ausprägungen besitzen können (wie "`Endstation"' oder Station, die einen Umstieg zwischen mehreren Linien ermöglicht). 
-\item Stationen liegen auf \emph{Linien}, die diese miteinander verbinden. Linien entsprechen den verlegten Gleisen beziehungsweise Routen, die die einzelnen Stationen verbinden. Es gibt die Möglichkeit, verschiedene Arten von Linien visuell zu unterscheiden, um zum Beispiel zwischen Straßenbahn- und Buslinie zu unterscheiden. Des Weiteren dürfen die Linien nur horizontal, vertikal oder im 45 Grad Winkel zueinander sein. 
-% Linien können sich auch teilen?!
-\item In \cite{automaticlayoutmetro08} werden als weiterer Bestandteil der Map \emph{Landmarks}, also Orientierungspunkte wie Flughäfen, Bahnhöfe, oder sehr wichtige touristische Orte, genannt. Dabei helfen sie bei der Orientierung, indem geographische Bezüge zwischen Stationen und Landmarks hergestellt werden.
-\item \emph{Zonen} stellen in Tube Maps meist Tarifzonen dar, können aber auch weitere Eigenschaften visualisieren, die sich durch Entfernung codieren lassen. 
+\item Es existieren \emph{Stationen}, die verschiedene Ausprägungen, wie "`Endstation"' oder "`Umstiegsmöglichkeiten"' besitzen. 
+
+\item Stationen liegen auf \emph{Linien}, die diese miteinander verbinden. Linien entsprechen den verlegten Gleisen beziehungsweise Routen, die die einzelnen Stationen verbinden. Es gibt die Möglichkeit, verschiedene Arten von Linien visuell zu unterscheiden, um zum Beispiel zwischen Straßenbahn- und Buslinie zu unterscheiden. Des Weiteren dürfen die Linien nur horizontal, vertikal oder im 45$^{\circ}$ Winkel zueinander sein. \\
+Linien können sich ab einer Station aufteilen, um zu zwei alternativen Endstationen zu fahren. \\ 
+Hinzu kommen Ringbahnen, bei denen die Endstation der Anfangsstation entspricht.
+
+\item In \cite{automaticlayoutmetro08} werden als weiterer Bestandteil der Map \emph{Landmarks}, also Orientierungspunkte wie Flughäfen, Bahnhöfe, oder sehr wichtige touristische Orte genannt. Dabei helfen sie bei der Orientierung, indem geographische Bezüge zwischen Stationen und Landmarks hergestellt werden.
+
+\item \emph{Zonen} stellen in Tube Maps meist Tarifzonen dar, können aber auch weitere Eigenschaften visualisieren, die sich durch Entfernung kodieren lassen. 
 \end{itemize}
-Tube Maps grenzen sich insofern von Node-Link Diagrammen ab, als dass keine Zyklen entstehen können und Linien sich selten teilen. Ersteres bedeutet auf eine Tube Map übertragen, dass keine Schleifen mit mehreren Stationen existieren (abgesehen von nötigen Wendeschleifen), sondern die Stationen in ihrer festen Reihenfolge bedient werden. 
-% hmm die ringbahn in berlin?! mist... aber wie grenzen sich die tube maps sonst ab?
 
 \subsubsection{Weitere Verwendungszwecke}
 \label{tm:verwendungszwecke}
-Wie in \cite{automaticlayoutmetro08} beschrieben, gibt es auch weitere Anwendungsgebiete für Tube Maps, wie Projektpläne, Karten von Verbindungen zwischen Objekten wie beispielsweise Programmiersprachen, Aufbau von Webseiten, sowie Metabolic Pathways genannt. Eigene Recherche des Teams hat ähnliche Ergebnisse ergeben, wobei nicht immer bei allen Ergebnissen klar war, warum diese Form der Visualsierung gewählt wurde. 
+Wie in \cite{automaticlayoutmetro08} beschrieben, gibt es auch weitere Anwendungsgebiete für Tube Maps, wie Projektpläne, Karten von Verbindungen zwischen Objekten wie beispielsweise Programmiersprachen, Aufbau von Webseiten, sowie Metabolic Pathways genannt. Eigene Recherche des Teams hat ähnliche Ergebnisse ergeben, wobei nicht immer bei allen Visualisierungen klar war, warum diese Form der Visualsierung gewählt wurde. 
 
-\section{W-Fragen}
-% bitte besseren namen einfallen lassen!!!
-\subsection{Warum überhaupt Kanji?}
+\section{Motivation}
+\subsection{Warum Kanji Zeichen?}
 Die japanische Schrift ist streng hierarchisch und modular aufgebaut. Der Datensatz ist begrenzt, da keine neuen Kanji "`erfunden"' werden, und er lässt sich reduzieren auf sogenannte \emph{Jouyou} Kanji. Jouyou sind Zeichen, die besonders häufig im Alltagsleben verwendet werden, und die somit ein Großteil der Japaner beherrscht. Im Vergleich zur Gesamtzahl aller Kanji beschränken sich die Jouyou auf knapp 2000 Zeichen, was eine starke Reduzierung des Datensatzes ermöglicht.
 Diese Reduzierung ist nicht nur von praktischer Bedeutung, es ist außerdem für Interessierte, die die Sprache lernen wollen, ein guter Startpunkt. 
 
-\subsection{Warum Tube Map für Kanji?}
-\begin{itemize}
-\item klare "`Anfangsstation"' durch Radikale
-\item Exploration ("`welche Radikale sollte ich zuerst lernen?"')
-\item Bessere Übersicht über Verlauf als bei einer Darstellung in einem Graphen
-\end{itemize}
-
-\subsection{Wer soll es am Ende verwenden?}
-Die Anwendung richtet sich primär an solche, die Kanji lernen möchten. Dabei wird davon ausgegangen, dass entweder ein spezielles Kanji gelernt oder nachgeschlagen wird, oder auch ein generelles Interesse an den Zeichen besteht. Soll das Kanji für "`Baum"' gelernt werden, kann man weitere Kanji lernen, die sehr ähnlich dazu sind. 
-\cite{kanjilearningjapanese10} beschreibt eine Lernstrategie, die für Kanji eine besonders gute Anwendung findet. Bei dieser Strategie spielt neben visueller Ähnlichkeit auch das sogenannte "`grouping"' (also die Bildung von Verknüpfungen zwischen Vokabeln basierend auf Bedeutung oder Konzepten) eine Rolle. 
-Diese Erkenntnisse lassen vermuten, dass Tube Maps sich zum Lernen von Kanji eignen.
+\subsection{Warum eine Tube Map für Kanji?}
+Durch den modularen Aufbau von Kanji können Radikale als Endstationen interpretiert werden, deren Linien durch mehrere Stationen (also Kanji) verlaufen. Dadurch ergibt sich der Aufbau eines Kanji anhand der Linien, die die Kanji-Station bedienen. \\
+Lernende können somit existierendes Wissen über Radikale und Kanji zur Orientierung verwenden, oder aber neue Zeichen kennenlernen, indem sie der Linie eines bekannten Radikals folgen. Anhand der Häufigkeitsstatistik, die für die Alltags-Kanji vorhanden ist, kann ein Benutzer sich anhand häufiger Kanji darin enthaltenen Radikale merken und diese verwenden, um weitere Kanji zu lernen. 
+\paragraph{Wer soll es am Ende verwenden?}
+Die Anwendung richtet sich primär an solche, die Kanji lernen möchten. Dabei wird davon ausgegangen, dass entweder ein spezielles Kanji gelernt oder nachgeschlagen wird, oder auch ein generelles Interesse an den Zeichen besteht. Soll das Kanji für "`Baum"' gelernt werden, kann man weitere Kanji lernen, die sehr ähnlich dazu sind.  
+\cite{kanjilearningjapanese10} beschreibt eine Lernstrategie, die für Kanji eine besonders gute Anwendung findet. Bei dieser Strategie spielt neben visueller Ähnlichkeit auch das sogenannte "`grouping"' (also die Bildung von Verknüpfungen zwischen Vokabeln basierend auf Bedeutung oder Konzepten) eine Rolle. Diese Erkenntnisse lassen vermuten, dass Tube Maps sich zum Lernen von Kanji eignen.
