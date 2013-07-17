@@ -5,7 +5,14 @@
 \pagestyle{plain}
 \usepackage[utf8]{inputenc}
 \usepackage[ngerman]{babel}
-\usepackage[hidelinks]{hyperref}
+\usepackage{hyperref}
+\hypersetup{
+	colorlinks=true,
+	linkcolor=blue,
+	citecolor=blue,
+	filecolor=blue,
+	urlcolor=blue
+}
 \usepackage{tudthesis, german}
 \usepackage[T1]{fontenc}
 \usepackage{graphicx}
@@ -13,6 +20,8 @@
 \usepackage{hyperref}
 \usepackage{float}
 \usepackage{CJK}
+\usepackage{etoolbox}
+\patchcmd{\thebibliography}{\chapter*}{\section*}{}{}
 \begin{document}
 
 \thesis{Dokumentation}
