@@ -15,7 +15,6 @@ require { baseUrl: './' }, ['utils', 'grid', 'graph'], (utils, grid, { Cluster, 
 	addEventListener 'message', (ev) ->
 		console.log 'worker receive', ev.data.type
 		handler[ev.data.type] ev.data
-	a = once: true
 	
 	handler =
 		my_graph:	null
@@ -27,7 +26,7 @@ require { baseUrl: './' }, ['utils', 'grid', 'graph'], (utils, grid, { Cluster, 
 			for node in graph.nodes
 				@grid.set node, node
 
-		snapNodes: ({ cb }) ->
+		snapNodes: ->
 			graph = @my_graph
 			grid = @grid
 			nodes = graph.nodes[..]
@@ -35,6 +34,7 @@ require { baseUrl: './' }, ['utils', 'grid', 'graph'], (utils, grid, { Cluster, 
 			while nodes.length > 0
 				toMove = {}
 				for node in nodes
+					continue if not toOptimize node
 					[ x, y ] = @nearestFreeGrid node, grid
 					(toMove[x+"x"+y] ?= []).push node
 				nodes = []
@@ -48,42 +48,113 @@ require { baseUrl: './' }, ['utils', 'grid', 'graph'], (utils, grid, { Cluster, 
 				if nodes.length >= old_length
 					throw "no progress"
 				old_length = nodes.length
-			nodes = for node in graph.nodes
+			@postNodes nodes
+			
+		postNodes: (nodes) ->
+			nodes = for node in nodes
 				x: node.x
 				y: node.y
 				id: node.id
-			postMessage { type: 'nodes', nodes, cb }
+				debug_fill: node.style.debug_fill
+			postMessage { type: 'nodes', nodes }
 			
-		applyRules: ({ cb }) ->
+		applyRules: ->
 			{ nodes, edges } = @my_graph
-			
+			queue = (n for n in nodes when toOptimize n)
+			no_move_since = [0]
 			changed_nodes = []
+			before = @my_graph.ruleViolations()
+			do postNodes = =>
+				if changed_nodes.length
+					@postNodes changed_nodes
+					changed_nodes.pop() while changed_nodes.length
+				if no_move_since < queue.length * 2
+					setTimeout postNodes, config.transitionTime
+			do optimizeNode = =>
+				for [1..10]
+					if not (no_move_since[0]++ < queue.length * 2)
+						now = @my_graph.ruleViolations()
+						P 'optimization done. ruleViolations from', before, 'to', now
+						return
+					node = queue.shift()
+					moved = @moveNode node
+					if moved
+						no_move_since[0] = 0
+						changed_nodes.push node
+					queue.push node
+				setTimeout optimizeNode, 100
+
+		optimizeNodes: (nodes) ->
+			P 'optimize', nodes.length, 'nodes'
+			graph = @my_graph
+			quality = (node) -> node.critValue graph
+			moved = []
 			for node in nodes
-				moved = @moveNode node, (node) => node.compliant @my_graph
-				if moved
-					changed_nodes.push node
+				continue if node.critValue(graph) == 0
+				if @moveNode node, quality
+					moved.push node
+			P moved.length, 'movements'
+			@postNodes moved
+
+		optimizeStraightLineClusters: (cb) ->
+			{ nodes } = @my_graph
+			used = {}
+			clusters = for node in nodes
+				continue if not toOptimize node
+				continue if node.id of used
+				cluster = @straightLineCluster node
+				continue if not cluster 
+				for node in cluster.nodes
+					if node.id of used
+						cluster = null
+					used[node.id] = true
+				continue if not cluster
+				cluster
+			clusters.sort (a,b) =>
+				d3.descending a.critValue(@my_graph), b.critValue(@my_graph)
+			do foo = =>
+				return cb?() if not clusters.length
+				cluster = clusters.shift()
+				if cluster.critValue(@my_graph) > 0
+					moved = @moveCluster cluster
+					if not moved
+						@optimizeNodes cluster.nodes
+				setTimeout foo, 10
+				
+		moveCluster: (cluster) ->
+			graph = @my_graph
+			min = coord: [0,0], value: cluster.critValue(graph)
+			for coord in @coordsForClusterMovement()
+				cluster.moveBy coord...
+				if cluster.critValue(graph) < min.value
+					min.coord = coord
+					min.value = cluster.critValue(graph)
+				cluster.resetPosition()
+			if not (min.coord[0] == min.coord[1] == 0)
+				cluster.moveBy min.coord...
+				@postNodes cluster.nodes
+				true
+			else
+				false
 			
-			nodes = for node in changed_nodes
-				x: node.x
-				y: node.y
-				id: node.id
-			postMessage { type: 'nodes', nodes, cb }
-			
-		moveNode: (node, quality) ->
+		moveNode: (node) ->
 			copy   = x: node.x, y: node.y
-			coords = @coordsAroundNode node, 50
-			before = quality node
+			coords = @coordsAroundNode node, 8
+			quality = => { rule: @my_graph.ruleViolations(), crit: @my_graph.critQuality() } 
+			gt = (a, b) ->
+				a.rule > b.rule or (a.rule == b.rule and a.crit > b.crit)
+			perfect = (x) ->
+				x.rule == x.crit == 0
+			before = quality()
 			min    = value: before, coord: [ node.x, node.y ]
 			for coord in coords
 				node.move coord...
-				value = quality node
-				value = 0 if value < 0.0001
-				if min.value > value
+				value = quality()
+				if gt min.value, value
 					min.value = value
 					min.coord = coord
-					break if min.value == 0
+					break if perfect min.value
 			[ x, y ] = min.coord
-			a.once = false
 			if x != copy.x or y != copy.y
 				node.move x,y
 				@grid.remove copy
@@ -104,6 +175,12 @@ require { baseUrl: './' }, ['utils', 'grid', 'graph'], (utils, grid, { Cluster, 
 				coords = [ coords..., generator.next()... ]
 			coords
 			
+		coordsForClusterMovement: do ->
+			generator = new GridCoordGenerator
+				spacing: config.gridSpacing
+			coords = d3.merge (generator.next() for [1..20])
+			-> coords
+			
 		nearestFreeGrid: ({ x, y }, grid) ->
 			g = config.gridSpacing
 			generator = new GridCoordGenerator {
@@ -116,5 +193,34 @@ require { baseUrl: './' }, ['utils', 'grid', 'graph'], (utils, grid, { Cluster, 
 			coords.push coord if not grid.has coord
 			{ b } = utils.nearest01 [ x, y ], coords
 			return b
+			
+		straightNode: (node) ->
+			okay = false
+			for edge in node.edges
+				other_edge = edge.otherEdge node.edges
+				continue if not other_edge
+				if (edge.getAngle other_edge) != 0
+					return false
+				okay = true
+			okay
+			
+		straightLineCluster: (start) ->
+			if not @straightNode start
+				for start in start.nextNodes()
+					continue if not toOptimize start
+					if @straightNode start
+						break
+			cluster = [start]
+			queue = [start]
+			while queue.length
+				node = queue.pop()
+				if @straightNode node
+					next = (n for n in node.nextNodes() when n not in cluster and toOptimize n)
+					cluster.push next...
+					queue.push next...
+			cluster
+			new Cluster cluster
+			
+	toOptimize = (node) -> node.kind == 'hi_node'
 
 	postMessage 'ready'

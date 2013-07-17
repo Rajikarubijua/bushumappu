@@ -5,7 +5,8 @@ define ['utils'], ({P}) ->
 		setup: (view, isInitial) ->
 			@view = view
 			if @view.graph == undefined or isInitial
-				@kanjis = @view.kanjis
+				jouyou = (my.kanjis[k] for k in my.jouyou)
+				@kanjis = jouyou
 			else
 				@kanjis = @view.graph.kanjis()
 
@@ -22,8 +23,12 @@ define ['utils'], ({P}) ->
 			for node in graph.nodes
 				if @isWithinCriteria(node.data, criteria)
 					node.style.filtered = false
+					if node.style.stationLabel
+						node.style.stationLabel.node().style_filtered = false
 				else
 					node.style.filtered = true
+					if node.style.stationLabel
+						node.style.stationLabel.node().style_filtered = true
 
 			for edge in graph.edges
 				nearHidden = edge.source.style.filtered or edge.target.style.filtered 
@@ -62,6 +67,8 @@ define ['utils'], ({P}) ->
 			for node in graph.nodes
 				node.style.isSearchresult = false
 				node.style.filtered = false
+				if node.style.stationLabel
+					node.style.stationLabel.node().style_filtered = false
 			for edge in graph.edges
 				edge.style.isSearchresult = false
 				edge.style.filtered = false
@@ -146,8 +153,8 @@ define ['utils'], ({P}) ->
 			else
 				count = "<div> #{arrKanjis.length} kanji have been found. </div>"
 
-			d3.select('#kanjicount')[0][0].innerHTML = count 
-			d3.select('#kanjilist')[0][0].innerHTML = list
+			d3.select('#kanjicount').node().innerHTML = count
+			d3.select('#kanjilist').node().innerHTML = list
 
 		# if flag then fill force
 		fillStandardInput: (id, flag) ->
@@ -258,16 +265,15 @@ define ['utils'], ({P}) ->
 				d3.select('#btn_reset').on 'click' ,  resetAll
 			else
 				# initial view
-				d3.selectAll('form input[type=text]').on 'change' , update
+				d3.selectAll('#overlay form input[type=text]').on 'change' , update
 
-		reloadInitialSwitch: (filsea) ->
-			me = this
-			switchToMain = () ->
+		reloadInitialSwitch: (filsea) =>
+			switchToMain = () =>
 				#d3.select('#overlay').style 'display', 'none'
 				d3.select('#overlay').remove()
 				strKanji = d3.event.srcElement.innerHTML
 				filsea.view.changeToCentralFromStr(strKanji)
-				setupFilterSearchEvents(filsea, false)
+				@setupFilterSearchEvents(filsea, false)
 
 			d3.selectAll('#overlay .searchKanji').on 'click', switchToMain
 
