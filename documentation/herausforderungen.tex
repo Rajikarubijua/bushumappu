@@ -1,29 +1,13 @@
-Bei normaler Tube Map:
-\begin{itemize}
-\item Anzahl Stationen relativ überschaubar
-\item initial embedding gegeben durch geographische Lage der Stationen
-\item Überschneiden von Linien eher selten (nicht in dem Sinne vorhanden bei U-Bahnen)
-\end{itemize}
+Da Haltestellen einen festen Ort haben, der sich nicht ändert, wird dieser als sehr wichtiger Faktor ("`initial embedding"') für das Layouting in Automatic Layout of Metro Maps using Multicriteria Optimisation von Stott (\cite{automaticlayoutmetro08}) beschrieben. Dabei kann sich die Position geringfügig verändern, zum Beispiel werden Entfernungen zwischen Haltestellen auf dem Plan teilweise nicht in dem eigentlich vorhanden Abstand dargestellt, sondern der Abstand wird angeglichen, um ein uniformes Aussehen des Plans zu gewährleisten. Diese Verortung existiert bei Kanji in diesem Maße nicht und daher müssen Richtungen und Positionen durch einen Algorithmus festgelegt werden. \\
+Ähnlich verhält es sich mit der Kreuzung von Linien außerhalb von Haltestellen. Vor allem bei Schienenverkehr findet eine solche Kreuzung selten statt, meist bedienen Linien stattdessen mindestens eine gemeinsame Haltestelle. Da eine physische Begrenzung dieser Art bei dem verwendeten Datensatz nicht vorhanden ist, müssen Linien dort aufwendig per Routingalgorithmus gelegt werden, um Überschneidungen – soweit möglich – zu vermeiden.
 
-\subsection{Lösungsvorschlänge}
-Im Folgenden werden Radikale als \emph{Endstationen} und Kanji als \emph{Stationen} bezeichnet, um den Vergleich zu einer üblichen Tube Map leichter zu machen. Dementsprechend verbindet eine Linie eine Endstation mit allen zugehörigen Stationen.
-\subsubsection{Lineare Anordnung von Radikalen}
-Bei der Linearen Anordnung werden Endstationen auf einer x-Achse (wie beim kartesischen Koordinatensystem) angeordnet und über ihnen alle Stationen. Diese können nach Kriterien wie Strichanzahl, Schuljahr, JPLT Level oder Häufigkeit auf der y-Achse sortiert werden. Weiterhin sollten diese grob in Cluster aufgeteilt werden, um sie nahe an den Endstationen zu halten, aus denen sie bestehen bzw. zu denen sie gehören. Dies bedeutet, dass die Stationen je nach Menge gleicher gemeinsamer Endstationen einem Cluster zuogeordnet werden.
-
-Hierbei sollte zwischen jeder Station ausreichend Platz gelassen werden, um im Zweifelsfall alle 237 Linien zwischen zwei Stationen hindurch zu führen. Ist das Routing zwischen allen Stationen beendet, so können einige dieser Lücken wieder verkleinert werden, vorausgesetzt, dass sich dadurch nicht (noch mehr) Linien kreuzen. 
-
-\paragraph{Vorteile}
-???
-
-\paragraph{Nachteile}
-\begin{itemize}
-\item sehr großer Platzbedarf
-\end{itemize}
-
-\subsection{Radiale Anordnung von Radikalen}
-
-\paragraph{Vorteile}
-???
-
-\paragraph{Nachteile}
-???
+\subsection{L"osungsvorschläge}
+Da der Datensatz mit knapp 2000 Kanji deutlich größer ist, als die Haltestellen der Dresdner Verkehrsbetriebe(\cite{dvbag})
+\paragraph{Clustering}
+Bei der Linearen Anordnung werden alle Radikale auf einer x-Achse (wie beim kartesischen Koordinatensystem) angeordnet und "uber ihnen alle Kanji. Diese k"onnen nach Kriterien wie Strichanzahl, Schuljahr oder Häufigkeit auf der y-Achse sortiert werden. Weiterhin sollten diese grob in Cluster aufgeteilt werden, um sie nahe an den Radikalen zu halten, aus denen sie bestehen beziehungsweise zu denen sie gehören. Dies bedeutet, dass die Kanji je nach Menge gleicher gemeinsamer Radikale einem Cluster zugeordnet werden. \\
+Hierbei sollte zwischen jedem Kanji ausreichend Platz gelassen werden, um im Zweifelsfall alle 237 Linien zwischen zwei Kanji hindurch zu f"uhren. Ist das Routing zwischen allen Kanji beendet, so k"onnen einige dieser Lücken wieder verkleinert werden, vorausgesetzt, dass sich dadurch nicht (noch mehr) Linien kreuzen. 
+Sehr nachteilig dabei ist der große Platzbedarf, der sich durch große ungenutzte Zwischenräume ergibt. Des Weiteren hat sich gezeigt, dass Clusterbildung nicht ausreicht um Überschneidungen von Linien zu verhindern. \\
+Um diese Probleme zu umgehen hat das Team mit einer radialen Anordnung von Radikalen experimentiert, um freie Fläche besser zu nutzen, aber dieser Ansatz brachte keine besseren Ergebnisse hervor und wurde deshalb nicht weiter verfolgt.
+\paragraph{Reduktion des Datensatzes}
+Eine drastische Reduktion des gerade angezeigten Datensatzes wurde dadurch erreicht, dass nur die Radikale eines ausgewählten Kanji gezeigt werden. Auf den Radikal-Linien befinden außer dem ausgewählten Kanji alle Kanji, in denen das Radikal vorkommt. Durch diese Reduktion lassen sich die (maximal neun) Linien strahlenförmig anordnen, wobei Verbindungen zwischen Linien existieren können. Diese werden mit einer Ecke versehen, um möglichst wenige Überschneidungen von Linien zu erhalten. 
+% rewrite!!
