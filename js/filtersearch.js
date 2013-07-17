@@ -10,9 +10,22 @@
       function FilterSearch() {}
 
       FilterSearch.prototype.setup = function(view, isInitial) {
+        var jouyou, k;
+
         this.view = view;
         if (this.view.graph === void 0 || isInitial) {
-          this.kanjis = this.view.kanjis;
+          jouyou = (function() {
+            var _i, _len, _ref, _results;
+
+            _ref = my.jouyou;
+            _results = [];
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              k = _ref[_i];
+              _results.push(my.kanjis[k]);
+            }
+            return _results;
+          })();
+          this.kanjis = jouyou;
         } else {
           this.kanjis = this.view.graph.kanjis();
         }
@@ -41,8 +54,14 @@
           node = _ref[_i];
           if (this.isWithinCriteria(node.data, criteria)) {
             node.style.filtered = false;
+            if (node.style.stationLabel) {
+              node.style.stationLabel.node().style_filtered = false;
+            }
           } else {
             node.style.filtered = true;
+            if (node.style.stationLabel) {
+              node.style.stationLabel.node().style_filtered = true;
+            }
           }
         }
         _ref1 = graph.edges;
@@ -102,6 +121,9 @@
           node = _ref[_i];
           node.style.isSearchresult = false;
           node.style.filtered = false;
+          if (node.style.stationLabel) {
+            node.style.stationLabel.node().style_filtered = false;
+          }
         }
         _ref1 = graph.edges;
         for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
@@ -157,7 +179,7 @@
           item = arrFieldData[_i];
           for (_j = 0, _len1 = arrValueData.length; _j < _len1; _j++) {
             value = arrValueData[_j];
-            if (item !== '' && value.indexOf(item)) {
+            if (value === item && item !== '') {
               return true;
             }
           }
