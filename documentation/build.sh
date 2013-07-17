@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sed -i 's/ä /"a/' *.tex
+sed -i 's/ä/"a/' *.tex
 sed -i 's/Ä/"A/' *.tex
 sed -i 's/ü/"u/' *.tex
 sed -i 's/Ü/"U/' *.tex
