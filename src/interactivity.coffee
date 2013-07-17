@@ -1,6 +1,25 @@
-define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'graph'], 
-({ P, compareNumber, styleZoom }, {Tube, createTubes}, {FilterSearch}, {History}, {CentralStationEmbedder}, { Node }) ->
-
+define [
+	'utils',
+	'tubeEdges',
+	'filtersearch',
+	'history',
+	'central_station',
+	'graph',
+	'detail_table',
+	'station_label',
+	'optimizer_client'], (
+		utils,
+		{Tube, createTubes},
+		{FilterSearch},
+		{History},
+		{CentralStationEmbedder},
+		{ Node },
+		{DetailTable},
+		{ StationLabel },
+		{ Optimizer }
+) ->
+	{P, compareNumber, styleZoom} = utils
+	
 	colors = [
 		"#E53517", #red
 		"#008BD0", #blue
@@ -14,7 +33,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 	]
 
 	class View
-		constructor: ({ svg, @config, @kanjis, @radicals, @optimizer }) ->
+		constructor: ({ svg, @config, @kanjis, @radicals }) ->
 			@svg = svg.g
 			@parent = svg
 			@g_edges = @svg.append('g').attr('id': 'edge_')
@@ -23,14 +42,10 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 			@g_stationLabels = @svg.append('g').attr('id': 'stationLabel_')
 			@zoom = d3.behavior.zoom()
 			@history = new History {}
+			@detailTable = new DetailTable {}
 			@history.setup this
 			@embedder = new CentralStationEmbedder { @config }
 			@seaFill = new FilterSearch {}
-
-			@svg.on 'mousemove', =>
-				{ x, y } =  d3.event
-				node = new Node { x, y }
-				node.compliant @graph
 
 			#setup zoom
 			w = new Signal
@@ -54,7 +69,7 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 			# This hasn't been reported yet.
 			svg.on('dblclick.zoom', null)
 
-		autoFocus: (kanji) ->
+		autoFocus: (kanji) =>
 			focus = {}
 			for node in @graph.nodes
 				node.style.isFocused = false
@@ -91,14 +106,17 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 			P "changeToCentral #{kanji.kanji}"
 			@history.addCentral kanji.kanji	
 			graph = @embedder.graph kanji, @radicals, @kanjis
-
-			@optimizer.graph graph
-			@optimizer.snapNodes =>
+			
+			@optimizer?.worker.terminate()
+			if config.optimizer
+				@optimizer = new Optimizer =>
+					@optimizer.onNodes = => @update graph
+					@optimizer.graph graph
+					@optimizer.snapNodes()
+					@optimizer.applyRules()
+			else
 				@update graph
-			@optimizer.applyRules =>
-				@update graph
 
-			@update graph
 			@seaFill.setup this, false
 			
 		changeToCentralFromNode: (node) ->	
@@ -106,16 +124,9 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 
 		changeToCentralFromStr: (strKanji) ->
 			strKanji = strKanji.trim()
-			central = {}
-			for k in @kanjis
-				if k.kanji == strKanji
-					central = k
-
-			if central.kanji == undefined or strKanji == ''
-				P "cannot set central (#{strKanji}) that is not in kanjis"
-				P @kanjis
-				return
-	
+			central = my.kanjis[strKanji]
+			if not central?
+				throw "central undefined"
 			@changeToCentral central
 
 		doInitial: () ->
@@ -135,335 +146,261 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 				me.changeToCentral kanji
 				setTimeout slideshow, me.config.transitionTime + 2000
 	
-		invalidateEdgeCoords: (edges) ->
-			for edge in edges
-				edge.sourcecoord = edge.targetcoord = undefined
 	
-		update: (graph) ->
-			@graph = graph if graph
-			{ svg, config, g_edges, g_nodes, g_endnodes, g_stationLabels } = this
-			{ nodes, lines, edges } = @graph
-			r = config.nodeSize
+	
+	
+	
+		addStationLabel: (node) =>
+			label = new StationLabel { node, @g_stationLabels }
+			label.showStationLabel(node)
+	
+		enterNodes: (enter) ->
+			{ addStationLabel, addKanjiDetail } = this
+			g_node = enter.append('g').classed('node', true)
+			g_station_kanji = g_node.append('g').classed('station-kanji', true)
+				.on('mouseenter.delayed-hover', (node) ->  
+					setFuncTimer(this, 800, -> addStationLabel node)
+				)
+				.on('mouseleave.delayed-hover', (node) ->
+					clearFuncTimer(this)
+				)
+				.on('click.addKanjiDetail', (node) ->
+					delayDblClick(550, -> addKanjiDetail node)
+				)
+				.on('dblclick.changeToCentralFromNode', (node) =>
+					@changeToCentralFromNode node
+				)
+			x = y = -config.nodeSize
+			width = height = 2*config.nodeSize
+			g_station_kanji.append('rect')
+				.attr { x, y, width, height }
+			g_station_kanji.append('text')
 			
-			that = this
-
-			for node in nodes
-				node.label ?= node.data.kanji or node.data.radical or "?"
-			endnodes = (node for node in nodes when node.data.radical)
-			central_node = (node for node in nodes when node.central_node)
-			central_node = central_node[0]
-			@updateCentralNode central_node
-			nodes = (node for node in nodes when node not in endnodes and node != central_node)
-			table = d3.select('table#details tbody')
-			tablehead = d3.select('thead').selectAll('tr')
-			table_data = [[],[],[],[],[]]
+		exitNodes: (exit) ->
+			exit.remove()
+	
+		updateNodes: (graph) ->
+			nodes = (n for n in graph.nodes when \
+				n.kind in ['hi_node','lo_node'])
 			
-			# remove minilabels
-			minilabels = d3.selectAll(".mini-label")
-			minilabels.remove()
+			update = @g_nodes.selectAll('g.node')
+				.data(nodes, (node) -> node.key())
+			@enterNodes update.enter()
+			@exitNodes update.exit()
 			
-			@invalidateEdgeCoords edges
-
-			# join
-			edge = g_edges.selectAll(".edge")
-				.data(edges)
-			node = g_nodes.selectAll('.node')
-				.data(nodes)
-			endnode = g_endnodes.selectAll('.endnode')
-				.data(endnodes)
-			colLabels = d3.select('table#details tbody').select('tr').selectAll('td')
+			update
+				.attr('id', (node) -> "kanji_"+node.data.kanji)
+				.classed("filtered",     (node) -> node.style.filtered)
+				.classed("searchresult", (node) -> node.style.isSearchresult)
+				.classed("focused",      (node) -> node.style.isFocused)
+				.style(fill: (node) -> node.style.debug_fill or null)
+				.select('text')
+					.text (node) -> node.label()
+			update.transition().duration(config.transitionTime)
+				.attr(transform: (node) -> utils.cssTranslateXY node)
 			
-			# enter
-			closeStationLabel = (d) ->
-				d.style.stationLabel.remove()
-				d.style.stationLabel = undefined
-			
-			showStationLabel = (node, edges) ->
-				return if node.style.stationLabel
-				stationLabel = g_stationLabels.append('g').classed("station-label", true)
-					.attr(transform: nodeTransform node)
-					.on('click.closeLabel', (d) -> closeStationLabel node)
-				edgeAngles = []
-				index = 0
-				for e in edges[0][0]
-					a = edges[0][0][index].getEdgeAngle()
-					r_a = Math.round(a / (0.25*Math.PI))
-					edgeAngles.push(r_a)
-					index++
-				if 0 in edgeAngles and -1 in edgeAngles
-					stationLabelAngle = 0
-				else if 0 in edgeAngles or 4 in edgeAngles
-					stationLabelAngle = -45
-				else if -2 in edgeAngles or 0 in edgeAngles
-					stationLabelAngle = 0
-				else
-					stationLabelAngle = 0
-				label_rect = stationLabel.append('rect')
-					.attr(x:24, y:-config.nodeSize-3)
-					.attr(transform: "rotate(#{stationLabelAngle})")
-				label_text = stationLabel.append('text')
-					.text((d) -> node.data.meaning or '?')
-					.attr(x:28, y:-config.nodeSize/2+4)
-					.attr(transform: "rotate(#{stationLabelAngle})")
-				rectLength = label_text.node().getBBox().width + 8
-				label_rect.attr(width: rectLength, height: 2.5*config.nodeSize) # inflating the rectangle
-				node.style.stationLabel = stationLabel
-			
-			# this function sets a timer for the stationlabel to be displayed
-			# this means that after a certain time after the mouse entered the node
-			# the label will be displayed, not right away
-			setFuncTimer = ( obj, ms, func) ->
-				obj.funcTimer = setTimeout(((d) -> func d), ms)
+		addKanjiDetail: (node) =>
+			@detailTable.addKanji node.data
+			@toggleMenu(true)
+			d3.selectAll('#details td.content')
+				.on 'click.hightlightSelected', (node) =>
+					@autoFocus node
 				
-			
-			clearFuncTimer = (obj) ->	
-				clearTimeout(obj.funcTimer)
-				obj.funcTimer = null
-			
-			# this function delays a double click event and takes the delay in ms as 
-			# well as the function to be called after the timeout as a parameter
-			delayDblClick = (ms, func) ->
-				if that.clickTimer 
-					clearTimeout(that.clickTimer)
-					that.clickTimer = null
-				else 
-					that.clickTimer = setTimeout(((d)-> 
-						that.clickTimer = null
-						func d), ms)
-			
-			thisView = this
-			selectKanjiDetail = (d) ->
-				i = 1
-				nothingtodo = false
-				for k in colLabels[0]
-					item = colLabels[0][i]
-					if item == undefined
-						break
-					if item.textContent == d.label
-						nothingtodo = true;
-						break
-					i++
-				radicals = []
-				radicals = (r.radical for r in d.data.radicals)
-				
-				if(!nothingtodo)
-					table_data[0].push d.label
-					table_data[1].push d.data.meaning
-					table_data[2].push radicals
-					table_data[3].push d.data.onyomi
-					table_data[4].push d.data.kunyomi
-				# enter
-				table_tr = table.selectAll('tr')
-					.data(table_data)
-				table_td = table_tr.selectAll('td.content')
-					.data((d) -> d)
-
-				if(!nothingtodo)
-					table_tr.enter()
-						.append('tr')
-						.classed('content', true) # xxx
-					
-					table_td.enter()
-						.append('td')
-						.classed("content", true)
-				
-				table_td.text((d) -> d)
-				
-				tablecontentcols = table.select('tr').selectAll('td')[0].length
-				tableheadcols = tablehead.selectAll('th')[0].length
-				if tableheadcols < tablecontentcols
-					tablehead.append('th')
-				
-				colLabels = d3.select('table#details tbody').select('tr').selectAll('td')
-					.on('mouseenter.hoverLabel', (d) -> 
-						that = this
-						setFuncTimer(that, 1000, -> displayDeleteTableCol.call(that, d)))
-					.on('mouseleave.resetHoverLabel', (d) ->
-						clearFuncTimer(this)
-						d3.select(d3.event.srcElement.childNodes[1]).remove())
- 					.on('click.hightlightSelected', (d) -> thisView.autoFocus d)
-			
-				
-			removeKanjiDetail = (d) ->
-				d3.event.stopPropagation()
-				index = 0
-				for label in table_data[0]
-					item = table_data[0][index]
-					if item == d
-						break
-					else
-						index++
-				
-				i = 0
-				for row in table_data
-					table_data[i].splice(index,1)
-					if table.selectAll('tr').selectAll('td')[i][index+1]
-						table.selectAll('tr').selectAll('td')[i][index+1].remove()
-					i++
-				if tablehead.selectAll('th')[0][index+1]
-					tablehead.selectAll('th')[0][index+1].remove()
-				table_td = table_tr.selectAll('td.content')
-					.text((d) -> d)
-				
-					
-			displayDeleteTableCol = (d) ->
-				# do not display this for the very first column 
-				# that contains description text
-				return if d == undefined
-				# we only need 1 button
-				return if d3.select(this).selectAll('g')[0].length != 0
-				
-				removeBtn = d3.select(this).append('g').classed('remove-col-btn', true)
-				removeBtn.append('text').text('x')
-				removeBtn.on('click.removeTableCol', (d) -> removeKanjiDetail(d))
-				this.removeBtn = removeBtn
-			
-			removeDeleteTableCol = (d) ->
-				return if not this.removeBtn
-				this.removeBtn.remove()
-
-			thisView = this
-
-			edge.enter()
-				#.append("g")
-				.append("path")
-				.classed("edge", true)
-				# for transitions; nodes start at 0,0. so should edges
-				.attr d: (d) -> svgline [ {x:0,y:0}, {x:0,y:0} ]
-			node_g = node.enter()
-				.append('g')
-				.classed("node", true)
-			stationKanji = node_g.append('g')
-				.classed("station-kanji", true)
-				.attr('id', (d) -> "kanji_"+d.data.kanji)
-				.on('mouseenter.showLabel', (d) ->  
-					edges = d3.select(this.parentNode.__data__.edges)
-					that = this
-					setFuncTimer(that, 800, -> showStationLabel.call(that, d, edges)))
-				.on('mouseleave.resetHoverTimer', (d) ->
-					clearFuncTimer(this))
-				.on('click.displayDetailsOfNode', (d) ->
-					P d , ', ', d.central_node
-					that = this
-					delayDblClick(550, -> selectKanjiDetail.call(that, d))
-					)
-				.on('dblclick.selectnewCentral', (d) -> thisView.changeToCentralFromNode d )
-			stationKanji.append('rect').attr x:-config.nodeSize, y:-config.nodeSize, width:2*config.nodeSize, height:2*config.nodeSize
-			stationKanji.append('text')
-			
-			
-			endnode_g = endnode.enter()
-				.append('g')
-				.classed("endnode", true)
-				.on('click.selectLine', (d) -> endnodeSelectLine d)
-			endnode_g.append("circle").attr {r : config.nodeSize}
-			endnode_g.append("text").text (d) -> d.label
+		removeKanjiDetail: (node) =>
+			@detailTable.removeKanji node.data
+			d3.event.stopPropagation()
+			d3.selectAll('#details td.content')
+				.on 'click.hightlightSelected', (node) =>
+					@autoFocus node
 		
-			# update
-			radicals = []
-			edge.each (d) ->
-				{ radical } = d.line.data
+		toggleMenu: (shouldStayOpen) =>
+				shouldStayOpen ?= false
+				bar = d3.select('#bottomBar')
+				toggleBtn = d3.select('#toggle-bottom-bar')
+				arrow = toggleBtn.select('.arrowIcon')
+				if bar.node().clientHeight > 11 and !shouldStayOpen
+					bar.style('max-height', '10px')
+					arrow.classed('up', true)
+					arrow.classed('down', false)
+				else
+					bar.style('max-height', '250px')
+					arrow.classed('down', true)
+					arrow.classed('up', false)
+		
+
+		enterEdges: (enter) ->
+			g_edge = enter.append('g').classed('edge', true)
+				# for transitions; nodes start at 0,0. so should edges
+				.attr(d: (d) -> "M0,0")
+			g_edge.append('path')
+			g_edge.append('text').classed('mini-label', true)
+		
+		exitEdges: (exit) ->
+			exit.remove()
+		
+		updateEdges: (graph) ->
+			{ edges } = graph
+			update = @g_edges.selectAll("g.edge")
+				.data(edges)
+			@enterEdges update.enter()
+			@exitEdges update.exit()
+		
+			update.each (edge) ->
+				{ radical } = edge.line.data
 				cls = "line_" + radical
 				d3.select(@).classed(cls, true)
-				radicals.push radical if radical not in radicals
-			for rad in radicals
-				selector = ".line_" + rad
-				d3.selectAll(selector)
-					.style stroke: colors[radicals.indexOf(rad)]
-			edge.each (d) ->
-				if d.style.debug_stroke
-					d3.select(@).style stroke: d.style.debug_stroke
-			i = 0
-			edge.transition().duration(config.transitionTime)
-				.attr d: (d) -> svgline01 createTubes d
-			that = this
-			edge.each (d) -> 
-				if d.tube.id % 5 == 0
-					that.createMiniLabel d, this, radicals
-			edge.classed("filtered", (d) -> d.style.filtered)
-			node.classed("filtered", (d) -> d.style.filtered)
-			node.classed("searchresult", (d) -> d.style.isSearchresult)
-			node.classed("focused", (d) -> d.style.isFocused)
-			node_t = node.transition().duration(config.transitionTime)
-			node_t.attr(transform: (d) -> nodeTransform d)
-			#node_t.style(fill: (d) -> if d.style.hi then "red" else if d.style.lo then "green" else null) # debug @payload
-			node_t.select('text').text (d) -> d.label
-
-			endnode.transition().duration(config.transitionTime)
-				.attr transform: (d) -> "translate(#{d.x} #{d.y})"
 				
-			toggleBtn = d3.select('#toggle-bottom-bar')
-				.on('mouseenter.bottomBarToggle', (d) ->
-					if d3.select('#bottomBar')[0][0].clientHeight > 11
-						d3.select('#bottomBar').style('max-height', '10px')
-					else
-						d3.select('#bottomBar').style('max-height', '200px')
-						
-					)
-			# exit
-			edge.exit().remove()
-			node.exit().remove()
-			endnode.exit().remove()
+			for radical, i in graph.radicals()
+				selector = ".edge.line_" + radical.radical
+				d3.selectAll(selector)
+					.style stroke: colors[i]
 
-			if config.forceGraph
-				force = d3.layout.force()
-					.nodes([nodes..., endnodes...])
-					.edges(edges)
-					.edgeStrength(1)
-					.edgeDistance(8*r)
-					.charge(-3000)
-					.gravity(0.001)
-					.start()
-					.on 'tick', -> updatePositions()
-				node.call force.drag
+			update.each (edge) ->
+				if edge.style.debug_stroke
+					d3.select(@).style stroke: edge.style.debug_stroke
+					
+			trans = update.transition().duration(config.transitionTime)
+			trans.select('path')
+				.attr(d: (edge) ->
+					svgline01 edge.coords())
+			trans.select('text.mini-label')
+				.attr(transform: (edge, edge_i) =>
+					distance_to_central =
+						edge.distanceToNode graph.centralNode()
+					return if distance_to_central % 5 != 0
+					{ x, y, width } = edge.tube
+					a = angle = edge.firstAngleFromNode { x, y }
+					r = utils.distance01 edge.coords()[0..1]...
+					r /= 2
+					i = edge.tube.edges.indexOf edge
+					i -= edge.tube.edges.length/2 - 0.5
+					space_between = 16
+					x = x + r * Math.cos angle
+					y = y + r * Math.sin angle
+					x += (space_between * i) * Math.cos angle
+					y += (space_between * i) * Math.sin angle
+					turn = 0.5*Math.PI
+					if 0.55*Math.PI < Math.abs a
+						turn = -turn
+					a += turn
+					x += (width+5) * Math.cos a
+					y += (width+5) * Math.sin a
+					grad = angle / 2/Math.PI * 360
+					grad = if (Math.round grad/45) % 2 == 0 then 0 else -45
+					"translate(#{x} #{y})"# rotate(#{grad}, #{x}, #{y})"
+				)
 			
-		createMiniLabel: (edge, dom, radicals) ->
-			parent = d3.select(dom.parentNode)
+			update
+				.classed("filtered", (edge) -> edge.style.filtered)
+				.select('text.mini-label')
+					.text((edge) -> edge.line.data.radical)
+					.style(fill: (edge) =>
+						i = @graph.radicals().indexOf edge.line.data
+						colors[i]
+					)
+		
+		updateStationLabels: (graph) ->
+			@g_stationLabels.selectAll(".station-label")
+				.classed("filtered", () -> this.style_filtered)
+		
+		update: (graph) ->
+			@graph = graph if graph
+			@updateNodes @graph
+			@updateEdges @graph
+			@updateStationLabels @graph
+			
+			{ nodes } = @graph
+			central_node = (node for node in nodes when node.kind == 'central_node')
+			if central_node.length > 1
+				throw 'cant handle more than one central node'
+			central_node = central_node[0]
+			@updateCentralNode central_node
+			
+			d3.select('#toggle-bottom-bar')
+				.on('mouseenter.bottomBarToggle', @toggleMenu)
+						
+		createMiniLabel: (edge, dom) ->
+			dom = d3.select(dom)
 			{ line, tube } = edge 
-			rad = line.data.radical 
-			color = colors[radicals.indexOf(rad)]
+			i = @graph.radicals().indexOf line.data
+			color = colors[i]
+			space_between = 12
 			i = tube.edges.indexOf(edge) - tube.edges.length/2
 			length = edge.length() / 2
 			x_mid = tube.x + length * Math.cos tube.angle
 			y_mid = tube.y + length * Math.sin tube.angle
-			x = x_mid + 8 * i * Math.cos tube.angle
-			y = y_mid + 8 * i * Math.sin tube.angle
+			x = x_mid + space_between * i * Math.cos tube.angle
+			y = y_mid + space_between * i * Math.sin tube.angle
 			x += (tube.width+5) * Math.cos tube.angle + 0.5*Math.PI
 			y += (tube.width+5) * Math.sin tube.angle + 0.5*Math.PI
 			grad = tube.angle / 2/Math.PI * 360
 			grad = if (Math.round grad/45) % 2 == 0 then 0 else -45
-			parent.append("text").classed("mini-label", true)
-				.text(rad)
-				.style(
-					"font-size": "8px"
-					"font-anchor": "middle"
-					"alignment-baseline": "central")
+			dom.append("text").classed("mini-label", true)
+				.text(line.data.radical)
+				.style(fill: "#{color}")
 				.attr
-					fill: "#{color}"
 					transform: "translate(#{x} #{y}) rotate(#{grad}, #{x}, #{y})"
 		
 		updateCentralNode: (node) ->
+			d3.select('#central-node').remove()
 			update_central_node = @svg.selectAll('#central-node').data([node])
 			enter_central_node = update_central_node.enter()
 			exit_central_node  = update_central_node.exit()
-			central_label = node.label
-			central_meaning = node.data.meaning
-			central_on = node.data.onyomi
-			central_kun = node.data.kunyomi
-			central_radical = node.data.radical
-			
+			central_label = node.label()
+			central_meaning = node.data.meaning or "–"
+			central_freq = node.data.freq or "–"
+			central_strokes = node.data.stroke_n or "–"
+			central_grade = node.data.grade or "–"
+			central_on = node.data.onyomi or "–"
+			central_kun = node.data.kunyomi or "–"
+			central_history = @history.render() or "–"
 			central_g = enter_central_node.append('g').attr('id': 'central-node')
 			central_g.append('foreignObject')
-					.attr('width', 200)
-					.attr('height', 200)
-					.attr(x: -100, y: -100)
-					.style('background', 'white')
-					.style('border', 'solid black 1px')
+					.attr(x: -120, y: -150)
+					.attr(width: 230, height: 400)
 				.append('xhtml:body')
-					.html('<h1> ' + central_label + '</h1>')
+					.html("
+					 <div class='centralStation'>
+						<div class='firstBlock'>
+							<div id='kKanji'>" + central_label + "</div>
+							<table>
+								<tr>
+									<td>Strokecount</td>
+									<td id='kCount'>" + central_strokes + "</td>
+								</tr>
+								<tr>
+									<td>Frequency</td>
+									<td id='kFreqency'>" + central_freq + "</td>
+								</tr>
+								<tr>
+									<td>Schoolgrade</td>
+									<td id='kGrade'>" + central_grade + "</td>
+								</tr>
+							</table>
+						</div> 
+						<div class='secondBlock'>
+							<div id='kMeaning'>" + central_meaning + "</div>
+							<div id='kOn'>" + central_on + "</div>
+							<div id='kKun'>" + central_kun + "</div>
+							<div id='history'>
+							" + central_history + "
+							</div>
+						</div>
+					</div>
+					 ")
+					
 			exit_central_node.remove()
-			
-			
+			height = ((Math.round(@history.history.length / 7)+1) *35)
+			d3.select('#history').style 'height' , "#{height}px"
+
+			me = this
+			onClick = () ->
+				kanji = this.innerHTML
+				me.changeToCentralFromStr kanji
+
+			d3.selectAll(".#{@history.nclass}").on 'click.history', onClick
+				
+	
 	svgline = d3.svg.line()
 		.x(({x}) -> x)
 		.y(({y}) -> y)
@@ -471,10 +408,29 @@ define ['utils', 'tubeEdges', 'filtersearch', 'history', 'central_station', 'gra
 	svgline01 = d3.svg.line()
 		.x( (d) -> d[0])
 		.y( (d) -> d[1])
+
+
+	# this function sets a timer for the stationlabel to be displayed
+	# this means that after a certain time after the mouse entered the node
+	# the label will be displayed, not right away
+	setFuncTimer = ( obj, ms, func) ->
+		obj.funcTimer = setTimeout(((d) -> func d), ms)
 		
 	
-	nodeTransform = (d) -> 
-		"translate(#{d.x} #{d.y})"
+	clearFuncTimer = (obj) ->	
+		clearTimeout(obj.funcTimer)
+		obj.funcTimer = null
+	
+	# this function delays a double click event and takes the delay in ms as 
+	# well as the function to be called after the timeout as a parameter
+	delayDblClick = (ms, func) ->
+		if @clickTimer 
+			clearTimeout(@clickTimer)
+			@clickTimer = null
+		else 
+			@clickTimer = setTimeout(((d)-> 
+				@clickTimer = null
+				func d), ms)
 
 	endnodeSelectLine = (d) ->
 		selector = ".line_"+d.data.radical

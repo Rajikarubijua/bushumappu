@@ -88,6 +88,10 @@ define ['utils'], ({ P, async, parseMaybeNumber }) ->
 					# XXX prints kanji which are not in my.kanjis (krad) but in kext
 					# if not kanji? then P obj 
 					continue
+				if name == "MEAN"
+					#remove last ,
+					if obj[obj.length-1] == ','
+						obj = obj[..obj.length-2]
 				map =
 					STROKECOUNT: 'stroke_n'
 					FREQ: 'freq'

@@ -1,4 +1,5 @@
-define ['utils', 'graph'], ({P, length}, {Graph, Edge, Node, Line}) ->
+define ['utils'], (utils) ->
+	{ P } = utils
 
 	cptplaceholder = 0
 
@@ -14,8 +15,6 @@ define ['utils', 'graph'], ({P, length}, {Graph, Edge, Node, Line}) ->
 			@minilabel ?= false
 			@id = tube_id++
 	createTubes = (my_edge) ->
-		if my_edge.sourcecoord? and my_edge.targetcoord?
-			return [my_edge.sourcecoord, my_edge.targetcoord]
 		{ source, target } = my_edge
 		tube = new Tube
 		tube.x = source.x
@@ -33,7 +32,7 @@ define ['utils', 'graph'], ({P, length}, {Graph, Edge, Node, Line}) ->
 		normal = tube.angle + 0.5*Math.PI
 		cos_angle = Math.cos normal
 		sin_angle = Math.sin normal
-		edges_n = tube.edges.length
+		edges_n = tube.edges.length 
 		for edge, edge_i in tube.edges
 			{ source, target, line } = edge
 			width = cptplaceholder + getStrokeWidth edge
@@ -42,13 +41,26 @@ define ['utils', 'graph'], ({P, length}, {Graph, Edge, Node, Line}) ->
 			y1 = source.y + r * sin_angle
 			x2 = target.x + r * cos_angle
 			y2 = target.y + r * sin_angle
-			edge.sourcecoord = [ x1, y1 ]
-			edge.targetcoord = [ x2, y2 ]
+			coords = [[ x1, y1 ], [ x2, y2 ]]
+			if utils.distance01(coords...) >= config.overlengthEdge
+				dx = Math.abs x2 - x1
+				dy = Math.abs y2 - y1
+				if dx >= dy
+					x05 = x2
+					y05 = y1
+				else
+					x05 = x1
+					y05 = y2
+				coords = [[ x1, y1 ], [ x05, y05 ], [ x2, y2 ]]
+			edge.setCoords coords
 			edge.tube = tube
-		return [my_edge.sourcecoord, my_edge.targetcoord]
+		undefined
 			
 	getStrokeWidth = (edge) ->
-		selector = ".line_"+ edge.line.data.radical
-		stroke_width = parseInt d3.selectAll(selector).style("stroke-width")		
+		# XXX
+		#selector = ".line_"+ edge.line.data.radical
+		#try stroke_width = parseInt d3.selectAll(selector).style("stroke-width")
+		#catch e
+		stroke_width = 5
 	
 	{Tube, createTubes}
