@@ -1,6 +1,9 @@
 define ->
 	# copies every attribute of a object 'b' to object 'a'
-	copyAttrs = (a, b) -> a[k] = v for k, v of b; a
+	copyAttrs = (a, bs...) ->
+		for b in bs
+			a[k] = v for k, v of b
+		a
 
 	# shorthand for console.log, also returns the last argument
 	# usage:
@@ -8,6 +11,36 @@ define ->
 	# 	1 + foo P 'bar', bar
 	P = (args...) -> console.log args...; return args[-1..][0]
 	PN= (args...) -> console.log args[...-1]...; return args[-1..][0]
+	PD= (args...) ->
+		str = prettyDebug args
+		console.debug str if my.debug
+		args[-1..][0]
+
+	prettyDebug = (x, known=[], depth=0) ->
+		if x in known
+			'###'
+		else if typeof x in ['undefined', 'boolean']
+			''+x
+		else if typeof x is 'string'
+			if depth <= 1 then x else '"'+x+'"'
+		else if typeof x is 'number'
+			x = ""+(0.01*Math.round x*100)
+		else if typeof x is 'function'
+			(""+x).split('{')[0]
+		else if Array.isArray x
+			known.push x
+			s = if depth == 0 then ' ' else ','
+			x = (for y in x
+				prettyDebug y, known, depth+1
+			).join s
+			if depth == 0 then x else '['+x+']'
+		else
+			known.push x
+			x = (for k, v of x
+				v = prettyDebug v, known, depth+1
+				k+':'+v
+			).join ','
+			'{'+x+'}'
 
 	# appends 'fill' to 'str' such that 'str.length == width'
 	W = (width, str, fill) ->
@@ -47,6 +80,14 @@ define ->
 				cb results if (Object.keys results).length == mapped_n
 			for label, func of mapped
 				func end label
+				
+		seqTimeout: (timeout, funcs...) ->
+			funcs = (func for func in funcs when func)
+			i = 0
+			iter = -> setTimeout (->
+				funcs[i++] (-> iter() if i < funcs.length)
+				), timeout
+			iter()
 
 	strUnique = (str, base) ->
 		base ?= ""
@@ -104,9 +145,10 @@ define ->
 	styleZoom = (el, zoom, dontCall) ->
 		func = ->
 			t = zoom.translate()
-			el.style "-webkit-transform": "
+			z = zoom.scale()
+			el.attr('style', "-webkit-transform:
 				translate(#{t[0]}px, #{t[1]}px)
-				scale(#{zoom.scale()})"
+				scale(#{z})")
 		func() if not dontCall
 		func
 
@@ -158,22 +200,28 @@ define ->
 					result["max_"+key] = element
 		result
 		
-	max = (array, func) ->
+	extremaFunc = (comp) -> (array, func) ->
 		if typeof func == 'string'
 			func = do (func) -> (x) -> x[func]
-		max_value = max_e = undefined
+		ex_value = ex_e = undefined
 		for e in array
 			value = func e
-			if not max_value? or value > max_value
-				max_value = value
-				max_e = e
-		max_e
+			if not max_value? or comp value, max_value
+				ex_value = value
+				ex_e = e
+		ex_e
+		
+	max = extremaFunc ((a,b)->a>b)
+	min = extremaFunc ((a,b)->a<b)
 
 	distanceSqrXY = (a, b) ->
 		Math.pow( b.x - a.x, 2 ) + Math.pow( b.y - a.y, 2 )
 
 	distanceSqr01 = (a, b) ->
 		Math.pow( b[0] - a[0], 2 ) + Math.pow( b[1] - a[1], 2 )
+		
+	distanceXY = (a, b) ->
+		Math.sqrt distanceSqrXY a, b
 
 	nearest = (a, array, distanceFunc) ->
 		min_d = 1/0
@@ -211,8 +259,64 @@ define ->
 			[x0+x, y0+y], [x0-x, y0+y], [x0+x, y0-y], [x0-x, y0-y],
 			[x0+y, y0+x], [x0-y, y0+x], [x0+y, y0-x], [x0-y, y0-x] ]
 
-	{ copyAttrs, P, PN, W, async, strUnique, expect, somePrettyPrint, length,
-	  sort, styleZoom, sunflower, vecX, vecY, vec, compareNumber, max,
-  	  parseMaybeNumber, equidistantSelection, getMinMax, arrayUnique,
-  	  distanceSqrXY, nearestXY, nearest01, distanceSqr01, nearest, forall,
-  	  rasterCircle }
+	sortSomewhat = (xs, cmp) ->
+		xs = xs[..]
+		min = x: xs[0], i: 0
+		for x, i in xs
+			if (cmp x, min.x) == -1
+				min = { x, i }
+		a = min.x
+		xs[min.i..min.i] = []
+		sorted = [a]
+		l = xs.length
+		while xs.length
+			for [0...xs.length]
+				b = xs.shift()
+				if (cmp a, b) == -1
+					sorted.push b
+					a = b
+				else
+					xs.push b
+			if xs.length >= l
+				P sorted, xs
+				throw "not somewhat sortable"
+		sorted
+
+	class Memo
+		memo_id = 0
+		constructor: ->
+			@memo = {}
+			@memoId = "__memo"+(memo_id++)+"__"
+			@funcId = 0
+			@objId = 0
+		onceObj: (func) =>
+			func_id = ""+@funcId++
+			(obj) =>
+				obj_id = obj[@memoId] ?= ""+@objId++
+				memo = @memo[obj_id] ?= {}
+				value = memo[func_id] ?= func obj
+
+	distToSegmentSqrXY = (p, a, b) ->
+		l2 = distanceSqrXY a, b
+		if l2 == 0
+			return distanceSqrXY p, a
+		vx = b.x - a.x
+		vy = b.y - a.y
+		t = ((p.x - a.x) * vx + (p.y - a.y) * vy) / l2
+		if t <= 0
+			return distanceSqrXY p, a
+		if t >= 1
+			return distanceSqrXY p, b
+		x = a.x + t * vx
+		y = a.y + t * vy
+		distanceSqrXY p, { x, y }
+		
+	distToSegmentXY = (p, a, b) ->
+		Math.sqrt distToSegmentSqrXY p, a, b
+
+	{ copyAttrs, P, PN, PD, W, async, strUnique, expect, somePrettyPrint, length,
+	  sort, styleZoom, sunflower, vecX, vecY, vec, compareNumber, max, min,
+	  parseMaybeNumber, equidistantSelection, getMinMax, arrayUnique,
+	  distanceSqrXY, nearestXY, nearest01, distanceSqr01, nearest, forall,
+	  rasterCircle, prettyDebug, sortSomewhat, Memo, distanceXY,
+	  distToSegmentXY, distToSegmentSqrXY }

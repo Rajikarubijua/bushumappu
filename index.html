@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="utf8"/>
+<title> BushuMappu 部首マップ</title>
 <script>
 var require = {
 	urlArgs: "bust=" +  (new Date()).getTime()
@@ -9,10 +11,201 @@ var require = {
 <script src="lib/figue.js"></script>
 <script src="lib/d3.v3.js" charset="utf-8"></script>
 <script src="lib/reactor.js"></script>
+<script src="js/config.js"></script>
 <script data-main="js/main.js" src="lib/require.js"></script>
-<link href="style.css" rel="stylesheet" type="text/css" />
+<link href="pure-min.css" rel="stylesheet"/>
+<link href="page.css"    rel="stylesheet"/>
+<link href="style.css"    rel="stylesheet"/>
 </head>
 <body>
+	<div id="overlay">
+		<div id="content">
+			<div class="header">  
+				<h1> BushuMappu 部首マップ </h1>
+				<div class="sub"> a tube map that visualizes radicals of kanji  </div>
+			</div>
+			<div class="row">
+				<form>
+					<table>
+					<tr>
+						<td>Kanji</td>
+						<td><input type="text" id="kanjistring" class="long"></td>
+						<td>Strokecount</td>
+						<td class="no-wrap">
+							<input class="half" id="count_min"> - <input type="text" class="half" id="count_max">
+							<input type="button" value="x" id="btn_clear1" class="btn_clear">
+						</td>
+					</tr>
+					<tr>
+						<td>Onyomi</td>
+						<td><input type="text" id="onyomistring" class="long"></td>
+						<td>Frequency</td>
+						<td class="no-wrap">
+							<input type="text" class="half" id="frq_min"> - <input type="text" class="half" id="frq_max">
+							<input type="button" value="x" id="btn_clear2" class="btn_clear">
+						</td>
+					</tr>
+					<tr>
+						<td>Kunyomi</td>
+						<td><input type="text" id="kunyomistring" class="long"></td>
+						<td>Schoolgrade</td>
+						<td class="no-wrap">
+							<input type="text" class="half" id="grade_min"> - <input type="text" class="half" id="grade_max">
+							<input type="button" value="x" id="btn_clear3" class="btn_clear">
+						</td>
+					</tr>
+					<tr>
+						<td>Meaning</td>
+						<td><input type="text" id="meaningstring" class="long"></td>
+						<td colspan="2" id="kanjicount"> </td>
+					</tr>
+
+					</table>
+				</form>
+			</div>
+			<div class="listwrapper">
+				<div id="kanjilist">
+						loading kanjis...
+				</div>
+			</div>
+		</div>
+		<div id="footer">
+			<div class="footwrapper">
+				<ol class="nolist">
+	             <li><strong>Gruppe</strong> Team D - Tubemap</li>
+	             <li><strong>Semester</strong> Sommersemester 13</li>
+	             <li><strong>Mitglieder</strong> Gilbert R. Röhrbein, <br>Alexandra Weiß, Robert Morawa, <br>Paula Schöley</li>
+	             <li><strong>Source</strong> <a href="https://github.com/organizations/Rajikarubijua">Git</a></li>
+	            </ol>
+				<ol class="nolist">
+	             <li><strong>Professur</strong> für Multimedia-Technologie </li>
+	             <li><strong>Institut</strong> für Software- und Multimediatechnik</li>
+	             <li><strong>Fakultät</strong> Informatik</li>
+	             <li><strong>Betreuung</strong> Ricardo Langner, Ulrike Kister</li>
+	             <li>Technische Universität Dresden</li>
+	             <li><a href="http://mt.inf.tu-dresden.de/index.html">Zum Lehrstuhl</a></li>
+	            </ol>
+				<ol class="nolist">
+	             <li><strong>Language</strong> CoffeeScript </li>
+	             <li><strong>Framework</strong> D3 JS</li>
+	             <li><strong>Style</strong> normalize.css </li>
+	             <li><strong>Data</strong>???</li>
+	            </ol>
+	        </div>
+		</div>
+	</div>
+
+
+	<div id="controlBoard">
+		<div class="toggleArea">
+			<div class="arrowIcon up"></div>
+		</div>
+		<div class="dataFormArea">
+			<div class="formArea">
+
+
+				<div id="seafil">
+				<form id="form2">
+					<table>
+						<tr>
+							<td>Kanji</td>
+							<td><input type="text" id="kanjistring" class="long"></td>
+							<td>Strokecount</td>
+							<td class="no-wrap">
+								<input class="half" id="count_min"> - <input type="text" class="half" id="count_max">
+								<input type="button" value="x" id="btn_clear1" class="btn_clear">
+							</td>
+						</tr>
+						<tr>
+							<td>Onyomi</td>
+							<td><input type="text" id="onyomistring" class="long"></td>
+							<td>Frequency</td>
+							<td class="no-wrap">
+								<input type="text" class="half" id="frq_min"> - <input type="text" class="half" id="frq_max">
+								<input type="button" value="x" id="btn_clear2" class="btn_clear">
+							</td>
+						</tr>
+						<tr>
+							<td>Kunyomi</td>
+							<td><input type="text" id="kunyomistring" class="long"></td>
+							<td>Schoolgrade</td>
+							<td class="no-wrap">
+								<input type="text" class="half" id="grade_min"> - <input type="text" class="half" id="grade_max">
+								<input type="button" value="x" id="btn_clear3" class="btn_clear">
+							</td>
+						</tr>
+						<tr>
+							<td>Meaning</td>
+							<td><input type="text" id="meaningstring" class="long"></td>
+							<td colspan="2"> </td>
+						</tr>
+						<tr>
+							<td colspan="2"></td>
+							<td colspan="2" class="no-wrap actionButtons"> 
+								<input type="button" value="reset" id="btn_reset">
+								<input type="button" value="search" id="btn_search"> 
+								<input type="button" value="filter" id="btn_filter"> 
+								<span id="kanjiresultCount"></span>
+							</td>
+						</tr>
+						<tr>
+							<td colspan="2"></td>
+							<td colspan="2" id="kanjiresult"></td>
+						</tr>
+
+					</table>
+
+				</form>
+				</div>
+				
+
+			</div>
+			<div class="dataArea">
+
+			<div class="tablewrapper">
+				<table id="details" class="pure-table pure-table-striped">					
+					<tbody>
+						<tr>
+							<td> </td>
+							<td class="content"> click Kanjis to see details </td>
+						</tr>
+						<tr>
+							<td>english</td>
+							<td class="content"> </td>
+						</tr>
+						<tr>
+							<td>radicals</td>
+							<td class="content"> </td>
+						</tr>
+						<tr>
+							<td>onyomi</td>
+							<td class="content"> </td>
+						</tr>
+						<tr>
+							<td>kunyomi</td>
+							<td class="content"> </td>
+						</tr>
+					</tbody>
+				</table>
+				</div>
+				
+
+			</div>
+		</div>
+	</div>
+	<!--Div containing the Kanji detail table 
+	<div id="bottomBar">
+		<div id="toggle-bottom-bar">
+			toggle
+		</div>
+	</div> 
+	-->
+	<div id="history">
+	</div>
+
+
+	<svg id="graph"> 
+	</svg>
 
 </body>
 </html>

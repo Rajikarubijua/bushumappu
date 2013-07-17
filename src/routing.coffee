@@ -1,73 +1,45 @@
-define ['utils'], ({ P, forall, nearest01, nearestXY, rasterCircle }) ->
+define ['utils', 'grid', 'criteria'], (utils, { Grid, GridCoordGenerator },
+	criteria) ->
+	{ P, PD, forall, nearest01, nearestXY, rasterCircle, length, compareNumber,
+	  sortSomewhat } = utils
+	optimizeCriterias = criteria
 	###
 
 		Here we stick to the terminology used in Jonathan M. Scotts thesis.
 		http://www.jstott.me.uk/thesis/thesis-final.pdf (main algorithm on page 90)
 		This involved graph, node, edge, metro line, ...
 
+		* data stucture
+			graph = { nodes, edges }
+			node  = { station }
+			edge  = { link }
+			station = { label, cluster,	vector, x, y, kanji, radical, fixed, links }
+			link = { source, target, radical, kanjis}
+			source = { station }
+			target = { station }
+
 	###
 
-	metroMap = ({ stations, endstations, links }, config) ->
+	metroMap = (graph, config) ->
 		console.time 'metroMap'
-		nodes = for station in [ stations..., endstations... ]
-			new Node { station }
-		edges = for link in links
-			new Edge { link }
-		graph = { nodes, edges }
 		layout = new MetroMapLayout { config, graph }
 		layout.snapNodes() if config.gridSpacing > 0
 		layout.optimize()
-		for node in nodes
-			node.station.x = node.x
-			node.station.y = node.y
 		console.timeEnd 'metroMap'
-		{ stations, endstations, links }
-	
-	class Node
-		constructor: ({ @station }) ->
-			@x = @station.x
-			@y = @station.y
-		
-		coord: -> @x+"x"+@y
-	
-	class Edge
-		constructor: ({ @link }) ->
-	
-	class Grid
-		constructor:    -> @map = d3.map()
-		get: (coord)    -> @map.get (@getCoord coord).coord
-		has: (coord)    -> @map.has (@getCoord coord).coord
-		remove: (coord) -> @map.remove (@getCoord coord).coord
-		coords:         -> @map.keys()
-		nodes:          -> @map.values()
-		entries:        -> @map.entries()
-		forEach: (func) -> @map.forEach func
-		
-		set: (coord, node) ->
-			{ coord, x, y } = @getCoord coord
-			node.x = x
-			node.y = y
-			@map.set coord, node
-		
-		getCoord: (coord) -> # just convenience
-			if typeof coord is 'string'
-				[ x, y ] = (+d for d in coord.split 'x')
-			else if Array.isArray coord
-				[ x, y ] = coord
-				coord = x+'x'+y
-			else if 'x' of coord and 'y' of coord
-				{ x, y } = coord
-				coord = x+'x'+y
-			{ coord, x, y }
+		graph
 		
 	class MetroMapLayout
-		constructor: ({ config, @graph }) ->
-			{ @timeToOptimize, @gridSpacing } = config
+		constructor: ({ @config, @graph }={}) ->
+			@config ?=
+				timeToOptimize: 100
+				gridSpacing: 1
+				optimizeMaxSteps: 1
 			@grid = new Grid
+			for node in @graph.nodes or []
+				@grid.set node, node
 		
 		snapNodes: ->
-			console.time "snapNodes"
-			grid = new Grid
+			grid = @grid
 			nodes = @graph.nodes[..]
 			old_length = nodes.length
 			while nodes.length > 0
@@ -79,91 +51,142 @@ define ['utils'], ({ P, forall, nearest01, nearestXY, rasterCircle }) ->
 				for coord, list of toMove
 					[ x, y ] = (+d for d in coord.split 'x')
 					{ b, i } = nearestXY { x, y }, list
+					grid.remove b
 					grid.set [x,y], b
 					list[i..i] = []
 					nodes = [ nodes..., list... ]
 				if nodes.length >= old_length
 					throw "no progress"
 				old_length = nodes.length
-			console.timeEnd "snapNodes"
 			
-		nearestFreeGrid: ({ x, y, spiral }, grid) ->
-			g = @gridSpacing
-			gx = g*Math.round (x/g)
-			gy = g*Math.round (y/g)
-			r = 0
-			coords = []
-			while coords.length == 0
-				coords = rasterCircle 0, 0, r++
-				coords = ([ gx+g*ox, gy+g*oy ] for [ox,oy] in coords)
-				coords = (coord for coord in coords when not grid.has coord)
+		nearestFreeGrid: ({ x, y }, grid) ->
+			g = @config.gridSpacing
+			generator = new GridCoordGenerator {
+				x, y
+				spacing: g
+				filter: (coord) -> not grid.has coord
+			}
+			coord = [ (g*Math.round (x/g)), (g*Math.round (y/g)) ]
+			coords = generator.next()
+			coords.push coord if not grid.has coord
 			{ b } = nearest01 [ x, y ], coords
 			return b
 			
-		optimize: ->
-			{ nodes } = @graph
-			# somewhat like Algorithm 3.2 Metro Map Layout
-			loops = 0
-			time = @timeToOptimize+Date.now()
-			mT0 = @calculateNodeCriteria nodes
-			loop
-				for node in nodes
-					mN0 = @calculateNodeCriteria nodes
-					mN  = @findLowestNodeCriteria nodes
-					if mN < mN0
-						@moveNode node
-				mT = @calculateNodeCriteria nodes
-				# XXX no clustering now
-				# no labels
-				++loops
-				break if time < +Date.now()
-				break if mT >= mT0
-				mT0 = mT
-			P loops+" metro optimization loops"
+		optimize: ({ timeAvailable, criterias }={}) ->
+			timeAvailable ?= @config.timeToOptimize
+			criterias ?= optimizeCriterias
+			{ optimizeMaxSteps } = @config
+			{ nodes, edges, lines } = @graph
 			
-		calculateNodeCriteria: (nodes) ->
-			# angularResolutionCriterion = @getAngularResolutionCriterion nodes
+			nodes = nodes[..]
+			criteria = (node) ->
+				crits = for name, crit of criterias
+					crit node
+				value = 0
+				deps = []
+				for crit in crits
+					value += crit.value
+					utils.arrayUnique crit.deps, deps
+				{ value, deps }
+			
+			stats =
+				moved: {}
+				steps: 0
+				bench: []
+			time = timeAvailable+Date.now()
+			while time > +Date.now() and stats.steps < optimizeMaxSteps
+				++stats.steps
+				@sortByCriteria nodes, criteria
+				stats.bench.push d3.sum (n.crit.value for n in nodes)
+				for node in nodes
+					if not node.crit
+						node.crit = criteria node
+					if node.crit.value > 0
+						if @moveNode node, criteria
+							stats.moved[node.data.kanji] = true
+			@sortByCriteria nodes, criteria
+			stats.bench.push d3.sum (n.crit.value for n in nodes)
+			stats.moved = length stats.moved
+			stats.better = stats.bench[-1..][0] / stats.bench[0]
+			{ stats }
+			
+		moveNode: (node, criteria) ->
+			update = (crit) -> n.crit = criteria n for n in crit.deps
+			sum = (crit) -> crit.value + d3.sum (n.crit.value for n in crit.deps)
+			
+			generator = new GridCoordGenerator
+				x: node.x
+				y: node.y
+				spacing: @config.gridSpacing
+				filter: (coord) => not @grid.has coord
+			coords = generator.next()
+			coords.push generator.next()...
+				
+			copy   = x: node.x, y: node.y
+			update node.crit
+			before = sum node.crit
+			min    = value: before, coord: [ node.x, node.y ]
+			
+			for coord in coords
+				node.x = coord[0]
+				node.y = coord[1]
+				node.crit = criteria node
+				update node.crit
+				value = sum node.crit
+				value = 0 if value < 0.0001
+				if min.value > value
+					min.value = value
+					min.coord = coord
+					break if min.value == 0
+			[ x, y ] = min.coord
+			if x != copy.x or y != copy.y
+				@grid.remove copy
+				@grid.set [x,y], node
+				node.crit = criteria node
+				update node.crit
+				node
+			else
+				node.x = copy.x
+				node.y = copy.y
+				null
+				
+		sortByCriteria: (nodes, criteria) ->
+			nodes.sort (a, b) ->
+				for node in [ a, b ]
+					node.crit = criteria node if not node.crit?
+				compareNumber b.crit.value, a.crit.value
+			
+		calculateNodesCriteria: (nodes) ->
 			# How to calculate final criterion over multiple criteria? p 89?
-			0
-		
-		getAngularResolutionCriterion: (nodes) ->
-			sum = 0
 			for node in nodes
 				edgesOfNode = @getEdgesOfNode node
-				degree = edgesOfNode.length
-				l_vec = @getVector edgesOfNode[0]
-				for edge in edgesOfNode
-					continue if edge == undefined 
-					c_vec = @getVector edge
-					continue if c_vec == l_vec
+				# angularResolutionCriterion = @getAngularResolutionCriterion edgesOfNode
 
-					scalar = c_vec[0] * l_vec[0] + c_vec[1] * l_vec[1] 
-					c_length = Math.sqrt( Math.pow( c_vec[0], 2 ) + Math.pow( c_vec[1], 2) )
-					l_length = Math.sqrt( Math.pow( l_vec[0], 2 ) + Math.pow( l_vec[1], 2) )
-					angle = scalar / c_length * l_length
-					sum += Math.abs( (2*Math.PI / degree) - angle ) 
+			[0,0]
+		
+		getAngularResolutionCriterion: (edges) ->
+			sum = 0
+			degree = edges.length
+			# TODO: nur nebeneinanderliegende Kanten
+			# nur die kleinsten Winkel ... Anzahl = Kanten
+			for e1 in edges
+				for e2 in edges
+					continue if e1 == e2
+					sum += Math.abs( (2*Math.PI / degree) - e1.getAngle(e2) )
 
-					l_vec = @getVector edge
 			sum
-
-		getVector: (edge) ->
-			p1 = [ edge.link.source.x, edge.link.source.y ]
-			p2 = [ edge.link.target.x, edge.link.target.y ]
-			vec= [ p1[0] - p2[0], 	p1[1] - p2[1] ]
 		
 		getEdgesOfNode: (node) ->
 			edgesOfNode = []
 			for edge in @graph.edges
-				kanji 	  = node.station.kanji.kanji
-				src_kanji = edge.link.source.kanji.kanji
-				tar_kanji = edge.link.target.kanji.kanji
+				kanji 	  = node.data.kanji
+				src_kanji = edge.source.data.kanji
+				tar_kanji = edge.target.data.kanji
 				if src_kanji == kanji or tar_kanji == kanji
 					edgesOfNode.push edge
 			edgesOfNode
 
 		findLowestNodeCriteria: (nodes) ->
 			0
-		
-		moveNode: (node) ->
 	
-	{ metroMap, MetroMapLayout }
+	{ metroMap, MetroMapLayout, optimizeCriterias }

@@ -1,4 +1,4 @@
-define ['utils'], ({ P }) ->
+define ['utils'], (utils) ->
 		
 	setupRadicalJouyous= ->
 		jouyou_kanjis = []
@@ -32,21 +32,38 @@ define ['utils'], ({ P }) ->
 				vector[radical_i] = +(radical.radical in char.radicals)
 		vector
 
-	setupClusterAssignment = (stations, initial_vectors, clusters_n) ->
-		vectors = (s.vector for s in stations)
+	setupClusterAssignment = (nodes, initial_vectors, clusters_n) ->
+		vectors = (n.vector for n in nodes)
 		if undefined in vectors
-			throw "station need .vector"
+			throw "node need .vector"
 		clusters_n ?= initial_vectors?.length
-		clusters_n ?= Math.floor Math.sqrt stations.length/2
+		clusters_n ?= Math.floor Math.sqrt nodes.length/2
 		{ centroids, assignments } =
 			figue.kmeans clusters_n, vectors, initial_vectors
-		clusters = ({ centroid, stations: [] } for centroid in centroids)
+		clusters = ({ centroid, nodes: [] } for centroid in centroids)
 		for assignment, assignment_i in assignments
 			cluster = clusters[assignment]
-			station   = stations[assignment_i]
-			station.cluster = cluster
-			cluster.stations.push station
+			node = nodes[assignment_i]
+			node.cluster = cluster
+			cluster.nodes.push node
 		clusters
+		
+	setupKanjiRadicals = (kanjis, radicals) ->
+		for kanji in kanjis
+			kanji.radicals = (radicals[radical] for radical in kanji.radicals)
+		
+	getRadicals = ->
+		radicals = (my.radicals[radical] for radical of my.jouyou_radicals)
+		radicals = my.config.filterRadicals radicals
+		radicals.sort (x) -> x.radical
+		radicals
+		
+	getKanjis = (radicals) ->
+		kanjis = []
+		for radical in radicals
+			utils.arrayUnique radical.jouyou, kanjis
+		kanjis.sort (x) -> x.kanji
 
 	{ setupRadicalJouyous, setupKanjiGrades,
-	  setupKanjiVectors, setupClusterAssignment, getRadicalVector }
+	  setupKanjiVectors, setupClusterAssignment, getRadicalVector,
+	  getRadicals, getKanjis, setupKanjiRadicals }

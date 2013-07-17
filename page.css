@@ -1,0 +1,232 @@
+@charset "UTF-8";
+@import url(http://fonts.googleapis.com/css?family=Ubuntu);
+
+body{
+	font-family: Ubuntu, sans-serif;
+	overflow-y:hidden; 
+	margin: 0px; 
+}
+
+/*! initialView */
+
+#overlay {
+	display: block;
+	width: 100%;
+	height: 100%;
+	z-index: 100;
+	position: absolute;
+	background-color: white;
+}
+
+.header{
+	color: #FFF;
+	background-color: #2FA199;
+	margin-top: 0;
+	padding: 0.5em;
+	font-size: 2em;
+	text-align: center;
+}
+.header h1{
+	margin-bottom: 0;
+	margin-top: 0.2em;
+}
+.header .sub {
+	font-size: 0.8em;
+	margin-left: 0.2em;
+}
+
+.listwrapper{
+	width: 80%;
+	margin: 0 auto;
+}
+
+form table td{
+	padding: 0.2em;
+}
+
+.row {
+	padding-top: 1em;
+	padding-bottom: 1em;
+	background-color: #EEE;
+	text-align: center;
+}
+.row form {
+	display: inline-block;
+}
+
+#footer{
+	color: #FFF;
+	background-color: #2FA199;
+	margin-top: 0;
+	padding: 0.5em;
+	width: 100%;
+	text-align: center;
+}
+
+#footer a, #footer a:hover, #footer a:active, #footer a:visited{
+	color: #333;
+}
+
+.footwrapper{
+	display: inline-block;
+}
+
+.nolist {
+	float:left;
+	list-style: none outside none;
+	text-align: left;
+}
+
+#kanjilist{
+	margin: 10px;
+	overflow: auto;
+	resize: both;
+}
+
+/*! new Bar */
+#controlBoard{
+	position: absolute;
+	bottom: 0;
+	width: 100%;
+	z-index: 10;
+}
+
+.toggleArea{
+	height: 30px;
+	background-color: #2FA199;
+	color: #FFF;
+	width: 80%;
+	margin: 0 auto;
+	border-radius: 50px 50px 0 0;
+}
+
+.arrowIcon{
+	width: 0;
+	height: 0;
+	margin: 0 auto;
+	position: relative;
+}
+
+.arrowIcon.up{
+	border-left: 15px solid transparent;
+	border-right: 15px solid transparent;
+	border-bottom: 15px solid #FFF;
+	top: 7px;
+}
+
+.arrowIcon.down{
+	border-left: 15px solid transparent;
+	border-right: 15px solid transparent;
+	border-top: 15px solid #FFF;
+	bottom: 7px;
+}
+
+/*  in DEVELOP MODE its off @Riin
+.toggleArea:hover + .dataFormArea, 
+.dataFormArea:hover{
+	display: table;
+}
+*/
+
+.dataFormArea{
+	background-color: #EEE;
+	width: 100%;
+	padding-top: 10px;
+	padding-left: 10px;
+	/* display: none; */
+	display: table;
+}
+
+.formArea{
+	display: table-cell;
+	width: 250px;
+}
+
+.dataArea{
+	display: table-cell;
+	padding-left: 10px;
+}
+
+#history{
+	display: none;
+}
+
+/*! old Bar */
+
+#bottomBar {
+	border: 1px solid silver;
+	background: white; 
+	bottom: 0px;
+	transition: 1s;
+	position: absolute;
+	width: 100%;
+}
+
+#bottomBar #toggle-bottom-bar{
+	cursor: pointer;
+	background: rgb(220, 220, 220);
+	float: left;
+}
+
+#bottomBar > * {
+}
+
+#details td {
+	white-space:nowrap;
+}
+
+.tablewrapper {
+	overflow-x: scroll;
+	overflow-y: hidden;
+}
+
+/*
+#seafil {
+	float: left;
+}
+*/
+
+#seafil table td{
+	padding-bottom: 5px;
+	padding-left: 5px;
+}
+
+#seafil form .long{
+	width: 10em;
+}
+
+#seafil form .half{
+	width: 3em;
+}
+
+#history {
+	margin-top: 10px;
+  	margin-right: 10px;
+	float: left;
+}
+
+.no-wrap{
+	white-space: nowrap;
+}
+
+input[type=button]{
+	background-color: #2FA199;
+	border-radius: 0;
+	border-width: 0;
+	color: #FFF;
+	padding: 0.2em 0.5em;
+	box-shadow: 1px 1px 3px #333;
+	background-image: -webkit-linear-gradient(#2FA199 0%, #2e7a74 100%);
+}
+
+input[type=button].btn_clear{
+	width: 1.3em;
+	border-radius: 1em;
+	border-width: 0;
+	color: #FFF;
+	font-weight: bold;
+	background-color: #2FA199;
+	padding: 0;
+}
+
+/* Central station */

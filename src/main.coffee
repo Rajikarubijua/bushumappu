@@ -1,64 +1,47 @@
-config =
-	showLines: 					false
-	fixedEndstation:			false
-	fixedStation:				false
-	filterRadicals:				(radicals) -> radicals
-	filterLinkedRadicals:		(radicals) -> radicals
-	sunflowerKanjis:			true
-	kmeansInitialVectorsRandom:	false
-	kmeansClustersN:			-1 # 0 rule of thumb, -1 vector.length
-	forceGraph:					false
-	circularLines:				true
-	gridSpacing:				48*6 # 0 deactivates snapNodes
-figue.KMEANS_MAX_ITERATIONS = 1
-
 # the global object where we can put stuff into it
 window.my = {
-	kanjis: {} 				# "kanji": { "kanji", "radicals", "strokes_n", "freq", "onyomi", "kunyomi", "meaning"}
+	kanjis: {} 				# "kanji": { "kanji", "radicals", "stroke_n", "freq", "onyomi", "kunyomi", "meaning"}
 	radicals: {} 			# "radical" . {"radical", "kanjis"}
 	jouyou_radicals: {} 	# "radical" value "kanjikanjikanji"
 	jouyou: []				# list of jouyou kanji
 	jouyou_grade: {}		# +grade: "kanjis"
 	config }
 
-define ['utils', 'load_data', 'prepare_data', 'initial_embedding',
-	'interactivity', 'routing', 'test_routing'], (
-	{ P, somePrettyPrint, styleZoom },
-	loadData, prepare, { setupInitialEmbedding }, { setupD3 }, { metroMap },
-	testRouting) ->
+define ['utils', 'load_data', 
+	'interactivity', 'routing', 'prepare_data',
+	'test_routing', 'test_bench', 'tests', 'optimizer_client'], (
+	{ P, somePrettyPrint, styleZoom, async, prettyDebug, copyAttrs },
+	loadData, { View }, { MetroMapLayout }, prepare,
+	testRouting, testBench, tests, { Optimizer }
+	) ->
 
 	main = () ->
 		body = my.body = d3.select 'body'
-		body.append('pre').attr(id:'my').text somePrettyPrint my
-				
-		svg   = my.svg = body.append 'svg'
+
+		if config.debugOverlay
+			showDebugOverlay body
+		
+		svg   = my.svg = body.select 'svg#graph'
 		svg.g = svg.append 'g'
-				
-		w = new Signal
-		h = new Signal
-		window.onresize = ->
-			w window.innerWidth
-			h window.innerHeight
-		window.onresize()
-		new Observer ->
-			attrs = { width : w(), height: h() }
-			svg.attr attrs
-			svg.style attrs
-				
-		svg.call (zoom = d3.behavior.zoom())
-			.translate([w()/2, h()/2])
-			.scale(0.03)
-			.on 'zoom', styleZoom svg.g, zoom
-		draggingStart = -> svg.classed 'dragging', true
-		draggingEnd   = -> svg.classed 'dragging', false
-		svg.on 'mousedown.cursor' , draggingStart
-		svg.on 'mouseup.cursor'   , draggingEnd
-		svg.on 'touchstart.cursor', draggingStart
-		svg.on 'touchend.cursor'  , draggingEnd
-			 
-		graph = setupInitialEmbedding config
-		graph = metroMap graph, config
-		setupD3 svg.g, graph, config
+
+		prepare.setupRadicalJouyous()
+		prepare.setupKanjiGrades()
+		prepare.setupKanjiRadicals(d3.values(my.kanjis), my.radicals)
+		radicals = prepare.getRadicals()
+		kanjis = prepare.getKanjis radicals
+
+		optimizer = new Optimizer ->
+			view = new View { svg, config, kanjis, radicals, optimizer }
+
+			if config.showInitialMode
+				view.doInitial()
+			else
+				view.doSlideshow()
 			
-	testRouting.runTests()
+	showDebugOverlay = (el) ->
+		el.append('pre').attr(id:'my').text somePrettyPrint my
+
+	all_tests = copyAttrs {}, testRouting.tests, testBench.tests
+	#tests.run all_tests, []
+	console.info 'end of tests'
 	loadData main

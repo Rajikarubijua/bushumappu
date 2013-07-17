@@ -1,48 +1,91 @@
 @charset "UTF-8";
 
-body { overflow: hidden; margin: 0; }
+@import url('stroke_colors.css')
+
+body { 
+	overflow-y:hidden; 
+	margin: 0px; 
+}
 
 circle, rect {
 	fill: white;
 	stroke: black;
 }
-text {
+
+.node > text, .endnode > text {
 	alignment-baseline: central;
 	text-anchor: middle;
 }
+
+.station-label > text {
+	alignment-baseline: central;
+	text-anchor: start;
+}
+
+.station-kanji > text {
+	alignment-baseline: central;
+	text-anchor: middle;
+}
+
+.remove-col-btn > text {
+	alignment-baseline: central;
+	text-anchor: middle;
+	padding-left: 7px;
+}
+
+.mini-label > text{
+	alignment-baseline: central;
+	text-anchor: middle;
+	font-size: 0.005em;
+}
+
+#details .remove-col-btn{
+	cursor: pointer;
+	width: 20px;
+	height: 20px;
+	margin-left: 10px;
+	border-radius: 3px;
+	position: absolute;
+	background-color: rgb(220,220,220);
+}
+
 path {
 	fill: none;
 	stroke: black;
-	stroke-width: 2pt;
+	stroke-width: 5;
 }
-
-
-div.tooltip {
-  position: absolute;
-  text-align: center;
-  min-width: 100px;
-  min-height: 90px;
-  padding: 8px;
-  font: 16px sans-serif;
-  background: lightsteelblue;
-  border: solid 0px #aaa;
-  border-radius: 8px;
-  pointer-events: none;
-}
-
-/* Output colors
-    [229,  53,  23, 1, "red"    ]
-    [151, 190,  13, 1, "green"  ]
-    [  0, 139, 208, 1, "blue"   ]
-    [255, 204,   0, 1, "yellow" ]
-    [226,   0, 122, 1, "pink"   ]
-    [100,  31, 128, 1, "purple" ]
-    [ 41,  14,   3, 1, "brown"  ]
-*/
 
 .highlighted {
-	stroke: rgb(229,53,23);
-	stroke-width: 10pt;
+	stroke-width: 10;
+}
+
+.filtered {
+	opacity: 0.2;
+}
+
+.searchresult rect{
+    stroke: black;
+    stroke-width: 3;
+}
+
+@-webkit-keyframes blink {
+	0% {
+		fill: #FFF;
+	}
+	50% {
+		fill: #ffcc00;
+	}
+	100% {
+		fill: #FFF;
+	}
+}
+
+.focused .station-kanji rect{ 
+	-webkit-animation-name: blink; 
+	-webkit-animation-iteration-count: 2;
+	-webkit-animation-duration: 2s;
+	-webkit-animation-timing-function: ease-in-out;
+	-webkit-animation-delay: .5s;
 }
 
 .dragable { cursor: pointer; cursor: hand; }
@@ -54,3 +97,36 @@ svg > g * {
 	transition: 1s;
 	-webkit-transition: 1s;
 }
+
+.historylist{
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+#kanjiresult{
+	height: 45px;
+}
+
+.searchKanji, .hisKanji, .firsthisKanji {
+	cursor: pointer;
+	padding: 3px;
+	margin: 3px;
+	border: 1px solid black;
+	float: left;
+	background-color: #FFF;
+}
+
+.firsthisKanji{
+	cursor: pointer;
+	padding: 6px;
+	margin: 11px;
+	font-size: 1.5em;
+}
+
+.lower{
+	padding: 3px;
+	margin: 3px;
+	float: left;	
+}
+
