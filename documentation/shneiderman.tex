@@ -1,23 +1,23 @@
 \subsection{Allgemeine Interaktionsaufgaben von Shneiderman}
-Die Interaktionsaufgaben werden von \cite{eyeshaveit96} wie folgt benannt: Overview, Zoom, Filter, Details-on-demand, Relate, History, Extract.  In den folgenden Untersektionen wird beschrieben wie die Tubemap Visualisierung alle Interaktionsaufgaben unterst"utzt. 
+Die Interaktionsaufgaben werden von \cite{eyeshaveit96} wie folgt benannt: Overview, Zoom, Filter, Details-on-demand, Relate, History, Extract.  In den folgenden Untersektionen wird beschrieben wie die Tubemap Visualisierung alle Interaktionsaufgaben umsetzt. 
 
-\subsubsection{Overview}
+\subsubsection{Overview}\label{Overview}
 Nachdem der Nutzer in der ersten Ansicht ein f"ur ihn interessantes Kanji gew"ahlt hat, wird dieses als zentraler Punkt in einer TubeMap gezeichnet. Nun ist es f"ur ihn m"oglich durch Zoomen den maximalen "Uberblick "uber alle dargestellten Kanji und deren Verbindungen zu erhalten. In dieser Zoomstufe lassen sich einzelne Kanji nicht mehr ablesen,da sie zu klein sind, aber die Radikallinien lassen sich in ihrer L"ange vergleichen und deren gesamter Verlauf besser nachvollziehen. Au"serdem sieht er in welchem Bereich besonders viele Radikallinien zwischen den Stationen wechseln.
 
 \subsubsection{Zoom}
 In der Tubemap ist es dem Nutzer m"oglich einen kleineren Teil der Visualisierung zu betrachten indem er hineinzoomt oder herauszoomt. Die genaueste Betrachtung der Beschaffenheit eines Kanjis ist auf der kleinsten Zoomstufe gegeben. Den gr"o"sten "Uberblick erh"alt man auf gr"o"ster Zoomstufe wie bereits in \ref{Overview} beschrieben. M"ochte der Nutzer den Ausschnitt der Visualisierung verschieben, kann er dies mit einer Pan Geste umsetzen. Auf diese Weise k"onnte er zum Beispiel eine Radikallinie verfolgen.
 
-\subsubsection{Filter}
-Am unteren Rand der Visualisierung befindet sich ein Formular. Mit diesem Formular k"onnen alle Kanji, die gerade angezeigt werden, nach den Kriterien Ausprache, Bedeutung, Strichanzahl, Schuljahr und Verwendungsh"aufigkeit gefiltert werden. Kanji, welche die Kriterien nicht erf"ullen, werden transparenter dargestellt(Brushing). Verbindungen werden in diesem Modus nur angezeigt, wenn sie zwischen zwei Kanji besteht, welche nicht transparent sind. Wenn der Nutzer wieder zur Ausgangssituation zur"uckkehren m"ochte, aktiviert er den reset Button, welcher Formulareingaben und Ver"anderungen in der Visualisierung r"uckg"angig macht.
+\subsubsection{Filter}\label{Filter}
+Am unteren Rand der Visualisierung befindet sich ein Formular. Mit diesem Formular k"onnen alle Kanji, die gerade angezeigt werden, nach den Kriterien Ausprache, Bedeutung, Strichanzahl, Schuljahr und Verwendungsh"aufigkeit gefiltert werden. Kanji, welche die Kriterien nicht erf"ullen, werden transparenter dargestellt (Brushing). Verbindungen werden in diesem Modus nur angezeigt, wenn sie zwischen zwei Kanji besteht, welche nicht transparent sind. Wenn der Nutzer wieder zur Ausgangssituation zur"uckkehren m"ochte, aktiviert er den Reset Button, welcher Formulareingaben und Ver"anderungen in der Visualisierung r"uckg"angig macht.
 
-\subsubsection{Details-on-demand}
+\subsubsection{Details-on-demand}\label{Details-on-demand}
 Mehr Informationen "uber ein spezifisches Kanji zu erhalten, ist auf mehreren Wegen m"oglich. F"ur ein schnelles und oberfl"achliches Informationsbed"urfnis f"ahrt der Nutzer "uber das Kanji und erh"alt dessen Bedeutung in einer Textbox neben diesem angezeigt. Durch einen einfachen Klick auf die Textbox kann er es wieder entfernen. Bei gr"o"serem Interesse klickt der Nutzer auf das Kanji und es wird in der Tabelle am unteren Bildschirmrand eingef"ugt. In der Tabelle sind nun alle Informationen "uber das Kanji ablesbar. Nach einem MouseOver "uber das Tabellenkanji erscheint ein Button zum entfernen des Kanjis aus der Tabelle. Um die aktuelle Tubemap Ansicht nicht verschieben zu m"ussen, wurde die Tabelle scrollbar gemacht. Klickt der Nutzer doppelt auf ein Kanji zeichnet sich die Tubemap mit diesem Kanji als zentrales Kanji neu. 
 
 \subsubsection{Relate}
 Die Eigenshaften von Kanji k"onnen in der Tabelle am unteren Bildschirmrand verglichen werden. Siehe dazu \ref{Details-on-demand}. Theoretisch k"onnen Kanjis auch durch die Textboxen mit der Bedeutung des jeweiligen Kanjis verglichen werden. Praktisch allerdings gestaltet es sich durch die teilweise gro"se Distanz zwischen den Kanji in der Tubemap als schwierig, weswegen die Tabelle eine gute Alternative darstellt. 
 
 \subsubsection{History}
-In einer Visualisierung soll es m"oglich sein Aktionen r"uckg"angig zu machen und zu vorherigen Ansichten zur"uckzugelangen. In der Tubemap ver"andert nur das W"ahlen eines neuen Kanjis als zentralen Punkt der Visualisierung die Ansicht nachhaltig. Im unteren Bereich des zentralen Kanjis wird eine Liste aller Kanji angezeigt, die bereits zentrales Kanji waren. Wenn der Nutzer zu einem Kanji zur"uckkehren m"ochte, kann er in dieser Liste das entsprechende Kanji selektieren.
+In einer Visualisierung soll es m"oglich sein, Aktionen r"uckg"angig zu machen und zu vorherigen Ansichten zur"uckzugelangen. In der Tubemap ver"andert nur das W"ahlen eines neuen Kanjis als zentralen Punkt der Visualisierung die Ansicht nachhaltig. Im unteren Bereich des zentralen Kanjis wird eine Liste aller Kanji angezeigt, die bereits zentrales Kanji waren. Wenn der Nutzer zu einem Kanji zur"uckkehren m"ochte, kann er in dieser Liste das entsprechende Kanji selektieren.
 
 
 \subsubsection{Extract}
