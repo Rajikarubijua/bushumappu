@@ -1,11 +1,11 @@
 #!/bin/bash
-sed -i 's/ä/"a/' *.tex
-sed -i 's/Ä/"A/' *.tex
-sed -i 's/ü/"u/' *.tex
-sed -i 's/Ü/"U/' *.tex
-sed -i 's/ö/"o/' *.tex
-sed -i 's/Ö/"O/' *.tex
-sed -i 's/ß/\ss /' *.tex
+sed -i 's/ä/"a/g' *.tex
+sed -i 's/Ä/"A/g' *.tex
+sed -i 's/ü/"u/g' *.tex
+sed -i 's/Ü/"U/g' *.tex
+sed -i 's/ö/"o/g' *.tex
+sed -i 's/Ö/"O/g' *.tex
+sed -i 's/ß/"s/g' *.tex
 
 pdflatex documentation.tex &&
 bibtex documentation.aux &&
