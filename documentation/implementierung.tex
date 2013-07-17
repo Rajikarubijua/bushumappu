@@ -3,7 +3,7 @@
 Die Software ist eine vollst"andig Client-seitige Webanwendung. Diese
 Entscheidung wurde in Abw"agung gegen"uber C++ mit Qt 5 getroffen.
 Ausschlaggebende Argumente waren die Verf"ugbarkeit von CSS und SVG zur
-Darstellung im Gegensatz zu imperativen und Objekt-orientierten Ans"atzen
+Darstellung im Gegensatz zu imperativen und objektorientierten Ans"atzen
 sowie das einfache Zeigen und Teilen mit anderen Menschen "uber einen
 Link und einen Browser.
 
@@ -13,12 +13,12 @@ Mit der Entscheidung zur Webanwendung war die erste Frage, welche
 Programmiersprache die vorherrschende sein sollte. Zwischen JavaScript,
 CoffeeScript, Java und Haxe fiel die Wahl auf
 \href{http://coffeescript.org/}{CoffeeScript 1.6.2}. Stark typisierte
-Sprachen, die zu JavaScript compilieren, wie Java und Haxe, haben das
+Sprachen, die zu JavaScript kompilieren wie Java und Haxe, haben das
 Problem, dass JavaScript Bibliotheken wie d3.js, einen abschreckenden
 Aufwand erfordern, die Interfaces zu definieren, so dass der Vorteil der
 starken Typisierung auch genutzt werden kann. CoffeeScript ist
 JavaScript in sofern "uberlegen, da es ein Klassen-Pattern bereits in die
-Sprache integriert und auch vor anderen Unklarheiten in JavaScript
+Sprache integriert hat und auch vor anderen Unklarheiten in JavaScript
 sch"utzt.
 
 Zur Darstellung selbst wird \href{http://www.w3.org/TR/SVG11/}{SVG 1.1}
@@ -26,13 +26,13 @@ und \href{http://www.w3.org/TR/css-2010/}{CSS 2010} verwendet, um mit
 Hilfe von CSS schnell schicke Effekte und Transitionen nach Bedarf zu
 definieren und sie vom Browser bereits effizient umgesetzt werden. CSS
 Effekte sind jedoch nur auf DOM Elemente anwendbar, was wiederum SVG
-verlangt als Darstellungsframework. \href{http://d3js.org/}{d3.js 3.1.6}
-ist darauf ausgelegt DOM Elemente basierend auf Daten zu erstellen.
+als Darstellungsframework verlangt. \href{http://d3js.org/}{d3.js 3.1.6}
+ist darauf ausgelegt, DOM-Elemente basierend auf Daten zu erstellen.
 Andere Darstellungsbibliotheken f"ur Webanwendungen legen entweder ihren
-Fokus nicht auf SVG und CSS oder sind nicht Daten-gebunden.
+Fokus nicht auf SVG und CSS oder sind nicht datengebunden.
 
 Zwischen Firefox 23 und \href{http://www.chromium.org/Home}{Chromium 28}
-fiel die Wahl auf letzteren, da der Chromium SVG mit Text effizient
+fiel die Wahl auf letzteren, da der Chromium Browser SVG mit Text effizient
 darstellt. Der Firefox st"o"st hier an eine Grenze.
 
 Weitere verwendete Technologien sind
@@ -61,7 +61,7 @@ kontinuierlich Bewertung und Ver"anderung um eine bessere Bewertung zu
 erzielen. Die Bewertung richtet sich nach mehreren Kriterien und Regeln.
 
 Konkret ist das Ergebnis der initialen Einbettung, dass das zentrale
-Kanji in der Mitte ist. Die Radikale des zentralen Kanji werden hier als
+Kanji der Mittelpunkt ist. Die Radikale des zentralen Kanji werden hier als
 relevante Radikale bezeichnet. Von dem zentralen Kanji ausgehend, denkt
 man sich f"ur jedes relvante Kanji Strahlen in 90° und 45° Winkel
 zueinander. F"ur jedes relevante Radikal werden die Kanji genommen, die
@@ -69,7 +69,7 @@ dieses Radikal enthalten und eingeteilt in solche, die von allen
 relevanten Radikalen nur eins enthalten (Lo-Kanji), und solche, die
 mehrere relevante Radikale enthalten (Hi-Kanji). Hi-Kanji werden unter
 den Strahlen verteilt, Lo-Kanji am entprechenden Strahl hinten
-angef"ugt. Alle Kanji haben nun eine Position. Um Kanji mit einandner
+angef"ugt. Alle Kanji haben nun eine Position. Um Kanji miteinandner
 zu verbinden, wird Verbindungen nacheinander gezogen f"ur jedes relevante
 Radikal. Vom zentralen Kanji aus werden alle Hi-Kanji des zum Radikal
 zugeh"origen Strahls verbunden und anschlie"send wird jeder Strahl
@@ -92,14 +92,14 @@ Graphen besser wird. In die Bewertung flie"sen Regeln und
 Qualit"atskriterien ein. Weniger Regeln zu verletzen ist stets besser als
 eine h"ohere Qualit"at zu erreichen.
 
-Folgende Regeln m"oglichst nicht verletzt werden:
+Folgende Regeln sollen m"oglichst nicht verletzt werden:
 
 \begin{itemize}
 \item
-  keine Kanten, die unter einem Knoten durchgehen, die nicht zu dem
+  keine Kanten, dürfen unter einem Knoten hindurchführen, die nicht zu dem
   Knoten selbst geh"oren (\texttt{wrongEdgesUnderneath})
 \item
-  der Knoten darf dem Knoten f"ur das zentral Kanji nicht zu Nahe kommen
+  der Knoten darf dem Knoten f"ur das zentrale Kanji nicht zu nahe kommen
   (\texttt{tooNearCentralNode})
 \item
   keine Kanten, die andere Kanten kreuzen (\texttt{edgeCrossings})
