@@ -1,4 +1,4 @@
-define [], () ->
+define 'grid', [], () ->
 
 	class Grid
 		constructor:    -> @map = d3.map()

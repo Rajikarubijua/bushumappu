@@ -1,4 +1,4 @@
-define ['utils'], ({ P, async, parseMaybeNumber }) ->
+define 'load_data', ['utils'], ({ P, async, parseMaybeNumber }) ->
 
 	load = (cb) ->
 		# load ALL the data concurrently

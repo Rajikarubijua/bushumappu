@@ -1,4 +1,4 @@
-define ['utils', 'criteria', 'tubeEdges'], (utils, criteria, tube) ->
+define 'graph', ['utils', 'criteria', 'tubeEdges'], (utils, criteria, tube) ->
 	{ P } = utils
 
 	class Node

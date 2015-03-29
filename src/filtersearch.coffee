@@ -1,4 +1,4 @@
-define ['utils'], ({P}) ->
+define 'filtersearch', ['utils'], ({P}) ->
 
 	class FilterSearch
 

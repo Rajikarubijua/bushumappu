@@ -1,9 +1,9 @@
 self.require = urlArgs: "bust=" +  (new Date()).getTime()
-importScripts '/lib/require.js'
+importScripts '../lib/require.js'
 self.document = documentElement: ->
 self.window = self
 window.CSSStyleDeclaration = ->
-importScripts '/lib/d3.v3.js'
+importScripts '../lib/d3.arrays.js'
 self.console = log: (xs...) -> postMessage type: 'log', log: xs.join ' '
 console.debug = console.info = console.log
 self.my = debug: true

@@ -1,4 +1,4 @@
-define ['utils'], ({P, arrayUnique}) ->
+define 'detail_table', ['utils'], ({P, arrayUnique}) ->
 	class DetailTable
 		constructor: () ->
 			@list = []

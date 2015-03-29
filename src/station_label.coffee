@@ -1,4 +1,4 @@
-define ['utils'], ({P, cssTranslateXY }) ->
+define 'station_label', ['utils'], ({P, cssTranslateXY }) ->
 	class StationLabel
 		constructor: ({ @node, @g_stationLabels, @style }) ->
 			@node

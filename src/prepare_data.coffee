@@ -1,4 +1,4 @@
-define ['utils'], (utils) ->
+define 'prepare_data', ['utils'], (utils) ->
 		
 	setupRadicalJouyous= ->
 		jouyou_kanjis = []

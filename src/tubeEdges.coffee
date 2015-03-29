@@ -1,4 +1,4 @@
-define ['utils'], (utils) ->
+define 'tubeEdges', ['utils'], (utils) ->
 	{ P } = utils
 
 	cptplaceholder = 0

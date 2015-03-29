@@ -1,4 +1,4 @@
-define ['utils'], ({P, arrayUnique}) ->
+define 'history', ['utils'], ({P, arrayUnique}) ->
 	class History
 		constructor: () ->
 			@history = []

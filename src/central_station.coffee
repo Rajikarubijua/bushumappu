@@ -1,4 +1,4 @@
-define ['utils', 'graph'], (utils, { Graph, Node }) ->
+define 'central_station', ['utils', 'graph'], (utils, { Graph, Node }) ->
 	{ P } = utils
 
 	class CentralStationEmbedder

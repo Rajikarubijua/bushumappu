@@ -1,4 +1,4 @@
-define ->
+define "utils", ->
 	# copies every attribute of a object 'b' to object 'a'
 	copyAttrs = (a, bs...) ->
 		for b in bs

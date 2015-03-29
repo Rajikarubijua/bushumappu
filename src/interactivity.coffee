@@ -1,4 +1,4 @@
-define [
+define 'interactivity', [
 	'utils',
 	'tubeEdges',
 	'filtersearch',
@@ -59,7 +59,8 @@ define [
 				svg.attr attrs
 				svg.style attrs
 					
-			svg.call (@zoom)
+			svg.call(@zoom)
+			@zoom
 				.translate([w()/2, h()/2])
 				.scale(@config.initialScale)
 				.on('zoom', styleZoom svg.g, @zoom)

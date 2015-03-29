@@ -1,4 +1,4 @@
-define [], ->
+define 'optimizer_client', [], ->
 	class Optimizer
 		constructor: (cb) ->
 			@worker = new Worker "js/optimize.js?"+Date.now()

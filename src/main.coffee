@@ -7,7 +7,7 @@ window.my = {
 	jouyou_grade: {}		# +grade: "kanjis"
 	config }
 
-define ['utils', 'load_data', 
+define 'main', ['utils', 'load_data', 
 	'interactivity', 'routing', 'prepare_data'], (
 	{ P, somePrettyPrint, styleZoom, async, prettyDebug, copyAttrs },
 	loadData, { View }, { MetroMapLayout }, prepare) ->

@@ -1,4 +1,4 @@
-define ['utils'], (utils) ->
+define 'criteria', ['utils'], (utils) ->
 	{ P } = utils
 	
 	wrongEdgesUnderneath = (node, edges) -> 
